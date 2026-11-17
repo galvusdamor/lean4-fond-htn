@@ -7,3 +7,6 @@ import FondHtn.IsoLemmas
 import FondHtn.MethodPolicies
 import FondHtn.MethodPoliciesStrong
 import FondHtn.Lang.Desc
+import FondHtn.Transfer.AppendLast
+import FondHtn.Transfer.Deterministic
+import FondHtn.Transfer.DetFond
