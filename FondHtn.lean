@@ -15,3 +15,6 @@ import FondHtn.Transfer.DetDesc
 import FondHtn.Hardness.FromDet
 import FondHtn.Cx.Closure
 import FondHtn.Cx.Closure2
+import FondHtn.Upper.StrongCompile
+import FondHtn.Upper.StrongDesc
+import FondHtn.Upper.StrongMem
