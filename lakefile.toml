@@ -6,10 +6,11 @@ name = "mathlib"
 git = "https://github.com/leanprover-community/mathlib4.git"
 rev = "v4.28.0"
 
-# Local checkout of the HTN formalisation (which itself depends on ComplexityTheory).
+# Local checkout of the HTN formalisation: HtnComplexity depends on HtnPlanning, which depends
+# on ComplexityTheory.
 [[require]]
-name = "HtnPlanning"
-path = "../htn-split/htn-planning"
+name = "HtnComplexity"
+path = "../htn-split/htn-complexity"
 
 [[lean_lib]]
 name = "FondHtn"

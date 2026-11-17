@@ -6,3 +6,4 @@ import FondHtn.FixedMethodsRelations
 import FondHtn.IsoLemmas
 import FondHtn.MethodPolicies
 import FondHtn.MethodPoliciesStrong
+import FondHtn.Lang.Desc
