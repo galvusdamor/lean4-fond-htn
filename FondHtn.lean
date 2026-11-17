@@ -97,3 +97,6 @@ import FondHtn.MPSemi.Strong
 import FondHtn.ATM.Savitch
 import FondHtn.ATM.Tableau
 import FondHtn.HardTR.Source
+import FondHtn.Alt.Buchi2
+import FondHtn.MPStrong.TOFair2Sem
+import FondHtn.MPStrong.TOFair2Desc
