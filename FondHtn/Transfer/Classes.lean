@@ -84,7 +84,7 @@ namespace TaskNetwork
 
 variable {I A C : Type} [DecidableEq I] {tn : TaskNetwork I A C} {i : I} {a : A}
 
-theorem appendLast_isTotallyOrdered_iff (hwf : tn.WF) (hi : i ∉ tn.T) :
+theorem appendLast_isTotallyOrdered_iff (hi : i ∉ tn.T) :
     (tn.appendLast i a).IsTotallyOrdered ↔ tn.IsTotallyOrdered := by
   have hne : ∀ {x}, x ∈ tn.T → x ≠ i := fun hx e => hi (e ▸ hx)
   constructor

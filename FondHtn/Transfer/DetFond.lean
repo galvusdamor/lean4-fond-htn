@@ -76,12 +76,14 @@ theorem weakExec_detFond_iff :
     · rintro ⟨happ, s', hrun, hgoal⟩; exact ⟨s', ⟨happ, hrun⟩, hgoal⟩
     · rintro ⟨s', ⟨happ, hrun⟩, hgoal⟩; exact ⟨happ, s', hrun, hgoal⟩
 
+omit [DecidableEq A] in
 /-- Task networks reachable from `tn_I` never use the name `g`. -/
 theorem labels_ne_of_decomposesTo (hg : FreshName Q g) {tn : TaskNetwork I A C}
     (h : HTN.DecomposesTo Q.methods Q.tnI tn) : ∀ t ∈ tn.T, tn.α t ≠ Sum.inl g := by
   have := HTN.DecomposesTo.labels_mem (L := {x | x ≠ Sum.inl g}) h hg.1 hg.2
   exact fun t ht => this t ht
 
+omit [DecidableEq A] in
 theorem not_mem_actions (hg : FreshName Q g) {tn : TaskNetwork I A C}
     (h : HTN.DecomposesTo Q.methods Q.tnI tn) {l : List I} {as : List A}
     (hl : tn.IsLinearization l) (has : tn.IsActionSeq l as) : g ∉ as := by

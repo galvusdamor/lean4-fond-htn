@@ -87,6 +87,9 @@ networks, decomposition, progression and the structural problem classes. Its mod
   \lean{FondHtn.IsoLemmas} & explicit isomorphisms; simulation of policy steps \\
   \lean{FondHtn.MethodPoliciesStrong} & strong method-based solutions $\Leftrightarrow$ AND/OR game \\
   \lean{FondHtn.Examples} & the counterexample of [CB21, Prop.~2.13] and [CB22, Fig.~1] \\
+  \lean{FondHtn.Lang.Desc} & descriptions, classes and plan-existence languages \\
+  \lean{FondHtn.Transfer.*} & deterministic problems as FOND problems \\
+  \lean{FondHtn.Hardness.FromDet} & lower bounds inherited from deterministic HTN planning \\
   \bottomrule
 \end{tabularx}
 \end{center}
@@ -380,6 +383,77 @@ $C\to b$ and $C\to c$. It has a strong method-based solution (via the AND/OR cha
 but no strong fixed-method solution (\lean{FOND.Examples.Fig1.fig1}). For the latter we show
 that every achievable primitive network is $a\prec d$ with $d\in\{b,c\}$ and that $(a\prec d,\emptyset)$
 is not a solvable belief state.
+
+\section{Complexity Results}\label{sec:complexity}
+
+Complexity statements are about plan-existence languages over bit codes of finite descriptions,
+following the deterministic development \lean{HtnComplexity}: \lean{PlanExFM c Y} for the
+fixed-method criteria and \lean{PlanExMP c Y} for method-based policies, where \lean{Y} is a
+structural class. The current state is tracked in \lean{STATUS.md}; the catalogue
+\lean{doc/results_catalogue.md} lists every result of the three papers and of our notes with its
+proof route and the gaps in the published proofs.
+
+\begin{deviation}[Descriptions]
+  A description lists the actions with their effects, the methods, the initial state and the
+  initial task network (\lean{FProbDesc}). Well-formed descriptions (\lean{FProbDesc.Valid})
+  satisfy the deterministic conditions and give every action at least one effect, so the
+  described problem satisfies all well-formedness assumptions of Deviation~\ref{dev:wf}
+  (\lean{toProblem_wf}). An undeclared action name denotes the no-op $(\emptyset,\emptyset,
+  \{(\emptyset,\emptyset)\})$, the image of the deterministic convention; it does not occur in
+  well-formed descriptions.
+\end{deviation}
+
+\begin{deviation}[Classes]
+  The structural classes are those of the deterministic development, applied to the skeleton of a
+  FOND problem (\lean{Problem.toArt}). There, ``regular'' is the notion of Bercher et al.: all
+  reachable methods are regular, and nothing is required of $\tnI$. The notion of [CB21, Def.~3.3]
+  additionally requires $\tnI$ to be regular; it is the separate class \lean{FClass.REGtn}.
+\end{deviation}
+
+\begin{deviation}[Goals]
+  FOND HTN problems have no state goal, deterministic problems do. A deterministic problem $Q$ is
+  turned into the FOND problem \lean{detFond Q i g}: the actions of $Q$ with their single effect,
+  and $\tnI$ followed by a fresh task $i\mapsto g$ whose action checks the goal. All four
+  fixed-method criteria and weak and strong solvability with method-based policies of this
+  problem coincide with solvability of $Q$ (\lean{detFond_solvable_iff}). The proof needs that
+  decompositions can be replayed with identifiers avoiding $i$ (\lean{decomposesTo_avoid}), and,
+  for method-based policies, that decompositions after the execution of a primitive task can be
+  moved before it (\lean{decomposesTo_progress_lift}).
+\end{deviation}
+
+\begin{deviation}[Inherited lower bounds]
+  The papers state that deterministic lower bounds carry over because deterministic problems are
+  special FOND problems. Formally this needs the goal elimination above, which must preserve the
+  classes. Appending a primitive task preserves acyclicity, tail-recursion, regularity in the
+  sense of Bercher et al.\ and total order (\lean{Transfer/Classes.lean}), but not regularity of
+  $\tnI$. Hence the inherited PSPACE lower bound for regular problems is proved for
+  \lean{FClass.REG}, not yet for \lean{FClass.REGtn}.
+\end{deviation}
+
+\begin{deviation}[Strong cyclic solutions and lower bounds]
+  With the literal Def.~7 of [CB22] (Deviation~\ref{dev:sc}) a deterministic problem with a
+  recursive task can be ``solved'' by decomposing forever, so strong cyclic solvability does not
+  coincide with deterministic solvability and the deterministic lower bounds are not inherited.
+  The lower bounds claimed for strong cyclic solutions in [CB22] therefore depend on reading
+  Def.~7 with a reachability (fairness) condition.
+\end{deviation}
+
+\begin{deviation}[Published proofs that need repair]
+  The catalogue (\S7) lists 26 problems. Those affecting the complexity results are:
+  \begin{itemize}
+    \item The PSPACE-hardness reduction of [CB21, Thm.~5.1] (primitive, partial order, strong OD)
+      is wrong. Player~1 can play onto an occupied square, which triggers \emph{illegal} and then
+      \emph{clear}. \emph{fin\_turn} grants a free extra move. \emph{win} re-enables the illegal
+      check. We plan to re-prove the bound from TQBF.
+    \item The EXPTIME-hardness proof of [CB22, Thm.~1] has no acceptance check, so every task can
+      be decomposed into nothing. Thms.~2 and~5 only say ``extend Alford et al.\ to alternating
+      machines''.
+    \item [DB25, Thm.~1] omits the STRIPS gadgets of its encoding.
+    \item The ideas for the open cases are proof sketches with missing parts: the PCP gadget
+      separating the two modes, alternation in the counter construction, and the rank argument
+      and the inductive step for total order.
+  \end{itemize}
+\end{deviation}
 
 \printbibliography
 

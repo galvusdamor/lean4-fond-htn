@@ -102,7 +102,7 @@ theorem matches_TOtn : Matches (fun P => P.IsTO_tnI) FClass.TOtn := by
   intro p hp
   change p.toProblem.tnI.IsTotallyOrdered ↔ (detDesc p).toProblem.tnI.IsTotallyOrdered
   rw [toProblem_detDesc hp]
-  exact (appendLast_isTotallyOrdered_iff (toProblem_wf' p).tnI (goalId_not_mem_T p)).symm
+  exact (appendLast_isTotallyOrdered_iff (goalId_not_mem_T p)).symm
 
 theorem matches_TO : Matches (fun P => P.IsTO) FClass.TO := by
   intro p hp

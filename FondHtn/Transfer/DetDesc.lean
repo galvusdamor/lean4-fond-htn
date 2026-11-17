@@ -27,9 +27,9 @@ theorem le_foldr_maxStep {l : List ℕ} {x : ℕ} (h : x ∈ l) : x ≤ l.foldr 
   | cons y l ih =>
     simp only [List.foldr_cons, maxStep]
     rcases List.mem_cons.1 h with rfl | h
-    · by_cases hy : x < l.foldr maxStep 0 <;> simp [hy] <;> omega
+    · by_cases hy : x < l.foldr maxStep 0 <;> (simp [hy]; try omega)
     · have := ih h
-      by_cases hy : y < l.foldr maxStep 0 <;> simp [hy] <;> omega
+      by_cases hy : y < l.foldr maxStep 0 <;> (simp [hy]; try omega)
 
 theorem lt_freshOf {l : List ℕ} {x : ℕ} (h : x ∈ l) : x < freshOf l :=
   Nat.lt_succ_of_le (le_foldr_maxStep h)
@@ -46,7 +46,7 @@ theorem pt_freshOf {α : Type} [BEnc α] {f : α → List ℕ} (hf : PT f) :
       (PT.fst.comp PT.snd)
   · have := (sz_le_of_mem hb).trans (hl' a)
     unfold maxStep
-    by_cases hbs : b < s <;> simp [hbs] <;> omega
+    by_cases hbs : b < s <;> (simp [hbs]; try omega)
 
 /-- The FOND version of a deterministic action description. -/
 def detAct (a : ActDesc) : FActDesc := (a.1, a.2.1, a.2.2.1, [(a.2.2.2.1, a.2.2.2.2)])
@@ -225,7 +225,7 @@ theorem appendDesc_toTaskNetwork {prim : ℕ → Prop} {t : TnDesc} (h : TnValid
         simp only [List.lookup]; split <;> simp_all
       rw [this, Option.or_none, if_neg hx]
 
-theorem detDesc_δ {p : ProbDesc} (hp : p.Valid) (a : ℕ) :
+theorem detDesc_δ (p : ProbDesc) (a : ℕ) :
     (detDesc p).δ a = (detFond p.toProblem (goalId p) (goalName p)).δ a := by
   simp only [FProbDesc.δ, detFond, ProbDesc.toProblem, ProbDesc.δ]
   have hfind : ((detDesc p).actions.find? fun x => x.name == a) =
@@ -269,7 +269,7 @@ theorem toProblem_detDesc {p : ProbDesc} (hp : p.Valid) :
       p.tnI.toTaskNetwork.appendLast (goalId p) (goalName p) :=
     appendDesc_toTaskNetwork hv (goalId_not_mem p) hg
   have hδ : (detDesc p).δ = (detFond p.toProblem (goalId p) (goalName p)).δ :=
-    funext (detDesc_δ hp)
+    funext (detDesc_δ p)
   unfold FProbDesc.toProblem
   rw [hδ, htn]
   rfl
