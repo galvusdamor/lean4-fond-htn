@@ -76,8 +76,9 @@ FOND-specific lower bounds:
 | CB21 Thm 4.7: strong LD for PRIM, ACYC(∩TO), REG(∩TO), TR(∩TO), TO, REG∩ACYC∩TO complete | ✅ `FondHtn/Upper/StrongMem.lean` |
 | CB21 Cor 4.8: TO strong OD complete; PRIM∩TO strong LD/OD ∈ P | ✅ `StrongMem.lean`, `FondHtn/Prim/StrongP.lean` |
 | CB22 Prop 2 consequences: MP weak for PRIM(∩TO), ACYC(∩TO), REG(∩TO), TR(∩TO), TO complete | ✅ `FondHtn/MP/WeakComplexity.lean`, `WeakReg.lean` |
-| CB21 Thm 5.1: PRIM strong OD ∈ PSPACE | ⬜ |
-| CB21 Thm 5.2 / 5.3: ACYC / REG strong OD ∈ EXPSPACE | ⬜ |
+| CB21 Thm 5.1: PRIM strong OD ∈ PSPACE | ✅ `FondHtn/StrongOD/Prim.lean` |
+| CB21 Thm 5.2: ACYC strong OD ∈ EXPSPACE | ✅ `FondHtn/StrongOD/Acyc.lean` |
+| CB21 Thm 5.3: REG strong OD ∈ EXPSPACE | ⬜ (published argument needs tn_I regular (REGtn); needs a sequential-composition lemma and a search tool with EXPSPACE-decidable steps) |
 | CB21 Thm 3.1: semi-decidability (weak LD/OD, strong LD, MP weak) | ✅ `FondHtn/Upper/SemiDec.lean`; strong OD ⬜ |
 | CB22 Thms 1, 3, 4: MP strong ∈ EXPTIME (ACYC∩TO, REG(∩TO), TR∩TO) | ✅ `FondHtn/MPStrong/Mem.lean` (hardness ⏳) |
 | CB22 Thms 2, 5: MP strong ACYC ∈ EXPSPACE, TR ∈ 2-EXPTIME | ✅ `FondHtn/MPStrong/Acyc.lean`, `TR.lean` (hardness ⬜) |
