@@ -48,6 +48,7 @@ strong cyclic definition of CB22, which does not collapse on recursive determini
 | ACYC (∩ TOtn) | NEXPTIME | `hard_ACYC_*` |
 | TR (∩ TOtn) | EXPSPACE | `hard_TR_*` |
 | UNRES | undecidable | `undecidable_fm`, `undecidable_mp` |
+| REGtn (∩ TO) (CB21 regular: tn_I regular too) | PSPACE, all FM criteria, MP weak/strong, fair | `FondHtn/RegTn/Hard.lean` (direct STRIPS reduction, goal checked by a terminal method); PSPACE-complete for weak LD/OD, strong LD, MP weak |
 
 FOND-specific lower bounds:
 

@@ -427,7 +427,9 @@ proof route and the gaps in the published proofs.
   classes. Appending a primitive task preserves acyclicity, tail-recursion, regularity in the
   sense of Bercher et al.\ and total order (\lean{Transfer/Classes.lean}), but not regularity of
   $\tnI$. Hence the inherited PSPACE lower bound for regular problems is proved for
-  \lean{FClass.REG}, not yet for \lean{FClass.REGtn}.
+  \lean{FClass.REG} by inheritance; for \lean{FClass.REGtn} it is proved by a direct reduction
+  from STRIPS in which the goal is checked by a terminal method $c\to g$ instead of a state goal
+  (\lean{RegTn/Hard.lean}).
 \end{deviation}
 
 \begin{deviation}[Strong cyclic solutions and lower bounds]

@@ -60,3 +60,5 @@ import FondHtn.Alt.Buchi
 import FondHtn.MPStrong.CyclicGame
 import FondHtn.MPStrong.CyclicAcyc
 import FondHtn.MPStrong.CyclicDesc
+import FondHtn.RegTn.Desc
+import FondHtn.RegTn.Hard
