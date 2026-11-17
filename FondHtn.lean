@@ -28,3 +28,4 @@ import FondHtn.Prim.WeakHard
 import FondHtn.Prim.StrongP
 import FondHtn.MP.StrongCyclic
 import FondHtn.Weak.Reg
+import FondHtn.Alt.ExpTime
