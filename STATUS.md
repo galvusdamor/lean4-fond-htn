@@ -85,5 +85,6 @@ FOND-specific lower bounds:
 | CB22 Thms 1, 3, 4: MP strong ∈ EXPTIME (ACYC∩TO, REG(∩TO), TR∩TO) | ✅ `FondHtn/MPStrong/Mem.lean` (hardness ⏳) |
 | CB22 Thms 1–5 for **fair** strong cyclic: ACYC∩TO, REG(∩TO), TR∩TO ∈ EXPTIME, ACYC ∈ EXPSPACE (fair = strong on ACYC), TR ∈ 2-EXPTIME; G8 holds for the fair reading | ✅ `FondHtn/MPStrong/Cyclic*.lean`, `FondHtn/Alt/Buchi.lean` (hardness ⬜) |
 | CB22 Thms 2, 5: MP strong ACYC ∈ EXPSPACE, TR ∈ 2-EXPTIME | ✅ `FondHtn/MPStrong/Acyc.lean`, `TR.lean` (hardness ⬜) |
+| CB22 arbitrary PO: MP weak and strong semi-decidable and undecidable | ✅ `FondHtn/MPSemi/Strong.lean` (`mp_weak_strong_semi_undec`); fair: open, `doc/notes_fair_semidec.md` |
 | ideas: TO MP strong ∈ 2-EXPTIME | ✅ `strongMP_TO_mem` (`FondHtn/MPStrong/TOGame.lean`, `TODesc.lean`; rank argument = sequential composition) |
 | ideas: TO MP fair strong cyclic ∈ 2-EXPTIME | ❓ table fails (counterexamples, `doc/notes_to_fair.md`); fair composition proved (`FondHtn/MPStrong/TOFair.lean`); characterisation open (`doc/notes_to_fair_2.md`) |

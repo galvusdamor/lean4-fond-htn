@@ -93,3 +93,4 @@ import FondHtn.MPStrong.TOGame
 import FondHtn.MPStrong.TODesc
 import FondHtn.StrongOD.SemiDec
 import FondHtn.MPStrong.TOFair
+import FondHtn.MPSemi.Strong
