@@ -1,0 +1,260 @@
+\documentclass[manuscript, screen]{jair}
+
+\setcopyright{none}
+\acmDOI{}
+\JAIRAE{}
+\JAIRTrack{}
+\acmVolume{}
+\acmArticle{}
+\acmMonth{11}
+\acmYear{2026}
+
+\RequirePackage[
+  datamodel=acmdatamodel,
+  style=acmauthoryear,
+  backend=biber,
+  giveninits=true,
+  uniquename=init
+  ]{biblatex}
+\renewcommand*{\bibopenbracket}{(}
+\renewcommand*{\bibclosebracket}{)}
+\addbibresource{references.bib}
+
+\usepackage{tabularx}
+
+\newcommand{\lean}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\tnI}{\mathit{tn}_I}
+\newcommand{\sI}{s_I}
+\newcommand{\tn}{\mathit{tn}}
+\newcommand{\pre}{\mathit{pre}}
+\newcommand{\eff}{\mathit{eff}}
+\newcommand{\FM}{\textsc{fond}\textsubscript{FM}}
+\newcommand{\MP}{\textsc{fond}\textsubscript{MP}}
+\newcommand{\CBa}{\textcite{chen:bercher:icaps-21}}
+\newcommand{\CBb}{\textcite{chen:bercher:icaps-22}}
+\newcommand{\DB}{\textcite{dekker:behnke:icaps-25}}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+\newtheorem{deviation}{Deviation}
+
+\begin{document}
+
+\title[FOND HTN Planning in Lean]{Where the Lean Formalisation of FOND HTN Planning Differs
+  from the Literature}
+
+\author{Gregor Behnke}
+\email{g.behnke@uva.nl}
+\affiliation{%
+  \institution{University of Amsterdam}
+  \city{Amsterdam}
+  \country{The Netherlands}}
+
+\renewcommand{\shortauthors}{Behnke}
+
+\begin{abstract}
+  We formalise fully observable nondeterministic (FOND) HTN planning in Lean~4 with Mathlib
+  \parencite{moura:ullrich:cade-21,mathlib:cpp-20}, covering the fixed-method solution criteria
+  of \CBa{} (weak and strong, linearisation- and outcome-dependent), the solvable belief states
+  of \DB{}, and the method-based policies of \CBb{} (weak, strong cyclic and strong). This report
+  lists every place where the formal definitions deviate from the papers and why, and documents
+  the formally proved relationships between the notions together with the deviations their
+  proofs required. All theorems depend only on the axioms \lean{propext},
+  \lean{Classical.choice} and \lean{Quot.sound}.
+\end{abstract}
+
+\maketitle
+
+\section{Overview}
+
+The development lives in the Lean library \lean{FondHtn} and builds on the deterministic HTN
+library \lean{HtnPlanning}, from which it takes task networks, methods, isomorphism of task
+networks, decomposition, progression and the structural problem classes. Its modules are:
+
+\begin{center}
+\begin{tabularx}{\linewidth}{@{}lL@{}}
+  \toprule
+  module & content \\
+  \midrule
+  \lean{FondHtn.Basic} & nondeterministic actions, domains, problems, problem classes \\
+  \lean{FondHtn.FixedMethods} & \CBa{}: LD and OD solutions; \DB{}: solvable belief states \\
+  \lean{FondHtn.FixedMethodsLemmas} & strong OD solutions $\Leftrightarrow$ solvable belief states \\
+  \lean{FondHtn.MethodPolicies} & \CBb{}: method-based policies and their solution criteria \\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+\noindent
+We refer to the three papers as [CB21], [CB22] and [DB25]. Section~\ref{sec:model} lists
+deviations in the common model, Section~\ref{sec:fm} those of the fixed-method criteria,
+Section~\ref{sec:mp} those of the method-based criteria, and Section~\ref{sec:results} the
+proved results.
+
+\section{The Common Model}\label{sec:model}
+
+\begin{deviation}[Negative preconditions]\label{dev:neg}
+  An action is a triple $(\Pi^+,\Pi^-,E)$ of a positive precondition, a negative precondition and
+  a set $E$ of effects $(\mathit{add},\mathit{del})$ (\lean{FOND.Action}), as in [DB25]. [CB21]
+  and [CB22] have positive preconditions only; their actions are the special case $\Pi^-=\emptyset$.
+  \emph{Reason:} the hardness constructions of [DB25] and of the planned work use negative
+  preconditions; the generalisation costs nothing.
+\end{deviation}
+
+\begin{deviation}[Well-formed actions]\label{dev:wf}
+  The papers implicitly assume that every action has finitely many and at least one effect
+  ($1 \le |\eff(a)| < \infty$). This is the separate predicate \lean{FOND.Action.WF} and part of
+  \lean{FOND.Problem.WF}; it is not built into the type. \emph{Consequence:} for an action without
+  effects, $\gamma(a,s)=\emptyset$. Belief-state solvability and strong OD solutions then hold
+  vacuously after executing $a$, whereas in the execution structure of [CB22] the node becomes
+  terminal (and hence fails unless it is a goal node). Under \lean{WF} the two readings agree.
+\end{deviation}
+
+\begin{deviation}[Types instead of finite sets]
+  Facts, primitive and compound task names and task identifiers are types \lean{F}, \lean{A},
+  \lean{C}, \lean{I}; states are arbitrary subsets of \lean{F}. Finiteness is to be imposed by
+  finite descriptions, as in \lean{HtnPlanning}. The action mapping $\delta$ is total on
+  \lean{A}, which plays the role of $N_P$.
+\end{deviation}
+
+\begin{deviation}[Fresh identifiers]\label{dev:fresh}
+  Decomposition (\lean{HTN.DecompStep}) inserts a well-formed copy of the method's network with
+  identifiers disjoint from the decomposed network. This exists only if enough identifiers are
+  available, so the notions involving decomposition are intended for an infinite type \lean{I};
+  theorems that need it assume \lean{[Infinite I]}.
+\end{deviation}
+
+\begin{deviation}[Problem classes]\label{dev:classes}
+  The classes primitive, totally ordered, regular, acyclic and tail-recursive
+  ([CB21, Defs.~2.14, 3.2--3.6], [CB22, Defs.~8--9]) depend only on $\tnI$ and the methods. They
+  are inherited from \lean{HtnPlanning} by applying its predicates to the \emph{skeleton}
+  (\lean{FOND.Problem.skeleton}), the deterministic problem with the same $\tnI$ and methods and
+  trivial actions. In \lean{HtnPlanning} the conditions on methods (total order, regularity, the
+  stratification conditions) are imposed only on methods \emph{reachable} from $\tnI$, whereas the
+  papers impose them on all methods. Unreachable methods can never be applied, so this does not
+  affect any solution notion; it only makes the classes slightly larger.
+\end{deviation}
+
+\section{Fixed Methods}\label{sec:fm}
+
+Achievable primitive task networks [CB21, Def.~2.5] and linearisation-dependent (LD) solutions
+[CB21, Def.~2.7] are formalised literally (\lean{AchievablePrimitive},
+\lean{IsWeakLDSolution}, \lean{IsStrongLDSolution}). The sets $S_i$ of Def.~2.7 are threaded
+through the recursion \lean{StrongExec}; weak executability guesses the outcomes
+(\lean{WeakExec}).
+
+\begin{deviation}[Outcome-dependent solutions]\label{dev:od}
+  Taken literally, [CB21, Defs.~2.9--2.11] do not express the intended notion:
+  \begin{itemize}
+    \item The execution structure $K=\langle Q,R\rangle$ of Def.~2.9 adds a state $s$ to $Q$
+      whenever $s$ lies in \emph{some} set executable by \emph{some} task set $T'$ with
+      $\pi(T',s)$ defined. The edges thus forget the history $T'$ along which $s$ was reached,
+      so an execution sequence may follow edges created for a different history.
+    \item By Def.~2.10 every prefix of an execution sequence is again an execution sequence. Hence
+      ``every execution sequence of $K$ is complete'' (strong OD, Def.~2.11) fails for every
+      policy of every non-trivial task network.
+  \end{itemize}
+  We formalise the intended semantics, which is also what the proofs of Props.~2.12, 2.13 and
+  2.15 use. A \emph{configuration} is a pair $(T',s)$ of executed tasks and current state
+  (\lean{FMConfig}). The policy gives a \emph{valid instruction} $t$ at $(T',s)$
+  (\lean{FMValid}) iff $\pi(T',s)=t$, $t\in T\setminus T'$, all $\prec$-predecessors of $t$ are
+  in $T'$, and $\alpha(t)$ is applicable in $s$. A step (\lean{FMStep}) executes a valid
+  instruction and moves to $(T'\cup\{t\},s')$ for any $s'\in\gamma(t,s)$. Then $\pi$ is a
+  \emph{strong} OD solution iff every configuration reachable from $(\emptyset,\sI)$ is complete
+  ($T'=T$) or has a valid instruction (\lean{StrongOD}), i.e.\ no run gets stuck; runs always
+  terminate since each step executes a new task. It is a \emph{weak} OD solution iff some
+  reachable configuration is complete (\lean{WeakOD}).
+\end{deviation}
+
+\begin{deviation}[Side condition of Def.~2.8]
+  [CB21, Def.~2.8] restricts the policy itself: $\langle(T',s),t\rangle\in\pi$ only if
+  $t\notin T'$ and no unexecuted task precedes $t$. We allow arbitrary partial functions
+  \lean{FMPolicy := Finset I → Set F → Option I} and check the condition during execution
+  (\lean{FMValid}); an instruction violating it makes the run stuck. Every policy in the sense of
+  the paper is one in our sense, and every policy in our sense can be restricted to its valid
+  instructions without changing its runs, so solution existence is unaffected.
+\end{deviation}
+
+\begin{deviation}[Belief states pointwise]
+  [DB25] defines solvability of a \emph{belief state}, a set of pairs $(\tn,S)$, as solvability
+  of all its members. We define solvability of a single pair (\lean{BeliefSolvable}) as an
+  inductive predicate; solvability of a set is then the conjunction over its members. The
+  recursion of [DB25] is well founded since $\tn\setminus t$ has fewer tasks, so the inductive
+  reading is the intended one.
+\end{deviation}
+
+\section{Method-Based Policies}\label{sec:mp}
+
+\begin{deviation}[Policies up to isomorphism]\label{dev:iso}
+  A policy of [CB22, Def.~5] is a partial function on pairs $(\tn,s)$ that is not defined on two
+  distinct isomorphic task networks for the same state; we formalise it as a partial function on
+  concrete task networks (\lean{MPPolicy}) with that condition (\lean{MPPolicy.WellDefined}).
+  Algorithm~1 looks up the instruction $(t,m)$ at an isomorphic entry $(\tn',s)$, but $t$ is then
+  a task of $\tn'$, not of $\tn$. We make the implicit transport explicit: the instruction at
+  $(\tn,s)$ is $(\sigma(t'),m)$ for an entry $\pi(\tn',s)=(t',m)$ with $t'\in\tn'$ and an
+  isomorphism $\sigma:\tn'\to\tn$ (\lean{MPInstr}). If $\tn$ has non-trivial automorphisms,
+  different $\sigma$ give different but automorphic tasks, whose successors are isomorphic.
+\end{deviation}
+
+\begin{deviation}[The quotient execution structure]\label{dev:quot}
+  [CB22, Def.~6] first builds the execution structure on concrete pairs and then takes the
+  quotient by isomorphism. We keep concrete nodes (\lean{MPNode}) and edges (\lean{MPStep}) and
+  express the properties of the quotient $[L]$ directly:
+  \begin{itemize}
+    \item $[L]$ is finite iff the reachable nodes fall into finitely many isomorphism classes
+      (\lean{MPFinite});
+    \item $[L]$ is acyclic iff no non-empty path leads from a reachable node to a node isomorphic
+      to it (\lean{MPAcyclic});
+    \item terminal and goal nodes are invariant under isomorphism and are used as is.
+  \end{itemize}
+  Decomposition has a successor for \emph{every} fresh copy of the method's network; all of them
+  are isomorphic and collapse in the quotient.
+\end{deviation}
+
+\begin{deviation}[Primitive tasks must be unconstrained]\label{dev:unc}
+  [CB22, Def.~6] creates an edge for an instruction $(t,\varepsilon)$ with $t$ primitive without
+  requiring that $t$ has no predecessors in $\tn$ (nor does Def.~5); the ordering of primitive
+  tasks would then be meaningless. The progression algorithm of [CB22, Alg.~2] only executes
+  tasks without predecessors. We require the executed task to be unconstrained
+  (\lean{MPStep.prim}). Compound tasks may be decomposed regardless of their position, exactly
+  as in Defs.~5--6.
+\end{deviation}
+
+\begin{deviation}[Ill-formed instructions]
+  [CB22, Def.~5] demands $m=\varepsilon$ for primitive and $m=(\alpha(t),\tn_m)\in M$ for compound
+  tasks. We allow any instruction; one violating this, or executing an inapplicable task, simply
+  has no successors, so the node is terminal (and fails unless it is a goal node). This agrees
+  with the paper's treatment of inapplicable tasks, for which $\gamma$ is undefined.
+\end{deviation}
+
+\begin{deviation}[Removing a task]
+  [CB22] writes $\tn\setminus t$ for the restriction of $\tn$ to $T\setminus\{t\}$. We use
+  progression \lean{HTN.TaskNetwork.progress} of \lean{HtnPlanning}, which removes $t$ and all
+  pairs $(t,t')$ from $\prec$ but may keep pairs $(t',t)$. As $t$ is unconstrained no such pair
+  with $t'\in T$ exists in a well-formed network, and in any case pairs involving tasks outside
+  the network are ignored by every notion considered here.
+\end{deviation}
+
+\begin{deviation}[Strong cyclic solutions]\label{dev:sc}
+  We formalise strong cyclic solutions exactly as [CB22, Def.~7] states them: every terminal
+  node of $[L]$ is a goal node (\lean{IsMPStrongCyclicSolution}). This admits executions that
+  never terminate, e.g.\ a policy that forever decomposes a recursive task, and differs from the
+  usual notion of \textcite{cimatti:et:al:aij-03} (from every reachable node some goal node is
+  reachable). The latter is provided for comparison as \lean{IsMPStrongCyclicFairSolution}. The
+  literal reading is the one assumed by the membership algorithm for totally ordered problems in
+  our notes, which uses triples $(c,s,\emptyset)$ for tasks that never finish.
+\end{deviation}
+
+\section{Proved Results}\label{sec:results}
+
+\paragraph{Strong OD solutions are solvable belief states.}
+For every primitive task network $\tn$, there is a policy that strongly executes $\tn$ in the
+sense of Deviation~\ref{dev:od} iff $(\tn,\sI)$ is a solvable belief state
+(\lean{FOND.Problem.strongOD_iff_beliefSolvable}). Hence strong OD plan existence of [CB21]
+coincides with plan existence of [DB25]
+(\lean{FOND.Problem.strongODSolvable_iff_fmSolvableDB}). This confirms that
+Deviation~\ref{dev:od} captures the intended notion. The policy constructed from a solvable
+belief state chooses, at each configuration, a task witnessing solvability of the remaining
+network.
+
+\printbibliography
+
+\end{document}
