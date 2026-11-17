@@ -25,11 +25,18 @@ conjecture (proof idea only).
 | weak compilation FOND → FOD [CB21 Lem 4.3] (preserves ACYC, TR, TO; not REG) | ✅ | `FondHtn/Weak/*.lean` |
 | strong LD compilation [CB21 Lem 4.6], repaired for negative preconditions (∩/∪ tracking) | ✅ | `FondHtn/Upper/StrongCompile.lean`, `StrongDesc.lean` |
 | negative preconditions compiled away | not needed (strong compilation handles them directly) | — |
+| AND-OR games over polynomial configurations ∈ EXPTIME | ✅ | `FondHtn/Alt/ExpTime.lean` |
+| bounded-depth AND-OR games ∈ PSPACE / EXPSPACE | ⏳ (in progress) | `FondHtn/Alt/Depth.lean` |
+| CB22 Prop 2: MP weak = FM weak (repetition-free path, G18) | ✅ | `FondHtn/MP/Weak.lean` |
+| strong cyclic: literal def. ≠ plan existence on deterministic problems; strong ⇒ fair; fair collapses | ✅ | `FondHtn/MP/StrongCyclic.lean`, `Fair.lean` |
+| delaying decompositions (G8), MP strong progression game | ⏳ (in progress) | `FondHtn/MPStrong/` |
 
 ## Lower bounds
 
-Inherited from deterministic HTN (✅ for all four FM criteria and for MP weak and strong; **not**
-for MP strong cyclic, which does not collapse on recursive deterministic problems):
+Inherited from deterministic HTN (✅ for all four FM criteria, for MP weak and strong, and for MP
+strong cyclic in the *fair* reading (`hardFair_*`, `FondHtn/MP/Fair.lean`); **not** for the literal
+strong cyclic definition of CB22, which does not collapse on recursive deterministic problems,
+`LoopEx.literal_not_planExistence`):
 
 | class | bound | Lean |
 | --- | --- | --- |
@@ -67,6 +74,7 @@ FOND-specific lower bounds:
 | CB21 Cor 4.5: REG (∩TO) weak LD/OD PSPACE-complete (via TR of height 2, new proof) | ✅ `FondHtn/Weak/Reg.lean` |
 | CB21 Thm 4.7: strong LD for PRIM, ACYC(∩TO), REG(∩TO), TR(∩TO), TO, REG∩ACYC∩TO complete | ✅ `FondHtn/Upper/StrongMem.lean` |
 | CB21 Cor 4.8: TO strong OD complete; PRIM∩TO strong LD/OD ∈ P | ✅ `StrongMem.lean`, `FondHtn/Prim/StrongP.lean` |
+| CB22 Prop 2 consequences: MP weak for PRIM(∩TO), ACYC(∩TO), REG(∩TO), TR(∩TO), TO complete | ✅ `FondHtn/MP/WeakComplexity.lean`, `WeakReg.lean` |
 | CB21 Thm 5.1: PRIM strong OD ∈ PSPACE | ⬜ |
 | CB21 Thm 5.2 / 5.3: ACYC / REG strong OD ∈ EXPSPACE | ⬜ |
 | CB21 Thm 3.1: semi-decidability | ⬜ |
