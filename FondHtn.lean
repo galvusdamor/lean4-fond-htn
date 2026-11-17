@@ -18,3 +18,5 @@ import FondHtn.Cx.Closure2
 import FondHtn.Upper.StrongCompile
 import FondHtn.Upper.StrongDesc
 import FondHtn.Upper.StrongMem
+import FondHtn.Weak.LabelMap
+import FondHtn.Weak.Compile
