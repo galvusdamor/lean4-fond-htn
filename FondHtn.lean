@@ -33,3 +33,4 @@ import FondHtn.MP.Weak
 import FondHtn.MP.WeakComplexity
 import FondHtn.MP.WeakReg
 import FondHtn.MP.Fair
+import FondHtn.Upper.SemiDec

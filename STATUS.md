@@ -77,6 +77,6 @@ FOND-specific lower bounds:
 | CB22 Prop 2 consequences: MP weak for PRIM(∩TO), ACYC(∩TO), REG(∩TO), TR(∩TO), TO complete | ✅ `FondHtn/MP/WeakComplexity.lean`, `WeakReg.lean` |
 | CB21 Thm 5.1: PRIM strong OD ∈ PSPACE | ⬜ |
 | CB21 Thm 5.2 / 5.3: ACYC / REG strong OD ∈ EXPSPACE | ⬜ |
-| CB21 Thm 3.1: semi-decidability | ⬜ |
+| CB21 Thm 3.1: semi-decidability (weak LD/OD, strong LD, MP weak) | ✅ `FondHtn/Upper/SemiDec.lean`; strong OD ⬜ |
 | CB22 Thms 1–5: MP strong ∈ EXPTIME / EXPSPACE / 2-EXPTIME | ⬜ (alternating search; 2-EXPTIME not yet defined) |
 | ideas: TO MP strong ∈ 2-EXPTIME | ❓ (rank argument missing) |
