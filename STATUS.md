@@ -56,10 +56,10 @@ FOND-specific lower bounds:
 | --- | --- |
 | CB21 Thm 4.1: PRIM ∩ TO weak NP-hard (SAT) | ✅ `weakLD_PRIM_TO_complete` (`FondHtn/Prim/WeakHard.lean`) |
 | CB21 Thm 5.1: PRIM (PO) strong OD PSPACE-hard | ✅ repaired via TQBF (TQBF PSPACE-hard from STRIPS by Savitch), `FondHtn/QBF/`; complete: `strongOD_PRIM_complete` |
-| CB22 Thm 1: ACYC ∩ TO MP strong EXPTIME-hard | ⚠ incomplete (no acceptance check) ⬜ |
+| CB22 Thm 1: ACYC ∩ TO MP strong EXPTIME-hard | ✅ new reduction from TO HTN (path game on the DP table), `FondHtn/HardMP/`; EXPTIME-complete `strongMP_ACYC_TO_complete` (also fair) |
 | CB22 Thm 2: ACYC MP strong EXPSPACE-hard | ⚠ sketch only ⬜ |
-| CB22 Thm 3: REG MP strong EXPTIME-hard (from FOND planning) | ⬜ (needs FOND STRIPS EXPTIME-hardness) |
-| CB22 Thm 4: TR ∩ TO MP strong EXPTIME-hard | ⬜ |
+| CB22 Thm 3: REG (∩TO) MP strong EXPTIME-hard | ✅ from TO HTN (not FOND planning); complete `strongMP_REG_complete`, `strongMP_REG_TO_complete` |
+| CB22 Thm 4: TR ∩ TO MP strong EXPTIME-hard | ✅ complete `strongMP_TR_TO_complete` |
 | CB22 Thm 5: TR MP strong 2-EXPTIME-hard | ⚠ sketch only; class 2-EXPTIME not yet defined ⬜ |
 | DB25 Thm 1: chosen-length games EXPSPACE-complete | ⬜ (large; STRIPS gadgets unspecified) |
 | DB25 Thm 4/5: REG FM strong OD EXPSPACE-hard | ⬜ |

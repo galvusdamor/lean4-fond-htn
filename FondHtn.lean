@@ -62,3 +62,14 @@ import FondHtn.MPStrong.CyclicAcyc
 import FondHtn.MPStrong.CyclicDesc
 import FondHtn.RegTn.Desc
 import FondHtn.RegTn.Hard
+import FondHtn.HardMP.ListGame
+import FondHtn.HardMP.Bridge
+import FondHtn.HardMP.Encoding
+import FondHtn.HardMP.Rounds
+import FondHtn.HardMP.Desc
+import FondHtn.HardMP.Sem
+import FondHtn.HardMP.Main
+import FondHtn.HardMP.Classes
+import FondHtn.HardMP.PT
+import FondHtn.HardMP.Final
+import FondHtn.HardMP.Complete
