@@ -82,3 +82,10 @@ import FondHtn.StrongOD.RegSearch
 import FondHtn.StrongOD.RegSound
 import FondHtn.StrongOD.RegComplete
 import FondHtn.StrongOD.Reg
+import FondHtn.HardMP.FairBridge
+import FondHtn.HardMP.DescC
+import FondHtn.HardMP.ClassesC
+import FondHtn.HardMP.SemC
+import FondHtn.HardMP.MainC
+import FondHtn.HardMP.FairC
+import FondHtn.HardMP.FairTR
