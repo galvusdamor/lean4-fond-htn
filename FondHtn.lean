@@ -21,3 +21,8 @@ import FondHtn.Upper.StrongMem
 import FondHtn.Weak.LabelMap
 import FondHtn.Weak.Compile
 import FondHtn.Weak.Desc
+import FondHtn.Weak.Classes
+import FondHtn.Weak.Mem
+import FondHtn.Prim.WeakMem
+import FondHtn.Prim.WeakHard
+import FondHtn.Prim.StrongP

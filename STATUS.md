@@ -21,10 +21,10 @@ conjecture (proof idea only).
 | goal elimination, `detDesc` (poly time, exact denotation) | ✅ | `FondHtn/Transfer/DetFond.lean`, `DetDesc.lean` |
 | class preservation | ✅ | `FondHtn/Transfer/Classes.lean` |
 | reductions `PlanEx Y ≤ₚ PlanExFM c Y'`, `≤ₚ PlanExMP c Y'` | ✅ | `FondHtn/Hardness/FromDet.lean` |
-| closure of complexity classes under `≤ₚ` (for memberships via compilation) | ⬜ | — |
-| weak compilation FOND → FOD [CB21 Lem 4.3] | ⬜ | — |
-| strong LD compilation [CB21 Lem 4.6] | ⬜ | — |
-| negative preconditions compiled away | ⬜ (needed only if a source uses positive-only actions) | — |
+| closure of complexity classes under `≤ₚ` (P, NP, PSPACE, EXPTIME, NEXPTIME, EXPSPACE) | ✅ | `FondHtn/Cx/Closure.lean`, `Closure2.lean` |
+| weak compilation FOND → FOD [CB21 Lem 4.3] (preserves ACYC, TR, TO; not REG) | ✅ | `FondHtn/Weak/*.lean` |
+| strong LD compilation [CB21 Lem 4.6], repaired for negative preconditions (∩/∪ tracking) | ✅ | `FondHtn/Upper/StrongCompile.lean`, `StrongDesc.lean` |
+| negative preconditions compiled away | not needed (strong compilation handles them directly) | — |
 
 ## Lower bounds
 
@@ -45,7 +45,7 @@ FOND-specific lower bounds:
 
 | result | status |
 | --- | --- |
-| CB21 Thm 4.1: PRIM ∩ TO weak NP-hard (SAT) | ⬜ |
+| CB21 Thm 4.1: PRIM ∩ TO weak NP-hard (SAT) | ✅ `weakLD_PRIM_TO_complete` (`FondHtn/Prim/WeakHard.lean`) |
 | CB21 Thm 5.1: PRIM (PO) strong OD PSPACE-hard | ⚠ published reduction wrong (catalogue G9); re-prove from TQBF ⬜ |
 | CB22 Thm 1: ACYC ∩ TO MP strong EXPTIME-hard | ⚠ incomplete (no acceptance check) ⬜ |
 | CB22 Thm 2: ACYC MP strong EXPSPACE-hard | ⚠ sketch only ⬜ |
@@ -62,10 +62,11 @@ FOND-specific lower bounds:
 
 | result | status |
 | --- | --- |
-| CB21 Cor 4.2 / CB22 Prop 2: PRIM weak ∈ NP | ⬜ |
-| CB21 Thm 4.4 / Cor 4.5: weak ∈ FOD class (via Lem 4.3) | ⬜ |
-| CB21 Thm 4.7: strong LD ∈ FOD class (via Lem 4.6) | ⬜ |
-| CB21 Cor 4.8: TO strong OD | ⬜ (Prop 2.15 ✅ + Thm 4.7) |
+| CB21 Cor 4.2: PRIM weak ∈ NP (NP-complete) | ✅ `weakLD_PRIM_complete`, `weakOD_PRIM_complete` |
+| CB21 Thm 4.4: weak LD/OD for ACYC, ACYC∩TO, TR, TR∩TO, TO complete | ✅ `FondHtn/Weak/Mem.lean` |
+| CB21 Cor 4.5: REG weak ∈ PSPACE | ⬜ (compilation breaks regularity) |
+| CB21 Thm 4.7: strong LD for PRIM, ACYC(∩TO), REG(∩TO), TR(∩TO), TO, REG∩ACYC∩TO complete | ✅ `FondHtn/Upper/StrongMem.lean` |
+| CB21 Cor 4.8: TO strong OD complete; PRIM∩TO strong LD/OD ∈ P | ✅ `StrongMem.lean`, `FondHtn/Prim/StrongP.lean` |
 | CB21 Thm 5.1: PRIM strong OD ∈ PSPACE | ⬜ |
 | CB21 Thm 5.2 / 5.3: ACYC / REG strong OD ∈ EXPSPACE | ⬜ |
 | CB21 Thm 3.1: semi-decidability | ⬜ |
