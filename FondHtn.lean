@@ -13,3 +13,5 @@ import FondHtn.Transfer.DetFond
 import FondHtn.Transfer.Classes
 import FondHtn.Transfer.DetDesc
 import FondHtn.Hardness.FromDet
+import FondHtn.Cx.Closure
+import FondHtn.Cx.Closure2
