@@ -64,7 +64,7 @@ FOND-specific lower bounds:
 | CB22 Thm 5: TR MP strong 2-EXPTIME-hard | ⚠ sketch only; class 2-EXPTIME not yet defined ⬜ |
 | DB25 Thm 1: chosen-length games EXPSPACE-complete | ⬜ (large; STRIPS gadgets unspecified) |
 | DB25 Thm 4/5: REG FM strong OD EXPSPACE-hard | ⬜ |
-| ideas: PCP, TR FM strong OD undecidable | ❓ |
+| ideas: PCP, TR/Bercher-REG FM strong OD undecidable | ❓ sketch does not work with STRIPS-style FOND actions (inactive mode's checks cannot be freed); no PCP in library — `doc/notes_pcp_strongOD.md`; needs the author's input |
 | ideas: counters, ACYC EXPSPACE-hard / TR 2-EXPTIME-hard | ❓ |
 | ideas: TO MP strong 2-EXPTIME-hard | ❓ |
 
