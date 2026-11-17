@@ -117,3 +117,5 @@ import FondHtn.DB25.PTOps
 import FondHtn.DB25.PTBuild
 import FondHtn.DB25.Hard
 import FondHtn.DB25.Complete
+import FondHtn.HardTR.WGame
+import FondHtn.HardTR.Round
