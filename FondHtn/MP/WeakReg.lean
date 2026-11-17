@@ -4,6 +4,8 @@ import FondHtn.Weak.Reg
 
 namespace FOND
 
+open HTN
+
 theorem weakMP_REG_complete : Cx.Complete Cx.PSPACE (PlanExMP .weak FClass.REG) := by
   rw [planExMP_weak_eq]; exact weakLD_REG_complete
 
