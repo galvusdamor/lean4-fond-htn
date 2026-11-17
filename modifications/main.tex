@@ -436,6 +436,64 @@ proof route and the gaps in the published proofs.
   coincide with deterministic solvability and the deterministic lower bounds are not inherited.
   The lower bounds claimed for strong cyclic solutions in [CB22] therefore depend on reading
   Def.~7 with a reachability (fairness) condition.
+
+  We formalise both readings. \lean{LoopEx.literal_not_planExistence} is a deterministic
+  problem with the single method $c\to c$: it has no plan (no primitive network is reachable),
+  but the policy that always decomposes is a literal strong cyclic solution. For the fair reading
+  (from every reachable node a goal node is reachable) every strong solution is a fair strong
+  cyclic solution (\lean{IsMPStrongSolution.fair}, using finiteness and acyclicity), and a fair
+  solution yields a weak plan (\lean{weakLDSolvable_of_fair}). Hence on deterministic problems
+  fair strong cyclic solvability is plan existence (\lean{detDesc_fair_iff}) and all
+  deterministic lower bounds hold for it (\lean{hardFair_*}). Upper bounds for strong cyclic
+  solutions are stated for the fair reading.
+\end{deviation}
+
+\begin{deviation}[Closure of complexity classes]
+  Memberships by compilation need $L\le_p L'\wedge L'\in\mathcal C\Rightarrow L\in\mathcal C$,
+  which the deterministic library does not state. We prove it for P, NP, PSPACE, EXPTIME
+  (\lean{Cx/Closure.lean}) and for the machine-defined NEXPTIME and EXPSPACE by going through
+  complete problems whose membership proofs are verifiers (resp.\ searches) in the polynomial-time
+  calculus: $L\le_p L'\le_p \mathrm{PlanEx}^{\mathrm{ACYC}\cap\mathrm{TO}\text{-}t_I}$ (resp.\
+  $\mathrm{TAIL}\text{-}\mathrm{REC}\cap\mathrm{TO}\text{-}t_I$), and the verifier (search)
+  with the reduction prepended (\lean{Cx/Closure2.lean}).
+\end{deviation}
+
+\begin{deviation}[Strong LD compilation, CB21 Lemma 4.6]
+  The deterministic run of [CB21, Lemma 4.6] tracks the intersection $\bigcap S_i$ of the belief
+  state. This is incorrect for negative preconditions, which must hold in every state of $S_i$.
+  We track the intersection and the union on two copies of the facts: an action is applicable
+  in all states of $S$ iff its positive precondition is in $\bigcap S$ and its negative
+  precondition is disjoint from $\bigcup S$, and both sets evolve by STRIPS effects
+  ($\mathit{add}_\cap=\bigcap_e\mathit{add}_e$, $\mathit{del}_\cap=\{f\mid\exists e\colon f\in
+  \mathit{del}_e\setminus\mathit{add}_e\}$, $\mathit{add}_\cup=\bigcup_e\mathit{add}_e$,
+  $\mathit{del}_\cup=\bigcap_e\mathit{del}_e$; \lean{Upper/StrongCompile.lean}). Methods and task
+  networks are unchanged, so every class is preserved literally, which gives [CB21, Thm.~4.7]
+  for all classes and, with Prop.~2.15, Cor.~4.8.
+\end{deviation}
+
+\begin{deviation}[Weak compilation, CB21 Lemma 4.3]
+  As in the paper, every primitive task $a$ becomes a compound task $c_a$ with a method
+  $c_a\to(a,e)$ per effect. The correctness proof (\lean{Weak/Compile.lean}) projects
+  decompositions of the compiled problem back along a label map, treating the new methods as
+  ``silent'' steps that only rename a task, up to isomorphism. The compilation preserves
+  acyclicity, tail recursion and total order (\lean{Weak/Classes.lean}; the new names form the
+  lowest strata), but not regularity.
+\end{deviation}
+
+\begin{deviation}[Regular weak problems, CB21 Cor.~4.5]
+  The argument of the paper is only sketched. We use instead that regular problems are the
+  tail-recursive problems of height $1$, that the weak compilation of such a problem is
+  tail-recursive of height $2$, and that plan existence for tail-recursive problems of bounded
+  height is in PSPACE. Regularity is decided in polynomial time, so non-regular inputs are
+  filtered out (\lean{Weak/Reg.lean}).
+\end{deviation}
+
+\begin{deviation}[Weak method-based policies, CB22 Prop.~2]
+  From a weak plan the paper builds a policy along a path of nodes, without noting that the
+  policy must be well defined on isomorphic nodes. We use a path of minimal length, whose nodes
+  are pairwise non-isomorphic. Since instructions are transported along all isomorphisms
+  (including automorphisms) the execution structure is larger than the path; it is still finite
+  (\lean{MP/Weak.lean}).
 \end{deviation}
 
 \begin{deviation}[Published proofs that need repair]
