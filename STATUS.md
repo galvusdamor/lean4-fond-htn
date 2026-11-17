@@ -26,10 +26,11 @@ conjecture (proof idea only).
 | strong LD compilation [CB21 Lem 4.6], repaired for negative preconditions (∩/∪ tracking) | ✅ | `FondHtn/Upper/StrongCompile.lean`, `StrongDesc.lean` |
 | negative preconditions compiled away | not needed (strong compilation handles them directly) | — |
 | AND-OR games over polynomial configurations ∈ EXPTIME | ✅ | `FondHtn/Alt/ExpTime.lean` |
-| bounded-depth AND-OR games ∈ PSPACE / EXPSPACE | ⏳ (in progress) | `FondHtn/Alt/Depth.lean` |
+| bounded-depth AND-OR games ∈ PSPACE / EXPSPACE | ✅ | `FondHtn/Alt/Depth.lean` |
+| 2-EXPTIME (padding) and AND-OR games over exponential configurations ∈ 2-EXPTIME | ✅ | `FondHtn/Cx/Exp2.lean` |
 | CB22 Prop 2: MP weak = FM weak (repetition-free path, G18) | ✅ | `FondHtn/MP/Weak.lean` |
 | strong cyclic: literal def. ≠ plan existence on deterministic problems; strong ⇒ fair; fair collapses | ✅ | `FondHtn/MP/StrongCyclic.lean`, `Fair.lean` |
-| delaying decompositions (G8), MP strong progression game | ⏳ (in progress) | `FondHtn/MPStrong/` |
+| delaying decompositions (G8), MP strong progression game | ✅ | `FondHtn/MPStrong/Prog.lean`, `Game.lean` |
 
 ## Lower bounds
 
@@ -78,5 +79,6 @@ FOND-specific lower bounds:
 | CB21 Thm 5.1: PRIM strong OD ∈ PSPACE | ⬜ |
 | CB21 Thm 5.2 / 5.3: ACYC / REG strong OD ∈ EXPSPACE | ⬜ |
 | CB21 Thm 3.1: semi-decidability (weak LD/OD, strong LD, MP weak) | ✅ `FondHtn/Upper/SemiDec.lean`; strong OD ⬜ |
-| CB22 Thms 1–5: MP strong ∈ EXPTIME / EXPSPACE / 2-EXPTIME | ⬜ (alternating search; 2-EXPTIME not yet defined) |
+| CB22 Thms 1, 3, 4: MP strong ∈ EXPTIME (ACYC∩TO, REG(∩TO), TR∩TO) | ✅ `FondHtn/MPStrong/Mem.lean` (hardness ⏳) |
+| CB22 Thms 2, 5: MP strong ACYC ∈ EXPSPACE, TR ∈ 2-EXPTIME | ⏳ |
 | ideas: TO MP strong ∈ 2-EXPTIME | ❓ (rank argument missing) |

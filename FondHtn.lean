@@ -36,3 +36,6 @@ import FondHtn.MP.Fair
 import FondHtn.Upper.SemiDec
 import FondHtn.Alt.Depth
 import FondHtn.Cx.Exp2
+import FondHtn.MPStrong.Prog
+import FondHtn.MPStrong.Game
+import FondHtn.MPStrong.Mem
