@@ -28,6 +28,7 @@ conjecture (proof idea only).
 | AND-OR games over polynomial configurations ∈ EXPTIME | ✅ | `FondHtn/Alt/ExpTime.lean` |
 | bounded-depth AND-OR games ∈ PSPACE / EXPSPACE | ✅ | `FondHtn/Alt/Depth.lean` |
 | 2-EXPTIME (padding) and AND-OR games over exponential configurations ∈ 2-EXPTIME | ✅ | `FondHtn/Cx/Exp2.lean` |
+| alternating sources: EXPSPACE = Savitch game (`expspace_savWin`), 2-EXPTIME = CKS tableau game (`exptime2_tabWin`) | ✅ | `FondHtn/ATM/`, `doc/notes_atm.md` |
 | CB22 Prop 2: MP weak = FM weak (repetition-free path, G18) | ✅ | `FondHtn/MP/Weak.lean` |
 | strong cyclic: literal def. ≠ plan existence on deterministic problems; strong ⇒ fair; fair collapses | ✅ | `FondHtn/MP/StrongCyclic.lean`, `Fair.lean` |
 | delaying decompositions (G8), MP strong progression game | ✅ | `FondHtn/MPStrong/Prog.lean`, `Game.lean` |
