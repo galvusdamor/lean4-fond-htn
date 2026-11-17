@@ -89,3 +89,5 @@ import FondHtn.HardMP.SemC
 import FondHtn.HardMP.MainC
 import FondHtn.HardMP.FairC
 import FondHtn.HardMP.FairTR
+import FondHtn.MPStrong.TOGame
+import FondHtn.MPStrong.TODesc
