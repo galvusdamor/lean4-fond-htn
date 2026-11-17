@@ -26,3 +26,4 @@ import FondHtn.Weak.Mem
 import FondHtn.Prim.WeakMem
 import FondHtn.Prim.WeakHard
 import FondHtn.Prim.StrongP
+import FondHtn.MP.StrongCyclic
