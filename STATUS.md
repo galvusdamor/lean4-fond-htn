@@ -64,7 +64,7 @@ FOND-specific lower bounds:
 | --- | --- |
 | CB21 Cor 4.2: PRIM weak ∈ NP (NP-complete) | ✅ `weakLD_PRIM_complete`, `weakOD_PRIM_complete` |
 | CB21 Thm 4.4: weak LD/OD for ACYC, ACYC∩TO, TR, TR∩TO, TO complete | ✅ `FondHtn/Weak/Mem.lean` |
-| CB21 Cor 4.5: REG weak ∈ PSPACE | ⬜ (compilation breaks regularity) |
+| CB21 Cor 4.5: REG (∩TO) weak LD/OD PSPACE-complete (via TR of height 2, new proof) | ✅ `FondHtn/Weak/Reg.lean` |
 | CB21 Thm 4.7: strong LD for PRIM, ACYC(∩TO), REG(∩TO), TR(∩TO), TO, REG∩ACYC∩TO complete | ✅ `FondHtn/Upper/StrongMem.lean` |
 | CB21 Cor 4.8: TO strong OD complete; PRIM∩TO strong LD/OD ∈ P | ✅ `StrongMem.lean`, `FondHtn/Prim/StrongP.lean` |
 | CB21 Thm 5.1: PRIM strong OD ∈ PSPACE | ⬜ |
