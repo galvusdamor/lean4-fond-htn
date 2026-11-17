@@ -3,3 +3,4 @@ import FondHtn.FixedMethods
 import FondHtn.MethodPolicies
 import FondHtn.FixedMethodsLemmas
 import FondHtn.FixedMethodsRelations
+import FondHtn.Examples
