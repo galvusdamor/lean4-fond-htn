@@ -65,7 +65,7 @@ FOND-specific lower bounds:
 | DB25 Thm 1: chosen-length games EXPSPACE-complete | ⬜ (large; STRIPS gadgets unspecified) |
 | DB25 Thm 4/5: REG FM strong OD EXPSPACE-hard | ⬜ |
 | ideas: PCP, TR/Bercher-REG FM strong OD undecidable | ❓ sketch does not work with STRIPS-style FOND actions (inactive mode's checks cannot be freed); no PCP in library — `doc/notes_pcp_strongOD.md`; needs the author's input |
-| ideas: counters, ACYC EXPSPACE-hard / TR 2-EXPTIME-hard | ❓ |
+| ideas: counters, ACYC EXPSPACE-hard / TR 2-EXPTIME-hard | ❓ construction and missing pieces (ATM source EXPSPACE ⊆ AEXPTIME, parallel-chain semantics) in `doc/notes_acyc_strongOD.md` |
 | ideas: TO MP strong 2-EXPTIME-hard | ❓ |
 
 ## Upper bounds
@@ -86,4 +86,4 @@ FOND-specific lower bounds:
 | CB22 Thms 1–5 for **fair** strong cyclic: ACYC∩TO, REG(∩TO), TR∩TO ∈ EXPTIME, ACYC ∈ EXPSPACE (fair = strong on ACYC), TR ∈ 2-EXPTIME; G8 holds for the fair reading | ✅ `FondHtn/MPStrong/Cyclic*.lean`, `FondHtn/Alt/Buchi.lean` (hardness ⬜) |
 | CB22 Thms 2, 5: MP strong ACYC ∈ EXPSPACE, TR ∈ 2-EXPTIME | ✅ `FondHtn/MPStrong/Acyc.lean`, `TR.lean` (hardness ⬜) |
 | ideas: TO MP strong ∈ 2-EXPTIME | ✅ `strongMP_TO_mem` (`FondHtn/MPStrong/TOGame.lean`, `TODesc.lean`; rank argument = sequential composition) |
-| ideas: TO MP fair strong cyclic ∈ 2-EXPTIME | ❓ table fails (counterexamples, `doc/notes_to_fair.md`); needs pushdown-Büchi summaries |
+| ideas: TO MP fair strong cyclic ∈ 2-EXPTIME | ❓ table fails (counterexamples, `doc/notes_to_fair.md`); fair composition proved (`FondHtn/MPStrong/TOFair.lean`); characterisation open (`doc/notes_to_fair_2.md`) |
