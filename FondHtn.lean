@@ -34,3 +34,5 @@ import FondHtn.MP.WeakComplexity
 import FondHtn.MP.WeakReg
 import FondHtn.MP.Fair
 import FondHtn.Upper.SemiDec
+import FondHtn.Alt.Depth
+import FondHtn.Cx.Exp2
