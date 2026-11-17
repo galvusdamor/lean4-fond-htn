@@ -515,6 +515,64 @@ proof route and the gaps in the published proofs.
   \end{itemize}
 \end{deviation}
 
+\begin{deviation}[CB21 Thm.~5.1, repaired]
+  The hardness reduction from $k$-in-a-row games is wrong. We reduce from TQBF instead, whose
+  PSPACE-hardness we prove from STRIPS plan existence by Savitch's construction
+  (\lean{QBF/}). Existential variables are encoded by the order of two tasks (one adds, one deletes
+  the literal; the later one wins), universal variables by an action with two outcomes, clauses by
+  check tasks with positive preconditions, and a final \emph{clear} task, enabled once all clauses
+  are satisfied, unblocks the remaining checks. The instances use only positive preconditions and
+  at most two outcomes, so they lie in the fragment of [CB21]. Membership uses a bounded-depth
+  AND-OR game in PSPACE (\lean{Alt/Depth.lean}).
+\end{deviation}
+
+\begin{deviation}[CB21 Thm.~5.3: regular strong OD]
+  The membership argument of [CB21] (and [DB25]) needs $\tnI$ to be regular as well
+  (\lean{FClass.REGtn}). For this class we prove EXPSPACE membership by a sequential-composition
+  lemma for solvable belief states and a search over chains of belief sets
+  (\lean{StrongOD/Reg.lean}). For the class of Bercher et al.\ (no condition on $\tnI$), parallel
+  chains in $\tnI$ can be interleaved with unbounded lag and the argument fails
+  (\lean{doc/notes_reg_strongOD.md}).
+\end{deviation}
+
+\begin{deviation}[Delaying decompositions, G8]
+  The algorithms of [CB22] only decompose the first tasks of a network (progression), while
+  policies may decompose any task. We prove that delaying a decomposition until the task is
+  unconstrained never hurts, for strong solutions and for fair strong cyclic solutions
+  (\lean{MPStrong/Prog.lean}, \lean{MPStrong/CyclicGame.lean}).
+\end{deviation}
+
+\begin{deviation}[CB22 Thms.~1, 3, 4: new lower-bound reductions]
+  The published EXPTIME-hardness proofs are incomplete (no acceptance check) or reduce from FOND
+  planning. We reduce from totally ordered deterministic HTN planning, which is EXPTIME-hard: a
+  game follows one path of the dynamic program for total order; the policy guesses methods and
+  intermediate states, nature chooses which child to verify. An acyclic doubling clock
+  (respectively a regular loop) provides the rounds (\lean{HardMP/}). The constructed problems use
+  negative preconditions. For the fair reading of strong cyclic solutions the regular loop needs
+  a round counter; without it a fair policy can cycle through consistent but unsolvable guesses
+  (counterexample in \lean{HardMP/FairC.lean}).
+\end{deviation}
+
+\begin{deviation}[Total order, ideas]
+  The membership of strong solutions for totally ordered problems in 2-EXPTIME is proved via a
+  sequential-composition (``rank'') lemma (\lean{MPStrong/TOGame.lean}, \lean{TODesc.lean}). The
+  table proposed for the strong cyclic variant computes the literal, not the fair, reading;
+  neither the least nor the greatest fixpoint is correct for the fair reading
+  (\lean{doc/notes_to_fair.md}, \lean{doc/notes_to_fair_2.md}).
+\end{deviation}
+
+\begin{deviation}[Open problems with documented obstacles]
+  \begin{itemize}
+    \item The PCP construction of the ideas file needs a way to make the checks of the inactive
+      mode free, which STRIPS-style FOND actions do not provide (\lean{doc/notes_pcp_strongOD.md}).
+    \item EXPSPACE-hardness of acyclic strong OD (counters) and of acyclic MP strong ([CB22,
+      Thm.~2]) needs alternating machines, which the library does not have
+      (\lean{doc/notes_acyc_strongOD.md}, \lean{doc/notes_cb22_thm2.md}).
+    \item Semi-decidability of fair strong cyclic solvability for unrestricted problems is open
+      (\lean{doc/notes_fair_semidec.md}).
+  \end{itemize}
+\end{deviation}
+
 \printbibliography
 
 \end{document}
