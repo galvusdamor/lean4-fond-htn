@@ -56,3 +56,7 @@ import FondHtn.QBF.SavitchRun
 import FondHtn.QBF.SavitchPT
 import FondHtn.QBF.Hard
 import FondHtn.StrongOD.PrimComplete
+import FondHtn.Alt.Buchi
+import FondHtn.MPStrong.CyclicGame
+import FondHtn.MPStrong.CyclicAcyc
+import FondHtn.MPStrong.CyclicDesc
