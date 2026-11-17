@@ -67,6 +67,10 @@ namespace Action
 
 variable {F : Type u}
 
+theorem ext' {a b : Action F} (h1 : a.pre = b.pre) (h2 : a.preNeg = b.preNeg)
+    (h3 : a.effs = b.effs) : a = b := by
+  cases a; cases b; simp_all
+
 /-- `τ(a, s) = ⊤` iff `pre(a) ⊆ s` and `Π⁻ ∩ s = ∅`. -/
 def Applicable (a : Action F) (s : Set F) : Prop := a.pre ⊆ s ∧ Disjoint a.preNeg s
 

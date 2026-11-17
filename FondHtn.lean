@@ -10,3 +10,6 @@ import FondHtn.Lang.Desc
 import FondHtn.Transfer.AppendLast
 import FondHtn.Transfer.Deterministic
 import FondHtn.Transfer.DetFond
+import FondHtn.Transfer.Classes
+import FondHtn.Transfer.DetDesc
+import FondHtn.Hardness.FromDet

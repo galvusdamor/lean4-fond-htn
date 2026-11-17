@@ -78,12 +78,13 @@ def init (p : FProbDesc) : List ℕ := p.2.1
 /-- The initial task network. -/
 def tnI (p : FProbDesc) : TnDesc := p.2.2
 
-/-- The action mapping: the first action described under the name (an undeclared name denotes
-an action without effects; it does not occur in well-formed descriptions). -/
+/-- The action mapping: the first action described under the name.  An undeclared name denotes
+the no-op `(∅, ∅, {(∅, ∅)})`, the image of the deterministic convention; it does not occur in
+well-formed descriptions. -/
 def δ (p : FProbDesc) (a : ℕ) : Action ℕ :=
   match p.actions.find? (fun x => x.name == a) with
   | some x => x.toAction
-  | none => ⟨∅, ∅, ∅⟩
+  | none => ⟨∅, ∅, {(∅, ∅)}⟩
 
 /-- **The problem a description denotes.** -/
 def toProblem (p : FProbDesc) : Problem ℕ ℕ ℕ ℕ where
@@ -144,11 +145,24 @@ theorem δ_of_mem {p : FProbDesc} (hp : p.Valid) {a : FActDesc} (ha : a ∈ p.ac
   have hxn : x.name = a.name := by simpa using List.find?_some hx
   rw [List.inj_on_of_nodup_map hp.names_nodup hxm ha hxn]
 
-/-- In a well-formed description, every action that occurs in the problem is well formed. -/
-theorem δ_wf {p : FProbDesc} (hp : p.Valid) {a : ℕ} (ha : p.Declared a) : (p.δ a).WF := by
-  obtain ⟨x, hx, rfl⟩ := List.mem_map.1 ha
-  rw [δ_of_mem hp hx]
-  exact FActDesc.toAction_wf (hp.effs_ne x hx)
+/-- In a well-formed description every action is well formed. -/
+theorem δ_wf {p : FProbDesc} (hp : p.Valid) (a : ℕ) : (p.δ a).WF := by
+  by_cases ha : p.Declared a
+  · obtain ⟨x, hx, rfl⟩ := List.mem_map.1 ha
+    rw [δ_of_mem hp hx]
+    exact FActDesc.toAction_wf (hp.effs_ne x hx)
+  · have : p.actions.find? (fun x => x.name == a) = none := by
+      rw [List.find?_eq_none]
+      intro x hx hxa
+      exact ha (List.mem_map.2 ⟨x, hx, by simpa using hxa⟩)
+    simp only [δ, this]
+    exact ⟨⟨_, rfl⟩, Set.finite_singleton _⟩
+
+/-- **A well-formed description denotes a well-formed problem.** -/
+theorem toProblem_wf {p : FProbDesc} (hp : p.Valid) : p.toProblem.WF where
+  tnI := TnDesc.toTaskNetwork_wf _
+  methods := by rintro m ⟨e, -, rfl⟩; exact TnDesc.toTaskNetwork_wf _
+  actions := δ_wf hp
 
 end FProbDesc
 
@@ -190,6 +204,12 @@ def TR : FClass := fun P => P.toArt.IsTailREC
 
 /-- Totally ordered problems (initial task network and reachable methods). -/
 def TO : FClass := fun P => P.toArt.IsTO
+
+/-- Problems whose initial task network is totally ordered. -/
+def TOtn : FClass := fun P => P.toArt.IsTO_tnI
+
+/-- Problems all of whose reachable methods are totally ordered. -/
+def TOM : FClass := fun P => P.toArt.IsTO_M
 
 /-- Intersection of classes. -/
 def inter (Y Z : FClass) : FClass := fun P => Y P ∧ Z P
