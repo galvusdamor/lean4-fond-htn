@@ -73,3 +73,12 @@ import FondHtn.HardMP.Classes
 import FondHtn.HardMP.PT
 import FondHtn.HardMP.Final
 import FondHtn.HardMP.Complete
+import FondHtn.StrongOD.Comp
+import FondHtn.StrongOD.RegDesc
+import FondHtn.StrongOD.RegStep
+import FondHtn.StrongOD.RegChar
+import FondHtn.StrongOD.RegBlock
+import FondHtn.StrongOD.RegSearch
+import FondHtn.StrongOD.RegSound
+import FondHtn.StrongOD.RegComplete
+import FondHtn.StrongOD.Reg
