@@ -237,6 +237,7 @@ lemma canon_eq [Nonempty I] {tn tn' : TaskNetwork I A C} (h : tn.Iso tn')
     (hw : tn.WF ↔ tn'.WF) : canon tn = canon tn' :=
   congrArg Quotient.out (Quotient.sound (s := isoWFSetoid) ⟨h, hw⟩)
 
+omit [DecidableEq I] in
 lemma canon_canon [Nonempty I] (tn : TaskNetwork I A C) : canon (canon tn) = canon tn :=
   canon_eq (canon_rel tn).1 (canon_rel tn).2
 
