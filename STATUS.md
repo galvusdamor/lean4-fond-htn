@@ -63,8 +63,8 @@ FOND-specific lower bounds:
 | CB22 Thm 3: REG (∩TO) MP strong EXPTIME-hard | ✅ from TO HTN (not FOND planning); complete `strongMP_REG_complete`, `strongMP_REG_TO_complete` |
 | CB22 Thm 4: TR ∩ TO MP strong EXPTIME-hard | ✅ complete `strongMP_TR_TO_complete` |
 | CB22 Thm 5: TR MP strong 2-EXPTIME-hard | ⚠ sketch only; class 2-EXPTIME not yet defined ⬜ |
-| DB25 Thm 1: chosen-length games EXPSPACE-complete | ⬜ (large; STRIPS gadgets unspecified) |
-| DB25 Thm 4/5: REG FM strong OD EXPSPACE-hard | ⬜ |
+| DB25 Thm 1: chosen-length games EXPSPACE-complete | ⬜ not formalised (not needed: Thm 4/5 proved directly from NTMs) |
+| DB25 Thm 4/5: REG(tn) FM strong OD EXPSPACE-hard | ✅ `FondHtn/DB25/Hard.lean` (direct reduction from exp-space NTMs, positive preconditions only); REGtn EXPSPACE-complete `strongOD_REGtn_complete` |
 | ideas: PCP, TR/Bercher-REG FM strong OD undecidable | ❓ sketch does not work with STRIPS-style FOND actions (inactive mode's checks cannot be freed); no PCP in library — `doc/notes_pcp_strongOD.md`; needs the author's input |
 | ideas: counters, ACYC EXPSPACE-hard / TR 2-EXPTIME-hard | ❓ construction and missing pieces (ATM source EXPSPACE ⊆ AEXPTIME, parallel-chain semantics) in `doc/notes_acyc_strongOD.md` |
 | ideas: TO MP strong 2-EXPTIME-hard | ❓ |
