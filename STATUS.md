@@ -54,7 +54,7 @@ FOND-specific lower bounds:
 | result | status |
 | --- | --- |
 | CB21 Thm 4.1: PRIM ∩ TO weak NP-hard (SAT) | ✅ `weakLD_PRIM_TO_complete` (`FondHtn/Prim/WeakHard.lean`) |
-| CB21 Thm 5.1: PRIM (PO) strong OD PSPACE-hard | ⚠ published reduction wrong (catalogue G9); re-prove from TQBF ⬜ |
+| CB21 Thm 5.1: PRIM (PO) strong OD PSPACE-hard | ✅ repaired via TQBF (TQBF PSPACE-hard from STRIPS by Savitch), `FondHtn/QBF/`; complete: `strongOD_PRIM_complete` |
 | CB22 Thm 1: ACYC ∩ TO MP strong EXPTIME-hard | ⚠ incomplete (no acceptance check) ⬜ |
 | CB22 Thm 2: ACYC MP strong EXPSPACE-hard | ⚠ sketch only ⬜ |
 | CB22 Thm 3: REG MP strong EXPTIME-hard (from FOND planning) | ⬜ (needs FOND STRIPS EXPTIME-hardness) |
