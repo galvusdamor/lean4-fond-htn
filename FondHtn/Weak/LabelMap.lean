@@ -66,7 +66,7 @@ theorem setLabels_wf {tn : TaskNetwork I A C} (h : tn.WF) (f : I → A ⊕ C) :
 
 /-- **Replacing a task by a single fresh task** gives, up to isomorphism, the same network with
 one label changed. -/
-theorem decomposeWith_single_iso [DecidableEq I] {tn u : TaskNetwork I A C} {t j : I}
+theorem decomposeWith_single_iso_fond [DecidableEq I] {tn u : TaskNetwork I A C} {t j : I}
     (htn : tn.WF) (ht : t ∈ tn.T) (hu : u.WF) (huT : u.T = {j}) (hj : j ∉ tn.T) :
     (decomposeWith tn t u).Iso (tn.setLabels (Function.update tn.α t (u.α j))) := by
   classical
@@ -201,7 +201,7 @@ theorem exists_decomposesTo_mapL_of [Infinite I] {M : Set (Method I A C)}
       have hjα : ψ (u.α j) = ψ (tn₁.α t) := by
         rw [hσα j (by simp [hjT]), hσj, hiα, hα]
       have hj : j ∉ tn₁.T := fun hj => Finset.disjoint_left.1 hdisj hj (by simp [hjT])
-      have hiso := (decomposeWith_single_iso hwf₁ ht hu hjT hj).mapL (ψ := ψ)
+      have hiso := (decomposeWith_single_iso_fond hwf₁ ht hu hjT hj).mapL (ψ := ψ)
       have heq : (tn₁.setLabels (Function.update tn₁.α t (u.α j))).mapL ψ = tn₁.mapL ψ := by
         refine ext' rfl rfl ?_
         funext x
@@ -263,7 +263,7 @@ theorem exists_decomposesTo_setLabels [Infinite I] {M' : Set (Method I A' C')}
         Finset.disjoint_singleton_right.2 hj, rfl⟩
     obtain ⟨t', N'', hs', hiso''⟩ := hs.iso hwfR hwf' hiso.symm
     refine ⟨N'', hN'.tail ⟨t', m, hs'⟩, ?_, hs'.wf hwf'⟩
-    have h1 := decomposeWith_single_iso hwfR ht hu rfl hj
+    have h1 := decomposeWith_single_iso_fond hwfR ht hu rfl hj
     have h2 : (relab S).setLabels (Function.update (relab S).α t (u.α j)) = relab (insert t S) := by
       refine ext' rfl rfl ?_
       funext x
