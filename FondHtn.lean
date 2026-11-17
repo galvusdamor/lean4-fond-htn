@@ -29,3 +29,7 @@ import FondHtn.Prim.StrongP
 import FondHtn.MP.StrongCyclic
 import FondHtn.Weak.Reg
 import FondHtn.Alt.ExpTime
+import FondHtn.MP.Weak
+import FondHtn.MP.WeakComplexity
+import FondHtn.MP.WeakReg
+import FondHtn.MP.Fair
