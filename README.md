@@ -21,9 +21,14 @@ Lean / Mathlib `v4.28.0`.
 | `FondHtn.Basic` | nondeterministic actions, domains, problems, well-formedness, problem classes (via the deterministic skeleton) |
 | `FondHtn.FixedMethods` | [CB21] LD and OD solutions, [DB25] solvable belief states |
 | `FondHtn.FixedMethodsLemmas` | strong OD solutions [CB21] ⇔ solvable belief states [DB25] |
+| `FondHtn.FixedMethodsRelations` | [CB21] Props. 2.12, 2.13 (⇒), 2.15 |
 | `FondHtn.MethodPolicies` | [CB22] method-based policies, execution structure up to isomorphism, weak / strong cyclic / strong solutions |
+| `FondHtn.IsoLemmas` | explicit isomorphisms, transport of progression/decomposition, simulation of policy steps |
+| `FondHtn.MethodPoliciesStrong` | strong method-based solutions ⇔ AND/OR game |
+| `FondHtn.Examples` | counterexample of [CB21] Prop. 2.13 (⇍), [CB22] Fig. 1 |
 
-Deviations from the literal paper definitions (and why) are documented in the module docstrings.
+Deviations from the literal paper definitions (and why) are documented in the module docstrings and
+in the report `modifications/main.tex` (JAIR template; build with `latexmk -pdf main.tex`).
 
 ## Building
 

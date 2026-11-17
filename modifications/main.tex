@@ -36,6 +36,7 @@
 \newcolumntype{L}{>{\raggedright\arraybackslash}X}
 
 \newtheorem{deviation}{Deviation}
+\emergencystretch=3em
 
 \begin{document}
 
@@ -57,8 +58,11 @@
   of \CBa{} (weak and strong, linearisation- and outcome-dependent), the solvable belief states
   of \DB{}, and the method-based policies of \CBb{} (weak, strong cyclic and strong). This report
   lists every place where the formal definitions deviate from the papers and why, and documents
-  the formally proved relationships between the notions together with the deviations their
-  proofs required. All theorems depend only on the axioms \lean{propext},
+  the formally proved results together with the deviations their proofs required: the
+  equivalence of strong outcome-dependent solutions with the solvable belief states of \DB{};
+  Props.~2.12, 2.13 and 2.15 of \CBa{}; a characterisation of strong method-based solutions as
+  an AND/OR game; and the example of \CBb{} showing that method-based policies are strictly more
+  expressive than fixed methods. All theorems depend only on the axioms \lean{propext},
   \lean{Classical.choice} and \lean{Quot.sound}.
 \end{abstract}
 
@@ -78,7 +82,11 @@ networks, decomposition, progression and the structural problem classes. Its mod
   \lean{FondHtn.Basic} & nondeterministic actions, domains, problems, problem classes \\
   \lean{FondHtn.FixedMethods} & \CBa{}: LD and OD solutions; \DB{}: solvable belief states \\
   \lean{FondHtn.FixedMethodsLemmas} & strong OD solutions $\Leftrightarrow$ solvable belief states \\
+  \lean{FondHtn.FixedMethodsRelations} & [CB21, Props.~2.12, 2.13, 2.15] \\
   \lean{FondHtn.MethodPolicies} & \CBb{}: method-based policies and their solution criteria \\
+  \lean{FondHtn.IsoLemmas} & explicit isomorphisms; simulation of policy steps \\
+  \lean{FondHtn.MethodPoliciesStrong} & strong method-based solutions $\Leftrightarrow$ AND/OR game \\
+  \lean{FondHtn.Examples} & the counterexample of [CB21, Prop.~2.13] and [CB22, Fig.~1] \\
   \bottomrule
 \end{tabularx}
 \end{center}
@@ -245,15 +253,133 @@ through the recursion \lean{StrongExec}; weak executability guesses the outcomes
 
 \section{Proved Results}\label{sec:results}
 
+Table~\ref{tab:results} lists the formally proved results. All hypotheses are stated
+explicitly in Lean; those that the papers leave implicit are discussed below.
+
+\begin{table}[t]
+\caption{Proved results. ``WF'' abbreviates well-formedness of the initial task network
+($\tnI$) or of the whole problem (\lean{Problem.WF}: $\tnI$, methods and actions).}
+\label{tab:results}
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}lLl@{}}
+  \toprule
+  result & Lean & hypotheses \\
+  \midrule
+  strong OD $\Leftrightarrow$ belief states [DB25]
+    & \lean{strongODSolvable_iff_fmSolvableDB} & none \\
+  {}[CB21, Prop.~2.12] & \lean{weakLDSolvable_iff_weakODSolvable} & $\tnI$ WF \\
+  {}[CB21, Prop.~2.13] ($\Rightarrow$) & \lean{strongODSolvable_of_strongLDSolvable} & $\tnI$ WF \\
+  {}[CB21, Prop.~2.13] ($\not\Leftarrow$) & \lean{FOND.Examples.prop_2_13_converse_fails} & --- \\
+  {}[CB21, Prop.~2.15] & \lean{strongLDSolvable_iff_strongODSolvable} & totally ordered, $\tnI$ WF \\
+  strong MP $\Leftrightarrow$ AND/OR game & \lean{mpStrongSolvable_iff_mpAndOr}
+    & problem WF, \lean{[Infinite I]} \\
+  {}[CB22, Fig.~1] & \lean{FOND.Examples.Fig1.fig1} & --- \\
+  \bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Fixed methods}
+
 \paragraph{Strong OD solutions are solvable belief states.}
 For every primitive task network $\tn$, there is a policy that strongly executes $\tn$ in the
 sense of Deviation~\ref{dev:od} iff $(\tn,\sI)$ is a solvable belief state
-(\lean{FOND.Problem.strongOD_iff_beliefSolvable}). Hence strong OD plan existence of [CB21]
-coincides with plan existence of [DB25]
-(\lean{FOND.Problem.strongODSolvable_iff_fmSolvableDB}). This confirms that
-Deviation~\ref{dev:od} captures the intended notion. The policy constructed from a solvable
-belief state chooses, at each configuration, a task witnessing solvability of the remaining
-network.
+(\lean{strongOD_iff_beliefSolvable}); hence strong OD plan existence of [CB21] coincides with
+plan existence of [DB25]. This confirms that Deviation~\ref{dev:od} captures the intended notion.
+The policy constructed from a solvable belief state chooses, at each configuration, a task
+witnessing solvability of the remaining network.
+
+\paragraph{Prop.~2.12 (weak LD = weak OD).}
+Proved for each achievable primitive network (\lean{weakLD_iff_weakOD}) and for plan existence.
+The proof does not follow the paper, whose execution structures we could not use
+(Deviation~\ref{dev:od}); both criteria are shown equivalent to a \emph{weak belief state}
+(\lean{WeakBelief}: some outcome of some executable unconstrained task leads to a weakly solvable
+pair). A linearisation $t\cdot l$ of $\tn$ is exactly an unconstrained $t$ followed by a
+linearisation $l$ of $\tn\setminus t$ (\lean{of_isLinearization_cons},
+\lean{isLinearization_cons_of}).
+
+\begin{deviation}[Irreflexive orderings]\label{dev:irrefl}
+  The step from a linearisation $t\cdot l$ to ``$t$ is unconstrained'' needs $t\not\prec t$, which
+  the papers get from $\prec$ being a strict partial order by definition. In \lean{HtnPlanning}
+  well-formedness is a separate predicate, so Props.~2.12, 2.13 and 2.15 assume that $\tnI$ is
+  well formed; achievable networks are then well formed as well (decomposition inserts
+  well-formed copies only).
+\end{deviation}
+
+\paragraph{Prop.~2.13.}
+A strong LD solution yields a solvable belief state (\lean{beliefSolvable_of_strongExec}): the
+set $S_i$ of Def.~2.7 over-approximates the states reachable along every branch. Hence a strong OD
+solution exists for the same network. The converse fails for the example of the paper's proof
+(\lean{prop_2_13_converse_fails}), formalised literally: $a$ adds $1$ or $2$, $b$ needs $1$ and
+adds $2$, $c$ needs $2$ and adds $1$, and $a\prec b$, $a\prec c$. The negative part shows that
+every linearisation starts with $a$ and that the second task is inapplicable in one of the two
+states after $a$.
+
+\paragraph{Prop.~2.15 (totally ordered problems).}
+The paper's proof (``there exists only one possible candidate policy'') is a sketch. We prove
+that in a well-formed totally ordered network the unconstrained task is unique
+(\lean{unconstrained_unique}); hence all states of a belief state are forced to execute the same
+task, so a solvable belief state yields a strongly executable linearisation
+(\lean{strongExec_of_beliefSolvable_TO}).
+
+\begin{deviation}[Total order of achievable networks]
+  Prop.~2.15 speaks about totally ordered \emph{problems} but uses that the achievable primitive
+  network is totally ordered, which the paper takes for granted. We prove it
+  (\lean{decomposesTo_isTotallyOrdered}): decomposing a task of a totally ordered network with a
+  totally ordered method yields a totally ordered network. Because the class of totally ordered
+  problems only constrains reachable methods (Deviation~\ref{dev:classes}), the invariant also
+  records that all compound tasks of reachable networks carry reachable names.
+\end{deviation}
+
+\subsection{Method-based policies}
+
+\paragraph{Strong solutions are won AND/OR games.}
+\lean{MPAndOr} is the game underlying the progression search of [CB22, Alg.~2]: a pair $(\tn,s)$
+is won if $\tn$ is empty, or some unconstrained primitive task is applicable and all outcomes are
+won, or some decomposition of some compound task (constrained or not, as in Def.~5) is won. We
+prove that a strong solution in the sense of Def.~7 exists iff $(\tnI,\sI)$ is won
+(\lean{mpStrongSolvable_iff_mpAndOr}).
+\begin{itemize}
+  \item[$\Rightarrow$] A finite and acyclic quotient $[L]$ bounds the length of every execution
+    by the number of isomorphism classes (pigeonhole; \lean{exists_not_mpPathFrom}). Induction on
+    this bound turns the policy into a winning strategy.
+  \item[$\Leftarrow$] We grade the game by the height of a winning strategy (\lean{MPAndOrH})
+    and show that the graded game is invariant under isomorphism (\lean{MPAndOrH.isoVia}). The
+    policy \lean{andOrPolicy} is defined only on a canonical representative of each class and
+    gives there an instruction of minimal height. Each step strictly decreases the height (so
+    $[L]$ is acyclic), the policy can move at every won non-goal node (no bad terminal nodes),
+    and every node has finitely many successor classes, so by induction on the height $[L]$ is
+    finite (\lean{andOrPolicy_finite_from}). The last argument uses that steps can be replayed at
+    isomorphic nodes (\lean{MPStep.sim}).
+\end{itemize}
+
+\begin{deviation}[Hypotheses of the AND/OR characterisation]
+  The direction $\Leftarrow$ needs three assumptions that [CB22] leaves implicit:
+  \begin{itemize}
+    \item \emph{Finitely many effects} (Deviation~\ref{dev:wf}). With infinitely many outcomes a
+      won game need not have a bounded height, and $[L]$ can have infinitely many classes.
+    \item \emph{At least one effect}. Otherwise the game is won vacuously after an action without
+      outcomes, while the corresponding node of $[L]$ is terminal and not a goal node.
+    \item \emph{Infinitely many task identifiers} (Deviation~\ref{dev:fresh}), to replay
+      decompositions at isomorphic networks.
+  \end{itemize}
+\end{deviation}
+
+\begin{deviation}[Canonical representatives and well-formedness]
+  Isomorphism of task networks (\lean{HTN.TaskNetwork.Iso}) only constrains the ordering on the
+  tasks of the networks, so an isomorphism class may contain both well-formed networks and
+  networks whose ordering relates identifiers outside the network. The policy chooses its
+  representatives up to ``isomorphic and equally well formed''
+  (\lean{isoWFSetoid}), so that the representative of a well-formed class is well formed. This is
+  invisible in the papers, where every task network is well formed by definition.
+\end{deviation}
+
+\paragraph{Fig.~1 of [CB22].}
+The problem of Fig.~1 is formalised with facts $1,2$ for the states $s_1,s_2$: $\tnI=\langle a,C\rangle$
+(totally ordered), $a$ adds $1$ or $2$, $b$ needs $1$, $c$ needs $2$, and $C$ has the two methods
+$C\to b$ and $C\to c$. It has a strong method-based solution (via the AND/OR characterisation),
+but no strong fixed-method solution (\lean{FOND.Examples.Fig1.fig1}). For the latter we show
+that every achievable primitive network is $a\prec d$ with $d\in\{b,c\}$ and that $(a\prec d,\emptyset)$
+is not a solvable belief state.
 
 \printbibliography
 
