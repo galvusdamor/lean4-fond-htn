@@ -39,3 +39,5 @@ import FondHtn.Cx.Exp2
 import FondHtn.MPStrong.Prog
 import FondHtn.MPStrong.Game
 import FondHtn.MPStrong.Mem
+import FondHtn.MPStrong.TR
+import FondHtn.MPStrong.Acyc

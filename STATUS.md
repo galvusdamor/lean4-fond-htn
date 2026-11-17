@@ -80,5 +80,5 @@ FOND-specific lower bounds:
 | CB21 Thm 5.2 / 5.3: ACYC / REG strong OD ∈ EXPSPACE | ⬜ |
 | CB21 Thm 3.1: semi-decidability (weak LD/OD, strong LD, MP weak) | ✅ `FondHtn/Upper/SemiDec.lean`; strong OD ⬜ |
 | CB22 Thms 1, 3, 4: MP strong ∈ EXPTIME (ACYC∩TO, REG(∩TO), TR∩TO) | ✅ `FondHtn/MPStrong/Mem.lean` (hardness ⏳) |
-| CB22 Thms 2, 5: MP strong ACYC ∈ EXPSPACE, TR ∈ 2-EXPTIME | ⏳ |
+| CB22 Thms 2, 5: MP strong ACYC ∈ EXPSPACE, TR ∈ 2-EXPTIME | ✅ `FondHtn/MPStrong/Acyc.lean`, `TR.lean` (hardness ⬜) |
 | ideas: TO MP strong ∈ 2-EXPTIME | ❓ (rank argument missing) |
