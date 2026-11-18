@@ -384,6 +384,79 @@ theorem pt_actsA (H : Hyp cS Xf F₀ acc₀) (ens : List (En S)) :
     (PT.single (pt_A_fin cS allS H.P))).of_eq fun a => ?_)
   simp [TD.acts, List.map_append]
 
+/-! ## The methods and the description -/
+
+theorem pt_methsP (H : Hyp cS Xf F₀ acc₀) (ens : List (En S)) (p : Bool) :
+    PT fun a => methsP cS (Xf a) (opsOf (Xf a).no (Xf a).P.length) ens p := by
+  have hmn : PT fun a => mm (Xf a) := pt_of_range H.m
+  have h6 : PT fun a => ([(nmN (.loop p), seqTn [lN (.block p), lN (.loop p)]), (nmN (.loop p), seqTn []),
+      (nmN (.block p), AcycHard.Sav.setTn [lN (.tree p (mm (Xf a))), lN (.reT p)]),
+      (nmN (.tree p 0), seqTn [lN (.bit p 0)]), (nmN (.bit p (mm (Xf a))), seqTn [lN (.core p)]),
+      (nmN (.incT p), seqTn [lA cS (.wrap p)])] : List MethodDesc) :=
+    PT.cons (PT.const _) (PT.cons (PT.const _) (PT.cons (PT.pair (PT.const _)
+      (AcycHard.Sav.pt_setTn (PT.cons (PT.pair (PT.const true) (PT.natPair (PT.const 3)
+        (PT.natPair (PT.const _) hmn))) (PT.single (PT.const _)))))
+      (PT.cons (PT.const _) (PT.cons (PT.pair (PT.natPair (PT.const 4) (PT.natPair (PT.const _) hmn))
+        (PT.const _)) (PT.single (PT.const _))))))
+  have hk : PT fun q : α × ℕ => ([(nmN (.tree p (q.2 + 1)), AcycHard.Sav.setTn [lN (.tree p q.2), lN (.tree p q.2)]),
+      (nmN (.incT p), seqTn [lA cS (.inc p q.2)])] ++
+      [false, true].flatMap fun b =>
+        [(nmN (.bit p q.2), seqTn [lA cS (.wb p q.2 b), lN (.bit p (q.2 + 1)), lN (.rbT p q.2 b)]),
+          (nmN (.rbT p q.2 b), seqTn [lA cS (.rb p q.2 b)]),
+          (nmN (.rbT p q.2 b), seqTn [lA cS (.dr p)])] : List MethodDesc) := by
+    have ht : ∀ {k : α × ℕ → ℕ}, PT k → PT fun q => nmN (.tree p (k q)) :=
+      fun hk => PT.natPair (PT.const 3) (PT.natPair (PT.const _) hk)
+    have hb : ∀ {k : α × ℕ → ℕ}, PT k → PT fun q => nmN (.bit p (k q)) :=
+      fun hk => PT.natPair (PT.const 4) (PT.natPair (PT.const _) hk)
+    have hr : ∀ (b : Bool), PT fun q : α × ℕ => nmN (.rbT p q.2 b) :=
+      fun b => PT.natPair (PT.const 8) (PT.natPair (PT.const _) PT.snd)
+    refine PT.append (PT.cons (PT.pair (ht (PT.succ PT.snd)) (AcycHard.Sav.pt_setTn
+      (PT.cons (PT.pair (PT.const true) (ht PT.snd)) (PT.single (PT.pair (PT.const true) (ht PT.snd))))))
+      (PT.single (PT.pair (PT.const _) (pt_seqTn (PT.single (PT.pair (PT.const false)
+        (PT.natPair (PT.const 4) (PT.natPair (PT.const _) PT.snd))))))))
+      (pt_flatMap_const _ fun b _ => ?_)
+    exact PT.cons (PT.pair (hb PT.snd) (pt_seqTn (PT.cons (PT.pair (PT.const false)
+      (PT.natPair (PT.const 0) (PT.natPair (PT.const _) PT.snd)))
+      (PT.cons (PT.pair (PT.const true) (hb (PT.succ PT.snd))) (PT.single (PT.pair (PT.const true)
+        (hr b)))))))
+      (PT.cons (PT.pair (hr b) (pt_seqTn (PT.single (PT.pair (PT.const false)
+        (PT.natPair (PT.const 2) (PT.natPair (PT.const _) PT.snd))))))
+        (PT.single (PT.pair (hr b) (PT.const _))))
+  have hcore : ∀ {β : Type} [BEnc β] {o : β → Op} (hc : PT fun q => codeOp (o q)) (w : Bool),
+      (∀ q, Spec.opW (o q) = w) → PT fun q =>
+        ([(nmN (.core p), seqTn [lA cS (.op p (o q)), lN (.incT p), lN (.rvT p (Spec.opW (o q)))]),
+          (nmN (.core p), seqTn [lA cS (.nrd p), lA cS (.op p (o q)), lN (.incT p),
+            lN (.rvT p (Spec.opW (o q)))])] : List MethodDesc) := by
+    intro β _ o hc w hw
+    have hn : PT fun q => lA cS (.op p (o q)) :=
+      PT.pair (PT.const false) (PT.natPair (PT.const 3) (PT.natPair (PT.const _) hc))
+    refine (PT.cons (PT.pair (PT.const _) (pt_seqTn (PT.cons hn (PT.const [lN (.incT p), lN (.rvT p w)]))))
+      (PT.single (PT.pair (PT.const _) (pt_seqTn (PT.cons (PT.const _)
+        (PT.cons hn (PT.const [lN (.incT p), lN (.rvT p w)]))))))).of_eq fun q => by rw [hw]
+  have hops := pt_ops (G := fun (_ : α) o =>
+      ([(nmN (.core p), seqTn [lA cS (.op p o), lN (.incT p), lN (.rvT p (Spec.opW o))]),
+        (nmN (.core p), seqTn [lA cS (.nrd p), lA cS (.op p o), lN (.incT p),
+          lN (.rvT p (Spec.opW o))])] : List MethodDesc)) H.no H.P
+    (fun b w => hcore (PT.const _) w fun _ => rfl)
+    (fun b w => hcore (PT.natPair (PT.const 0) (PT.natPair (PT.succ PT.snd) (PT.const _))) w
+      fun _ => rfl)
+    (fun d b w => hcore (PT.const _) w fun _ => rfl)
+    (fun d b w => hcore (PT.natPair (PT.const 1) (PT.natPair (PT.const _)
+      (PT.succ (PT.natPair (PT.fst' PT.snd) (PT.snd' PT.snd))))) w fun _ => rfl)
+    (fun w => hcore (PT.const _) w fun _ => rfl)
+    (fun w => hcore (PT.const _) w fun _ => rfl)
+  exact PT.append (PT.append (PT.append (PT.append (PT.append h6 (PT.flatMap H.m hk)) hops)
+    (PT.const _)) (PT.const _)) (PT.const _)
+
+theorem pt_meths (H : Hyp cS Xf F₀ acc₀) (ens : List (En S)) :
+    PT fun a => meths cS (Xf a) (opsOf (Xf a).no (Xf a).P.length) ens :=
+  PT.cons (PT.const _) (PT.cons (PT.const _) (PT.append (pt_methsP H ens true) (pt_methsP H ens false)))
+
+/-- **The description is computed in polynomial time.** -/
+theorem pt_desc (H : Hyp cS Xf F₀ acc₀) (ens : List (En S)) (σ₀ : S) :
+    PT fun a => desc cS (Xf a) allS (opsOf (Xf a).no (Xf a).P.length) ens σ₀ :=
+  PT.pair (PT.pair (pt_actsA allS H ens) (pt_meths H ens)) (PT.const _)
+
 end Fam
 
 end TP
