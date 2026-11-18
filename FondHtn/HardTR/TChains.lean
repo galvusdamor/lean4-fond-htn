@@ -810,6 +810,73 @@ theorem split (h : TC tn cs) {k : ℕ} (hk : k < cs.length) {l₁ l₂ : List �
     · exact h12 x hx1 hy2
     · exact hij rfl
 
+/-- **Re-tagging a free chain** as the post-chain of a group without pre-tasks. -/
+theorem retag (h : TC tn cs) {k : ℕ} (hk : k < cs.length) {ids : List ℕ} {lab : List (A ⊕ C)} {g : Bool}
+    (hc : cs[k] = ⟨ids, lab, none⟩)
+    (hpre : ∀ i (hi : i < cs.length), cs[i].tag = some (g, false) → cs[i].ids = []) :
+    TC tn (cs.set k ⟨ids, lab, some (g, true)⟩) := by
+  have hgs : ∀ j (hj : j < cs.length), (cs.set k ⟨ids, lab, some (g, true)⟩)[j]'(by simpa using hj) =
+      if k = j then ⟨ids, lab, some (g, true)⟩ else cs[j] := fun j hj => by
+    simp [List.getElem_set]
+  have hids : ∀ j (hj : j < cs.length), ((cs.set k ⟨ids, lab, some (g, true)⟩)[j]'(by simpa using hj)).ids =
+      cs[j].ids := fun j hj => by
+    rw [hgs j hj]; split_ifs with hjk
+    · subst hjk; rw [hc]
+    · rfl
+  have hlab : ∀ j (hj : j < cs.length), ((cs.set k ⟨ids, lab, some (g, true)⟩)[j]'(by simpa using hj)).lab =
+      cs[j].lab := fun j hj => by
+    rw [hgs j hj]; split_ifs with hjk
+    · subst hjk; rw [hc]
+    · rfl
+  refine ⟨fun x => ?_, fun a b => ?_, fun j hj => ?_, fun j hj => ?_, fun i j hi hj hij x hx => ?_⟩
+  · rw [h.mem]; simp only [List.length_set]
+    exact exists_congr fun j => ⟨fun ⟨hj, hx⟩ => ⟨hj, by rw [hids j hj]; exact hx⟩,
+      fun ⟨hj, hx⟩ => ⟨hj, by rw [hids j hj] at hx; exact hx⟩⟩
+  · rw [h.ord, cross_iff, cross_iff]
+    unfold InTag
+    simp only [List.length_set]
+    constructor
+    · rintro (⟨j, hj, hb⟩ | ⟨g', ⟨i, hi, hti, hx⟩, ⟨j, hj, htj, hy⟩⟩)
+      · exact Or.inl ⟨j, hj, by rw [hids j hj]; exact hb⟩
+      · have hik : i ≠ k := fun e => by subst e; rw [hc] at hti; simp at hti
+        have hjk : j ≠ k := fun e => by subst e; rw [hc] at htj; simp at htj
+        refine Or.inr ⟨g', ⟨i, hi, ?_, by rw [hids i hi]; exact hx⟩, ⟨j, hj, ?_, by rw [hids j hj]; exact hy⟩⟩
+        · rw [hgs i hi, if_neg (Ne.symm hik)]; exact hti
+        · rw [hgs j hj, if_neg (Ne.symm hjk)]; exact htj
+    · rintro (⟨j, hj, hb⟩ | ⟨g', ⟨i, hi, hti, hx⟩, ⟨j, hj, htj, hy⟩⟩)
+      · exact Or.inl ⟨j, hj, by rw [hids j hj] at hb; exact hb⟩
+      · rw [hids i hi] at hx; rw [hids j hj] at hy
+        have hik : i ≠ k := fun e => by rw [hgs i hi, if_pos e.symm] at hti; simp at hti
+        rw [hgs i hi, if_neg (Ne.symm hik)] at hti
+        by_cases hjk : j = k
+        · subst hjk
+          rw [hgs j hj, if_pos rfl] at htj
+          simp only [Option.some.injEq, Prod.mk.injEq, and_true] at htj
+          subst htj
+          rw [hpre i hi hti] at hx; simp at hx
+        · rw [hgs j hj, if_neg (Ne.symm hjk)] at htj
+          exact Or.inr ⟨g', ⟨i, hi, hti, hx⟩, ⟨j, hj, htj, hy⟩⟩
+  · have hj' : j < cs.length := by simpa using hj
+    rw [hids j hj', hlab j hj']; exact h.lab j hj'
+  · have hj' : j < cs.length := by simpa using hj
+    rw [hids j hj']; exact h.nodup j hj'
+  · have hi' : i < cs.length := by simpa using hi
+    have hj' : j < cs.length := by simpa using hj
+    rw [hids i hi'] at hx; rw [hids j hj']
+    exact h.disj i j hi' hj' hij x hx
+
+/-- A sequence network is a single free chain. -/
+theorem of_isSeqNet {l : List ℕ} {xs : List (A ⊕ C)} (h : tn.IsSeqNet l xs) : TC tn [⟨l, xs, none⟩] where
+  mem x := by rw [h.memT]; simp
+  ord a b := by
+    rw [h.ord, ← before_nodup_iff h.nodup]
+    simp [Cross]
+  lab j hj := by
+    simp at hj; subst hj; exact h.labels
+  nodup j hj := by
+    simp at hj; subst hj; exact h.nodup
+  disj i j hi hj hij := by simp at hi hj; omega
+
 end TC
 
 end HardTR

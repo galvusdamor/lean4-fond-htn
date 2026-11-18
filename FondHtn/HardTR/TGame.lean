@@ -58,6 +58,10 @@ inductive TWin : List (LCh A C) → Set F → Prop
       (hpre : ∀ i (hi : i < ls.length), ls[i].tag = some (g, false) → ls[i].lab = [])
       (hpost : ∀ i (hi : i < ls.length), i ≠ k → ls[i].tag = some (g, true) → ls[i].lab = [])
       (h : TWin (ls.set k ⟨xs₂, some (g, true)⟩ ++ [⟨xs₁, some (g, false)⟩]) s) : TWin ls s
+  | retag {ls : List (LCh A C)} {s : Set F} {k : ℕ} (hk : k < ls.length) {xs : List (A ⊕ C)}
+      {g : Bool} (hc : ls[k] = ⟨xs, none⟩)
+      (hpre : ∀ i (hi : i < ls.length), ls[i].tag = some (g, false) → ls[i].lab = [])
+      (h : TWin (ls.set k ⟨xs, some (g, true)⟩) s) : TWin ls s
 
 /-! ## Simulation -/
 
@@ -207,6 +211,23 @@ theorem mpAndOr_of_twin {ls : List (LCh A C)} {s : Set F} (h : TWin P ls s) :
     refine ih hsp ?_
     rw [List.map_append, List.map_set, he]
     simp [TCh.proj, hl₁, hl₂]
+  | @retag ls s k hk xs g hc hpre hw ih =>
+    intro tn cs htc he
+    have hk' : k < cs.length := by rw [len_eq he]; exact hk
+    have hck := proj_get he hk'
+    rw [hc] at hck
+    have hl : cs[k].lab = xs := by have := congrArg LCh.lab hck; simpa [TCh.proj] using this.symm
+    have htg : cs[k].tag = none := by have := congrArg LCh.tag hck; simpa [TCh.proj] using this.symm
+    have hcs : cs[k] = ⟨cs[k].ids, xs, none⟩ := by rw [← hl, ← htg]
+    have hempty : ∀ i (hi : i < cs.length), (ls[i]'(by rw [← len_eq he]; exact hi)).lab = [] →
+        cs[i].ids = [] := fun i hi h1 => by
+      rw [proj_get he hi] at h1
+      have := htc.lab i hi
+      rw [show cs[i].lab = [] from h1, List.map_eq_nil_iff] at this
+      exact this
+    refine ih (htc.retag hk' hcs (fun i hi hti => hempty i hi (hpre i _ (by rw [proj_get he hi]; exact hti)))) ?_
+    rw [List.map_set, he]
+    rfl
 
 /-! ## The game on multisets of chains -/
 
@@ -235,6 +256,9 @@ inductive MWin : Multiset (LCh A C) → Set F → Prop
       (hpost : ∀ c ∈ M, c.tag = some (g, true) → c.lab = [])
       (h : MWin (⟨xs₂, some (g, true)⟩ ::ₘ ⟨xs₁, some (g, false)⟩ ::ₘ M) s) :
       MWin (⟨xs₁ ++ xs₂, some (g, true)⟩ ::ₘ M) s
+  | retag {M : Multiset (LCh A C)} {s : Set F} {xs : List (A ⊕ C)} {g : Bool}
+      (hpre : ∀ c ∈ M, c.tag = some (g, false) → c.lab = [])
+      (h : MWin (⟨xs, some (g, true)⟩ ::ₘ M) s) : MWin (⟨xs, none⟩ ::ₘ M) s
 
 variable {P}
 
@@ -303,6 +327,60 @@ theorem twin_of_mwin [DecidableEq A] [DecidableEq C] {M : Multiset (LCh A C)} {s
     · exact hpost _ (by rw [← hM]; exact mem_rest hi hik) hti
     · rw [← Multiset.coe_add, coe_set_idx ls hk, hM, Multiset.coe_singleton, Multiset.cons_add,
         Multiset.add_comm, Multiset.singleton_add]
+  | @retag M s xs g hpre hw ih =>
+    intro ls he
+    obtain ⟨k, hk, hkc, hM⟩ := pick he
+    refine .retag (g := g) hk hkc (fun i hi hti => ?_) (ih _ ?_)
+    · have hik : i ≠ k := fun e => by subst e; rw [hkc] at hti; simp at hti
+      exact hpre _ (by rw [← hM]; exact mem_rest hi hik) hti
+    · rw [coe_set_idx ls hk, hM]
+
+/-- Empty chains do not matter. -/
+theorem MWin.add_empty {M : Multiset (LCh A C)} {s : Set F} (h : MWin P M s) :
+    ∀ {J : Multiset (LCh A C)}, (∀ c ∈ J, c.lab = []) → MWin P (M + J) s := by
+  induction h with
+  | empty hM =>
+    intro J hJ
+    exact .empty fun c hc => (Multiset.mem_add.1 hc).elim (hM c) (hJ c)
+  | prim hfree happ hall ih =>
+    intro J hJ
+    rw [Multiset.cons_add]
+    refine .prim (fun g hg c hc htc => ?_) happ fun s' hs' => by
+      have := ih s' hs' hJ; rwa [Multiset.cons_add] at this
+    rcases Multiset.mem_add.1 hc with hc | hc
+    · exact hfree g hg c hc htc
+    · exact hJ c hc
+  | seq hm hmc hseq hw ih =>
+    intro J hJ
+    rw [Multiset.cons_add]
+    exact .seq hm hmc hseq (by have := ih hJ; rwa [Multiset.cons_add] at this)
+  | set hm hmc hset hw ih =>
+    intro J hJ
+    rw [Multiset.cons_add]
+    refine .set hm hmc hset ?_
+    have := ih hJ
+    rw [Multiset.cons_add] at this
+    convert this using 2
+    rw [add_right_comm]
+  | split hpre hpost hw ih =>
+    intro J hJ
+    rw [Multiset.cons_add]
+    refine .split (fun c hc htc => ?_) (fun c hc htc => ?_) ?_
+    · rcases Multiset.mem_add.1 hc with hc | hc
+      · exact hpre c hc htc
+      · exact hJ c hc
+    · rcases Multiset.mem_add.1 hc with hc | hc
+      · exact hpost c hc htc
+      · exact hJ c hc
+    · have := ih hJ; rwa [Multiset.cons_add, Multiset.cons_add] at this
+  | @retag M s xs g hpre hw ih =>
+    intro J hJ
+    rw [Multiset.cons_add]
+    refine .retag (g := g) (fun c hc htc => ?_) ?_
+    · rcases Multiset.mem_add.1 hc with hc | hc
+      · exact hpre c hc htc
+      · exact hJ c hc
+    · have := ih hJ; rwa [Multiset.cons_add] at this
 
 end HardTR
 
