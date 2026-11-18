@@ -119,3 +119,8 @@ import FondHtn.DB25.Hard
 import FondHtn.DB25.Complete
 import FondHtn.HardTR.WGame
 import FondHtn.HardTR.Round
+import FondHtn.AcycHard.ChainGame
+import FondHtn.AcycHard.Fifo
+import FondHtn.AcycHard.Supply
+import FondHtn.AcycHard.Chains
+import FondHtn.AcycHard.Assembly
