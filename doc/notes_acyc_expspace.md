@@ -8,15 +8,10 @@ Targets:
 
 Membership is proved for both (`strongMP_ACYC_mem`, `strongOD_ACYC_mem`).
 
-Status: **one construction serves both targets**. What is **formalised** in
-`FondHtn/AcycHard/` (no sorry, standard axioms only), §3:
-* the combinatorial core, the FIFO queue of counter cells (the "hard combinatorial core" of
-  `notes_acyc_strongOD.md` §3.2);
-* the bridge from belief solvability of a union-of-chains network;
-* the supply argument.
-
-Together: `beliefSolvable_iff_qi`. The remaining layers are listed in §6 with their proof
-obligations.
+Status: **done.** One construction serves both targets (and the fair reading):
+`FOND.AcycHard.complete_ACYC_strongOD`, `complete_ACYC_mpStrong`, `complete_ACYC_mpFair`
+(`FondHtn/AcycHard/Main.lean`; no sorry, standard axioms only). §3–§6 describe the layers; §6
+ends with the deviations of the final instance from the plan.
 
 ## 1. Decisions and why they avoid the known obstacles
 
@@ -303,20 +298,25 @@ to `X.cwin_iff_qi`.
 `HierInv.lean` (`HSpec`, expansions `exI`/`exMI`/`exC`, `HInv`, `HInv.step`, `HInv.isChains`,
 `exists_primitive`), `HierGame.lean` (`strongOD_iff_hier`, `mpAndOr_iff_hier`).
 
-**Remaining plan for the instance.**
-1. Transfer lemma: `CWin` with control `u ++ refill^R` (`u` refill-free) is invariant under an
-   injective fact encoding and action naming, provided the encoded actions are the images
-   except `refill`, which only has to make all remaining pool actions applicable (the abstract
-   `refill` adds `Set.univ`, which a finite description cannot).
-2. Description: facts `Tok Gate (Fct (AS Q) (Sym Q Γ))` coded as numbers; actions: `opn/cls g`,
-   plain `toRd/half/halfChk/acc`, `refill` (adds the codes of all needed facts), pool `init τ`,
-   `tick`, `res`, `fin τ`, `opt o` for the (finitely many) options of `Sav.Δ`.
-3. Hierarchy: control = `preC ++ sweepC ++ [toRd] ++ (sweepC ++ [half])^K ++ sweepC ++ [halfChk]
-   ++ sweepC ++ [acc] ++ refill^R` with `sweepC = stepC^S`, `stepC = (W T)^S (W R)^S W F W I W U`,
-   powers by binary doubling (seq-kind); pool root (set-kind) = `S` blank cells + `n` fresh cells
-   per symbol + `n` copies per option, multiplicities by set-kind doubling.
-4. `HInv` of `tn_I` (two unordered roots), `Fit`, method existence, validity, ACYC (rank),
-   PT, final theorems (FM via `strongOD_iff_hier`, MP via `mpAndOr_iff_hier`).
+**The instance (done).** Files `Transfer.lean` (CWin under an injective fact coding and
+action naming, with a separate trash phase), `InstEnc.lean` (codes), `InstHier.lean` (names,
+bodies, the expansions `exI_ctl` and `exMI_pool`), `InstDesc.lean` (description, validity,
+`Fit`, closure, ACYC, `HInv` of `tn_I`, transfer hypotheses; `Good.strongOD_iff`,
+`Good.mpStrong_iff`), `InstMach.lean` (`instOf N P E₁ E₂ w`, `good_instOf`,
+`instOf_strongOD_iff`), `InstNum.lean`/`InstPT.lean` (numeric form, `pt_descOf`), `Main.lean`.
+Deviations from the plan:
+* All counts are written with `B = E₂ + 1` bits (`pw b j`, `spw s j` for `j < B`); the
+  supply is `n = 2 ^ E₁` and the refills are `R = 2 ^ E₂` (upper bounds instead of exact
+  values, so their bit patterns are trivial); `E₁ = 2P + k + 4`, `E₂ = E₁ + P + |w| + D + 4`
+  (`bounds`).
+* The symbols are *all* symbols (`allSyms`; `Rich` needs every allowed symbol); the options are
+  the input transitions (`optsI`, depend on `w`) and the read/check transitions (`optsC`,
+  constant, chosen classically).
+* The refill adds the preconditions of all pool actions (a finite list), not `univ`; the
+  transfer lemma handles the trash phase on both sides separately (`TransferHyp.trash₁/₂`).
+* PT: the description is rewritten with numeric building blocks only (`acts_num`,
+  `meths_num`); options enter through their code quadruples (`quad`).
+
 * The NFA `Chk` is the only machine-specific part.
 * `X`, `Q`, `Γ` are finite and fixed (`Fin k`, `Space.TapeSym`); only the `In` states depend
   on `w`.

@@ -23,18 +23,11 @@ Legend: **[WIP]** partial Lean files exist · **[PLAN]** construction on paper, 
   `SoundK.lean`, completeness `CompleteK.lean`, machine link `Red.lean`, PT `PT.lean`).
 - Open follow-up: the fair strong cyclic version (`hardFair_TO` is only EXPTIME).
 
-### 1.3 Counters — ACYC EXPSPACE-hard (FM strong OD and MP strong = CB22 Thm 2) **[WIP]**
-- Core proved: `FondHtn/AcycHard/` (chain game, FIFO cell queue, supply, `beliefSolvable_iff_qi`).
-- Plan: `doc/notes_acyc_expspace.md` §6. Source: `FOND.ATM.expspace_savWin`.
-- Next:
-  1. L3: queue game → Savitch game (`QI` as an automaton queue game, sweep lemma, list
-     version of `SavWin`, check automaton for `x ⊢ y`), ≈1000–1500 lines.
-  2. L1b/L1c: the acyclic hierarchy (doubling, binary counts), every reachable primitive network
-     is `IsChains`; for MP: `MPAndOr tn s ↔ CWin(expansions)` on partially decomposed networks.
-  3. L1d: descriptions, validity, ACYC, PT layer.
-  4. Assembly: `Cx.Hard Cx.EXPSPACE (PlanExFM .strongOD FClass.ACYC)` and
-     `(PlanExMP .strong FClass.ACYC)`; completeness with `strongOD_ACYC_mem`, `strongMP_ACYC_mem`;
-     fair via `planExMPFair_eq_strong`.
+### 1.3 Counters — ACYC EXPSPACE-hard (FM strong OD and MP strong = CB22 Thm 2) **[DONE]**
+- Proved: `FOND.AcycHard.hard_ACYC_strongOD`, `hard_ACYC_mpStrong`, `hard_ACYC_mpFair` and the
+  EXPSPACE-completeness versions (`FondHtn/AcycHard/Main.lean`); construction
+  `doc/notes_acyc_expspace.md` (chain game, FIFO cell queue, supply, Savitch program `SavProg`,
+  single-method hierarchy `Hier*`, transfer to coded names, instance `Inst*`, PT `InstPT`).
 
 ### 1.4 Counters — TR 2-EXPTIME-hard (MP strong and fair = CB22 Thm 5) **[WIP]**
 - Proved: `FondHtn/HardTR/{Source,WGame,Round}.lean` (source game with all-ones counters,

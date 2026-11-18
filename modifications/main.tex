@@ -581,11 +581,24 @@ proof route and the gaps in the published proofs.
   machine (\lean{PCP/Reduction.lean}, \lean{undecidable\_strongOD\_REG\_TR}).
 \end{deviation}
 
+\begin{deviation}[Acyclic problems are EXPSPACE-hard: a new construction]
+  The proofs of [CB22, Thm.~2] and of the counter idea for acyclic strong OD are sketches that
+  do not work as stated (\lean{doc/notes_acyc_strongOD.md}, \lean{doc/notes_cb22_thm2.md}).
+  We use a different construction (\lean{doc/notes_acyc_expspace.md}). The source is the
+  \emph{Savitch game} of an exponential-space machine (\lean{expspace_savWin}), not an
+  alternating machine. An acyclic hierarchy with a single method per compound task decomposes
+  to one fixed network: a totally ordered control chain and unordered pools of counter cells.
+  The cells implement a FIFO queue of tape symbols with an exponential delay. The queue
+  program plays the Savitch game: it halves the computation in each round, and an automaton
+  checks the last pair. Repetition counts are written in binary by doubling methods (ordered for
+  the control, unordered for the pools). The same network serves fixed methods (strong OD) and
+  method-based policies (strong, and fair, which coincide on acyclic problems):
+  \lean{complete_ACYC_strongOD}, \lean{complete_ACYC_mpStrong},
+  \lean{complete_ACYC_mpFair}.
+\end{deviation}
+
 \begin{deviation}[Open problems with documented obstacles]
   \begin{itemize}
-    \item EXPSPACE-hardness of acyclic strong OD (counters) and of acyclic MP strong ([CB22,
-      Thm.~2]) needs alternating machines, which the library does not have
-      (\lean{doc/notes_acyc_strongOD.md}, \lean{doc/notes_cb22_thm2.md}).
     \item Semi-decidability of fair strong cyclic solvability for unrestricted problems is open
       (\lean{doc/notes_fair_semidec.md}).
   \end{itemize}

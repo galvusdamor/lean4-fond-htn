@@ -132,6 +132,12 @@ import FondHtn.AcycHard.HierInv
 import FondHtn.AcycHard.HierGame
 import FondHtn.AcycHard.Transfer
 import FondHtn.AcycHard.InstEnc
+import FondHtn.AcycHard.InstHier
+import FondHtn.AcycHard.InstDesc
+import FondHtn.AcycHard.InstMach
+import FondHtn.AcycHard.InstNum
+import FondHtn.AcycHard.InstPT
+import FondHtn.AcycHard.Main
 import FondHtn.TOHard2.Auto
 import FondHtn.TOHard2.Bits
 import FondHtn.TOHard2.Chain
