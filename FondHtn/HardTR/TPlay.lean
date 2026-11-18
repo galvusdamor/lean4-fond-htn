@@ -206,6 +206,110 @@ theorem play_tree (ρ : Bool) : ∀ k, k ≤ mm X → ∀ (M : Multiset (LCh ℕ
     rw [e3]
     exact h _ (junk_cons _ (junk_add hJ hJ'))
 
+/-! ## Phase: the address bits of a writer thread -/
+
+/-- The pending address checks of a thread with address `c` below bit `k`. -/
+def rbs (p : Bool) (c k : ℕ) : List (ℕ ⊕ ℕ) :=
+  (List.range k).reverse.map fun j => nL (.rbT p j (c.testBit j))
+
+theorem rbs_succ (p : Bool) (c k : ℕ) : rbs p c (k + 1) = nL (.rbT p k (c.testBit k)) :: rbs p c k := by
+  simp [rbs, List.range_succ]
+
+/-- The phase before writing bit `k`. -/
+def phk (X : Spec S) (k : ℕ) : Ph := if k < mm X then .wb k else .rv
+
+variable (hS : Function.Injective cS) (hall : ∀ s, s ∈ allS) (hX : X.Valid)
+include hS hall hX
+
+/-- **Writing the address bits.** -/
+theorem play_bits (ρ : Bool) {c : ℕ} (M : Multiset (LCh ℕ ℕ)) (y : Bool) (g : Ctl S) :
+    ∀ j k, k + j = mm X → Good X ⟨phk X k, c, ρ, y, g⟩ →
+      MW cS X allS ops ens σ₀ (⟨nL (.bit ρ (mm X)) :: rbs ρ c (mm X), preT ρ⟩ ::ₘ M) ⟨.rv, c, ρ, y, g⟩ →
+      MW cS X allS ops ens σ₀ (⟨nL (.bit ρ k) :: rbs ρ c k, preT ρ⟩ ::ₘ M) ⟨phk X k, c, ρ, y, g⟩ := by
+  intro j
+  induction j with
+  | zero =>
+    intro k hk _ h
+    simp only [Nat.add_zero] at hk; subst hk
+    simpa [phk] using h
+  | succ j ih =>
+    intro k hk hG h
+    have hkm : k < mm X := by omega
+    have hph : phk X k = .wb k := by simp [phk, hkm]
+    rw [hph] at hG ⊢
+    have := mv_seq (cS := cS) (X := X) (allS := allS) (σ₀ := σ₀) (m_bit cS X ops ens ρ hkm (c.testBit k))
+      (xs₁ := []) (xs₂ := rbs ρ c k) (τ := preT ρ) (M := M) (r := ⟨.wb k, c, ρ, y, g⟩)
+    simp only [List.nil_append, List.map_cons, List.map_nil, toLab_lA, toLab_lN,
+      List.cons_append] at this
+    apply this
+    refine mv_prim hS hall hX (a := .wb ρ k (c.testBit k))
+      (by rw [mem_acts_iff]; exact Or.inl ⟨ρ, k, _, hkm, rfl⟩) hG
+      ⟨rfl, rfl, rfl⟩ (fun g h => by simp at h) fun r' hr' hG' => ?_
+    simp only [Mach.outs, Set.mem_singleton_iff] at hr'
+    subst hr'
+    have hnext : X.mach.nextWb k = phk X (k + 1) := by
+      unfold Mach.nextWb phk; rfl
+    rw [hnext] at hG' ⊢
+    have := ih (k + 1) (by omega) hG' h
+    rwa [rbs_succ] at this
+
+/-! ## Phase: reading a tail -/
+
+omit hS hall hX in
+/-- A stored tail. -/
+abbrev tailC (X : Spec S) (p : Bool) (a : ℕ) (γ : Bool) : LCh ℕ ℕ :=
+  ⟨nL (.rvT p γ) :: rbs p a (mm X), preT p⟩
+
+omit hS hall hX in
+/-- The phase while `k` address bits remain to be checked. -/
+def phr (k : ℕ) : Ph := if k = 0 then .op else .rb (k - 1)
+
+/-- **Checking the address bits of a tail.** -/
+theorem play_rbs (ρ : Bool) {c : ℕ} (M : Multiset (LCh ℕ ℕ)) (y : Bool) (g : Ctl S) :
+    ∀ k, k ≤ mm X → Good X ⟨phr k, c, ρ, y, g⟩ →
+      MW cS X allS ops ens σ₀ (⟨[], preT (!ρ)⟩ ::ₘ M) ⟨.op, c, ρ, y, g⟩ →
+      MW cS X allS ops ens σ₀ (⟨rbs (!ρ) c k, preT (!ρ)⟩ ::ₘ M) ⟨phr k, c, ρ, y, g⟩ := by
+  intro k
+  induction k with
+  | zero => intro _ _ h; simpa [phr, rbs] using h
+  | succ k ih =>
+    intro hk hG h
+    rw [rbs_succ]
+    have hph : phr (k + 1) = .rb k := by simp [phr]
+    rw [hph] at hG ⊢
+    have := mv_seq (cS := cS) (X := X) (allS := allS) (σ₀ := σ₀)
+      (m_rb cS X ops ens (!ρ) (k := k) (by omega) (c.testBit k))
+      (xs₁ := []) (xs₂ := rbs (!ρ) c k) (τ := preT (!ρ)) (M := M) (r := ⟨.rb k, c, ρ, y, g⟩)
+    simp only [List.nil_append, List.map_cons, List.map_nil, toLab_lA, List.cons_append] at this
+    apply this
+    refine mv_prim hS hall hX (a := .rb (!ρ) k (c.testBit k))
+      (by rw [mem_acts_iff]; exact Or.inr (Or.inl ⟨!ρ, k, _, by omega, rfl⟩)) hG
+      ⟨rfl, by simp, rfl⟩ (fun g h => by simp at h) fun r' hr' hG' => ?_
+    simp only [Mach.outs, Set.mem_singleton_iff] at hr'
+    subst hr'
+    have hnext : Mach.nextRb k = phr k := by unfold Mach.nextRb phr; rfl
+    rw [hnext] at hG' ⊢
+    exact ih (by omega) hG' h
+
+/-- **Reading a tail**: the value `γ` stored for the cell `c`. -/
+theorem play_read (ρ γ : Bool) {c : ℕ} (M : Multiset (LCh ℕ ℕ)) (y : Bool) (g : Ctl S)
+    (hG : Good X ⟨.rv, c, ρ, y, g⟩)
+    (h : MW cS X allS ops ens σ₀ (⟨[], preT (!ρ)⟩ ::ₘ M) ⟨.op, c, ρ, γ, g⟩) :
+    MW cS X allS ops ens σ₀ (tailC X (!ρ) c γ ::ₘ M) ⟨.rv, c, ρ, y, g⟩ := by
+  have := mv_seq (cS := cS) (X := X) (allS := allS) (σ₀ := σ₀) (m_rv cS X ops ens (!ρ) γ)
+    (xs₁ := []) (xs₂ := rbs (!ρ) c (mm X)) (τ := preT (!ρ)) (M := M) (r := ⟨.rv, c, ρ, y, g⟩)
+  simp only [List.nil_append, List.map_cons, List.map_nil, toLab_lA, List.cons_append] at this
+  apply this
+  refine mv_prim hS hall hX (a := .rv (!ρ) γ)
+    (by rw [mem_acts_iff]; exact Or.inr (Or.inr (Or.inr (Or.inl ⟨!ρ, γ, rfl⟩)))) hG
+    ⟨rfl, by simp⟩ (fun g h => by simp at h) fun r' hr' hG' => ?_
+  simp only [Mach.outs, Set.mem_singleton_iff] at hr'
+  subst hr'
+  have hm : X.mach.m - 1 + 1 = mm X := by simp [Spec.mach, mm]
+  have hph : Ph.rb (X.mach.m - 1) = phr (mm X) := by simp [phr, Spec.mach, mm]
+  rw [hph] at hG' ⊢
+  exact play_rbs hS hall hX ρ M γ g (mm X) le_rfl hG' h
+
 end TD
 
 end HardTR
