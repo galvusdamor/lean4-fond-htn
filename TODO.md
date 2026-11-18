@@ -42,8 +42,14 @@ Legend: **[WIP]** partial Lean files exist · **[PLAN]** construction on paper, 
 - Proved: `FOND.PCP.undecidable_strongOD_REG_TR` (`FondHtn/PCP/Reduction.lean`). It reduces
   directly from the halting problem of `undecTSM` (no PCP needed); construction and check:
   `doc/notes_pcp_check.md`.
-- Possible follow-ups: the same instances for weak OD or MP criteria; a statement for `REGtn`
-  is not possible (tn_I has four unordered roots).
+- No follow-ups: the analogous undecidability cannot hold for the other criteria. On REG
+  (Bercher) and on TR, every other criterion is already proved decidable: weak LD/OD
+  (`weakOD_REG_complete` PSPACE, `weakOD_TR_complete` EXPSPACE), strong LD
+  (`FondHtn/Upper/StrongMem.lean`), MP weak (`FondHtn/MP/WeakComplexity.lean`, `WeakReg.lean`),
+  MP strong (`strongMP_REG_complete` EXPTIME, `strongMP_TR_mem` 2-EXPTIME) and MP fair
+  (`fairMP_REG_complete`, `fairMP_TR_mem`). The undecidability is specific to strong OD (one
+  decomposition fixed in advance against all outcomes). For `REGtn` strong OD is EXPSPACE-complete
+  (`strongOD_REGtn_complete`); the PCP instances are not in `REGtn` (tn_I has four unordered roots).
 
 ---
 
