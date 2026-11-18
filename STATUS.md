@@ -100,4 +100,4 @@ FOND-specific lower bounds:
 | Total order, 2-EXPTIME hardness | construction completed on paper (`doc/notes_to_hard.md`), formalisation partial (`FondHtn/TOHard2/`) |
 | Counters, ACYC EXPSPACE-hard | core proved (`FondHtn/AcycHard/`), remaining layers in `doc/notes_acyc_expspace.md` |
 | Counters, TR 2-EXPTIME-hard | source + round lemma proved (`FondHtn/HardTR/`), encoding open |
-| PCP | blocked: sketch needs a mode mechanism (`doc/notes_pcp_strongOD.md`) |
+| PCP | plan: repaired by gated cheat tasks (`doc/notes_pcp_strongOD.md`); formalisation and PCP undecidability open |

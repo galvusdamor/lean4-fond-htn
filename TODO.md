@@ -51,9 +51,10 @@ Legend: **[WIP]** partial Lean files exist · **[PLAN]** construction on paper, 
   automaton, encoding, descriptions, PT, TR certificate), P4 (completeness on real networks),
   P5/P6 (assembly, completeness with `strongMP_TR_mem` / `fairMP_TR_mem`).
 
-### 1.5 PCP — TR / Bercher-REG FM strong OD undecidable **[BLOCKED]**
-- The sketch does not work with STRIPS-style FOND actions: the checks of the inactive mode cannot
-  be freed (`doc/notes_pcp_strongOD.md`). **Needs the author's input** on the mode mechanism.
+### 1.5 PCP — TR / Bercher-REG FM strong OD undecidable **[PLAN]**
+- The original sketch fails (inactive mode's checks block); repaired by gated cheat tasks
+  (author's suggestion, see the end of `doc/notes_pcp_strongOD.md`). Next: formalise the
+  construction; instances are Bercher-REG ∩ TR (two compound tasks in tn_I).
 - Also needs a PCP undecidability proof (none in the library; from `undecTSM` or a TM
   simulation).
 

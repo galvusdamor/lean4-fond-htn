@@ -97,3 +97,17 @@ disjunctive preconditions such as "word mode ∨ letter matches". Neither is ava
 inactive mode's tasks free. As stated, the construction does not go through with STRIPS FOND
 actions. The undecidability of FM strong OD for TR (and Bercher-REG) stays open (❓). The
 inherited result `undecidable_fm` (UNRES) is unaffected.
+
+## Repair (suggested by the author, 2026-11-18): gated cheat tasks
+
+Add cheat tasks "add f" / "del f" for every fact f of the *other* mode, a constant number inside
+every method (so the supply grows with the chains; methods stay regular: primitives, then the
+compound task last). Gating: cheats for word-mode facts require `cheatW`, which `init`'s
+char-mode outcome adds; in word mode `cheatW` is only added by the final task `fin` (after the
+genuine word checks), so the active mode's own cheats are idle until the end and then execute
+harmlessly; symmetrically `cheatC`. `fin` requires both "chars matched" and "indices matched";
+the inactive one is produced by cheats. The active check uses conjunctive preconditions with
+lag 1 (`free`/`pending_x` handshake). Soundness: fixed methods commit both words before `init`
+reveals the mode. This defeats the obstruction above (identical effects in both modes): the
+cheats give the policy arbitrary control over the inactive mode's facts only.
+Remaining: formalise; PCP undecidability (not in the library; from the two-stack machine).
