@@ -143,3 +143,7 @@ import FondHtn.DB25Games.HardDesc
 import FondHtn.DB25Games.Main
 import FondHtn.DB25Games.Sem
 import FondHtn.DB25Games.Tab
+import FondHtn.PCP.Words
+import FondHtn.PCP.ChainNet
+import FondHtn.PCP.Decomp
+import FondHtn.PCP.Chains4
