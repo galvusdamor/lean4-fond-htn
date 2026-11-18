@@ -51,12 +51,12 @@ Legend: **[WIP]** partial Lean files exist · **[PLAN]** construction on paper, 
   automaton, encoding, descriptions, PT, TR certificate), P4 (completeness on real networks),
   P5/P6 (assembly, completeness with `strongMP_TR_mem` / `fairMP_TR_mem`).
 
-### 1.5 PCP — TR / Bercher-REG FM strong OD undecidable **[PLAN]**
-- The original sketch fails (inactive mode's checks block); repaired by gated cheat tasks
-  (author's suggestion, see the end of `doc/notes_pcp_strongOD.md`). Next: formalise the
-  construction; instances are Bercher-REG ∩ TR (two compound tasks in tn_I).
-- Also needs a PCP undecidability proof (none in the library; from `undecTSM` or a TM
-  simulation).
+### 1.5 PCP — TR / Bercher-REG FM strong OD undecidable **[DONE]**
+- Proved: `FOND.PCP.undecidable_strongOD_REG_TR` (`FondHtn/PCP/Reduction.lean`). It reduces
+  directly from the halting problem of `undecTSM` (no PCP needed); construction and check:
+  `doc/notes_pcp_check.md`.
+- Possible follow-ups: the same instances for weak OD or MP criteria; a statement for `REGtn`
+  is not possible (tn_I has four unordered roots).
 
 ---
 

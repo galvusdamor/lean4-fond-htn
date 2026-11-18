@@ -150,3 +150,9 @@ import FondHtn.PCP.Chains4
 import FondHtn.PCP.ChainTn
 import FondHtn.PCP.Construction
 import FondHtn.PCP.ConstrSem
+import FondHtn.PCP.Lang
+import FondHtn.PCP.LangB
+import FondHtn.PCP.GameBase
+import FondHtn.PCP.Game
+import FondHtn.PCP.Correct
+import FondHtn.PCP.Reduction

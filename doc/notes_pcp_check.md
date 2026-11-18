@@ -42,14 +42,34 @@ FOND problem: facts `free_m`, `pend_m(c)`, `cheatOK_m` for modes `m = 1, 2`.
 - A letter of `B` with `o_m = c`: precondition `pend_m(c)`, adds `free_m`, deletes `pend_m(c)`.
 - `cheat_m`: precondition `cheatOK_m`, adds all facts of mode `m`.
 - `fin`: precondition `{free₁, free₂}`, adds `{cheatOK₁, cheatOK₂}`.
-- `tn_I = {init, A, B, S₁, S₂, fin}`, `init ≺ A, B ≺ fin`. Chains are automata: methods
-  `(k, q) → [x, (k, q')]` and `(k, q) → []` for final `q`. All methods are regular (one compound
-  task, last); one stratum gives tail recursion.
+- `endB` (last task of chain `B`): adds `dB`; `fin` additionally needs `dB`.
+- `tn_I` = four unordered compound tasks: chain `A` = `init · A-letters · fin`, chain
+  `B` = `blocks · endB`, supply chains `S₁ = cheat₁*`, `S₂ = cheat₂*`. Chains are automata:
+  methods `q → [x, q']` and `q → []` (or `q → [x]` at the end). All methods are regular (one
+  compound task, last); one stratum gives tail recursion. Since `init` is first and `fin` (gated
+  by `dB`) last in chain `A`, no order between the chains is needed, and every primitive network
+  is a union of chains, so the chain game of `FondHtn/AcycHard/Chains.lean` applies.
+- Stack symbols: the alphabet is `(s₁ ++ s₂ ++ X ++ symbols of M).dedup` for an extra list `X`;
+  with `s₁ ++ s₂ ⊆ X` the description depends on the stacks only through the first method of
+  `A`, which makes the reduction easy to compute.
 
 Correctness. The only applicable first task is `init`. Afterwards all actions are deterministic.
 In the active mode `m`, the facts of mode `m` change only through the letters of `A` and `B`
 before `fin` (its cheats need `cheatOK_m`, which only `fin` adds), so executing all letters and
-then `fin` (precondition `free_m`) is possible iff the `m`-streams of `A` and `B` are equal. The
-facts of the other mode are restored by a `cheat` before every letter. After `fin` the remaining
-cheats are enabled. The trivial case (initial = final configuration, zero steps) is mapped to a
-fixed solvable instance.
+then `fin` (precondition `free_m`, and `dB`, i.e. after all of `B`) is possible iff the
+`m`-streams of `A` and `B` are equal. The facts of the other mode are restored by a `cheat`
+before every letter. After `fin` the remaining cheats are enabled. The reduction uses
+`s₁ = [0]` (`HTN.Undec.undecTSM_halts_iff`), so the initial and the final configuration always
+differ and runs have at least one step.
+
+## Formalisation (`FondHtn/PCP/`)
+
+| file | content |
+| --- | --- |
+| `Words.lean` | runs as equalities of projections: `transGen_iff_eqns`, `eqns_iff_words` |
+| `ChainNet.lean`, `Decomp.lean`, `Chains4.lean`, `ChainTn.lean` | problems whose methods are chains: `strongOD_iff_cwin` (derivations per root + chain game) |
+| `Construction.lean`, `ConstrSem.lean` | the description `desc M X s₁ s₂`, validity, its methods |
+| `Lang.lean`, `LangB.lean` | the words derived from the roots (`derA_*`, `derB_*`, `derS_*`) |
+| `GameBase.lean`, `Game.lean` | the game: `game_sound` (per-mode view of the state), `game_complete` (interleaving strategy) |
+| `Correct.lean` | `strongOD_iff`, `isREG`, `isTailREC` |
+| `Reduction.lean` | computability, `undecidable_strongOD_REG_TR` |

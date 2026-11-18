@@ -5,7 +5,7 @@ import FondHtn.Lang.Desc
 /-!
 # The FOND problem of a two-stack machine
 
-For a two-stack machine `M` and initial stacks `s₁, s₂`, `FOND.PCP.desc M s₁ s₂` is a FOND
+For a two-stack machine `M` and initial stacks `s₁, s₂`, `FOND.PCP.desc M X s₁ s₂` is a FOND
 description with four chains (`doc/notes_pcp_check.md`):
 
 * chain `A` (control): `init`, then the word `aw c₀ c_f mid` (each letter an action `nA ℓ`),
@@ -78,17 +78,19 @@ def dB : ℕ := Nat.pair 3 0
 
 /-! ## The alphabet -/
 
-variable (M : TSM) (s₁ s₂ : List ℕ)
+variable (M : TSM) (X s₁ s₂ : List ℕ)
 
-/-- The stack symbols. -/
-def syms : List ℕ := s₁ ++ s₂ ++ M.trans.flatMap fun t => t.pop :: t.push
+/-- The stack symbols: those of the initial stacks, the extra alphabet `X` and those of the
+transitions.  With `s₁ ++ s₂ ⊆ X` the list does not depend on `s₁`, `s₂`
+(`FOND.PCP.syms_of_subset`), which makes the reduction simple to compute. -/
+def syms : List ℕ := (s₁ ++ s₂ ++ X ++ M.trans.flatMap fun t => t.pop :: t.push).dedup
 /-- The control states. -/
 def sts : List ℕ := M.start :: M.acc :: M.trans.flatMap fun t => [t.src, t.tgt]
 /-- The characters. -/
-def chars : List Ch := (( syms M s₁ s₂).map Ch.stk ++ (sts M).map Ch.st ++ [Ch.sep]).dedup
+def chars : List Ch := (( syms M X s₁ s₂).map Ch.stk ++ (sts M).map Ch.st ++ [Ch.sep]).dedup
 /-- The letters. -/
 def letters : List Letter :=
-  (chars M s₁ s₂).flatMap fun c => [(none, some c), (some c, some c), (some c, none)]
+  (chars M X s₁ s₂).flatMap fun c => [(none, some c), (some c, some c), (some c, none)]
 
 /-! ## Actions -/
 
@@ -115,11 +117,11 @@ def actInit : FActDesc := (nInit, [], [], [([fr 1, ok 2], []), ([fr 2, ok 1], []
 def actFin : FActDesc := (nFin, [fr 1, fr 2, dB], [], [([ok 1, ok 2], [])])
 def actEnd : FActDesc := (nEnd, [], [], [([dB], [])])
 def actCheat (m : ℕ) : FActDesc :=
-  (nCheat m, [ok m], [], [(fr m :: (chars M s₁ s₂).map (pd m), [])])
+  (nCheat m, [ok m], [], [(fr m :: (chars M X s₁ s₂).map (pd m), [])])
 
 def actions : List FActDesc :=
-  [actInit, actFin, actEnd, actCheat M s₁ s₂ 1, actCheat M s₁ s₂ 2] ++
-    (letters M s₁ s₂).map actA ++ (letters M s₁ s₂).map actB
+  [actInit, actFin, actEnd, actCheat M X s₁ s₂ 1, actCheat M X s₁ s₂ 2] ++
+    (letters M X s₁ s₂).map actA ++ (letters M X s₁ s₂).map actB
 
 /-! ## Methods -/
 
@@ -139,14 +141,14 @@ def triples : List (ℕ × List ℕ × Option ℕ) :=
     (3, [nB (some Ch.sep, some Ch.sep)], some 4),
     (4, [nEnd], none),
     (5, [nCheat 1], some 5), (5, [], none), (6, [nCheat 2], some 6), (6, [], none)] ++
-  (chars M s₁ s₂).map (fun c => (1, [nA (some c, some c)], some 1)) ++
-  (syms M s₁ s₂).map (fun a => (2, [symB a], some 2)) ++
-  (syms M s₁ s₂).map (fun a => (3, [symB a], some 3)) ++
-  (syms M s₁ s₂).map (fun a => (4, [symB a], some 2)) ++
+  (chars M X s₁ s₂).map (fun c => (1, [nA (some c, some c)], some 1)) ++
+  (syms M X s₁ s₂).map (fun a => (2, [symB a], some 2)) ++
+  (syms M X s₁ s₂).map (fun a => (3, [symB a], some 3)) ++
+  (syms M X s₁ s₂).map (fun a => (4, [symB a], some 2)) ++
   M.trans.map (fun t => (2, ruleW t, some 3)) ++
   M.trans.map (fun t => (4, ruleW t, some 3))
 
-def methods : List MethodDesc := (triples M s₁ s₂).map fun q => (q.1, chainTn q.2.1 q.2.2)
+def methods : List MethodDesc := (triples M X s₁ s₂).map fun q => (q.1, chainTn q.2.1 q.2.2)
 
 /-- The initial task network: the four roots, unordered. -/
 def tnI : TnDesc := ([0, 1, 2, 3], [], [(0, true, 0), (1, true, 2), (2, true, 5), (3, true, 6)])
@@ -159,7 +161,7 @@ def root : ℕ → ℕ
   | _ => 6
 
 /-- **The description.** -/
-def desc : FProbDesc := ((actions M s₁ s₂, methods M s₁ s₂), ([], tnI))
+def desc : FProbDesc := ((actions M X s₁ s₂, methods M X s₁ s₂), ([], tnI))
 
 end PCP
 
