@@ -599,6 +599,125 @@ theorem play_sweepB (ρ : Bool) (i : ℕ) (σ : S)
     rw [e2]
     exact ih (c + 1) _ _ (by omega) hG' hend
 
+/-! ## Draining after the finish -/
+
+omit hS hall hX in
+/-- The labels that can be drained. -/
+def DrL (X : Spec S) (x : ℕ ⊕ ℕ) : Prop :=
+  (∃ p γ, x = nL (.rvT p γ)) ∨ (∃ p k b, k < mm X ∧ x = nL (.rbT p k b)) ∨ (∃ p, x = nL (.reT p))
+
+omit hS hall hX in
+/-- The chains that can be drained. -/
+def Drainable (X : Spec S) (c : LCh ℕ ℕ) : Prop :=
+  c.lab = [] ∨ (∃ p, c.tag = preT p ∧ ∀ x ∈ c.lab, DrL X x) ∨ (∃ p, c.lab = [nL (.loop p)])
+
+theorem drain_chain {r : Rec (Ctl S)} (hr : r.ph = .drain) (hG : Good X r) (p : Bool)
+    (M : Multiset (LCh ℕ ℕ)) : ∀ l : List (ℕ ⊕ ℕ), (∀ x ∈ l, DrL X x) →
+      MW cS X allS ops ens σ₀ (⟨[], preT p⟩ ::ₘ M) r → MW cS X allS ops ens σ₀ (⟨l, preT p⟩ ::ₘ M) r := by
+  intro l
+  induction l with
+  | nil => exact fun _ h => h
+  | cons x l ih =>
+    intro hl h
+    have hdr : ∀ p', MW cS X allS ops ens σ₀ (⟨aL cS (.dr p') :: l, preT p⟩ ::ₘ M) r := fun p' =>
+      mv_prim hS hall hX (a := .dr p')
+        (by rw [mem_acts_iff]; exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl ⟨p', rfl⟩)))))))
+        hG hr (fun g h => by simp at h) fun r' hr' _ => by
+          simp only [Mach.outs, Set.mem_singleton_iff] at hr'
+          subst hr'
+          exact ih (fun x hx => hl x (List.mem_cons_of_mem _ hx)) h
+    rcases hl x List.mem_cons_self with ⟨p', γ, rfl⟩ | ⟨p', k, b, hk, rfl⟩ | ⟨p', rfl⟩
+    · have := mv_seq (cS := cS) (X := X) (allS := allS) (σ₀ := σ₀) (m_rvD cS X ops ens p' γ)
+        (xs₁ := []) (xs₂ := l) (τ := preT p) (M := M) (r := r)
+      simp only [List.nil_append, List.map_cons, List.map_nil, toLab_lA, List.cons_append] at this
+      exact this (hdr p')
+    · have := mv_seq (cS := cS) (X := X) (allS := allS) (σ₀ := σ₀) (m_rbD cS X ops ens p' hk b)
+        (xs₁ := []) (xs₂ := l) (τ := preT p) (M := M) (r := r)
+      simp only [List.nil_append, List.map_cons, List.map_nil, toLab_lA, List.cons_append] at this
+      exact this (hdr p')
+    · have := mv_seq (cS := cS) (X := X) (allS := allS) (σ₀ := σ₀) (m_reD cS X ops ens p')
+        (xs₁ := []) (xs₂ := l) (τ := preT p) (M := M) (r := r)
+      simp only [List.nil_append, List.map_cons, List.map_nil, toLab_lA, List.cons_append] at this
+      exact this (hdr p')
+
+/-- **Draining**: after the finish, every remaining chain can be emptied. -/
+theorem drain_all {r : Rec (Ctl S)} (hr : r.ph = .drain) (hG : Good X r)
+    (M : Multiset (LCh ℕ ℕ)) (hM : ∀ c ∈ M, Drainable X c) :
+    ∀ J, Junk J → MW cS X allS ops ens σ₀ (M + J) r := by
+  induction M using Multiset.induction_on with
+  | empty =>
+    intro J hJ
+    exact .empty fun c hc => hJ c (by simpa using hc)
+  | cons a M ih =>
+    intro J hJ
+    have ih' := ih fun c hc => hM c (Multiset.mem_cons_of_mem hc)
+    obtain ⟨l, τ⟩ := a
+    have e : (⟨l, τ⟩ ::ₘ M) + J = ⟨l, τ⟩ ::ₘ (M + J) := Multiset.cons_add _ _ _
+    have e' : ∀ τ', (⟨[], τ'⟩ ::ₘ (M + J) : Multiset (LCh ℕ ℕ)) = M + (⟨[], τ'⟩ ::ₘ J) := fun τ' => by
+      simp only [← Multiset.singleton_add]; abel
+    rw [e]
+    rcases hM _ (Multiset.mem_cons_self _ _) with hl | ⟨p, hτ, hl⟩ | ⟨p, hl⟩
+    · simp only at hl; subst hl
+      rw [e']; exact ih' _ (junk_cons _ hJ)
+    · simp only at hτ hl; subst hτ
+      refine drain_chain hS hall hX hr hG p _ l hl ?_
+      rw [e']; exact ih' _ (junk_cons _ hJ)
+    · simp only at hl; subst hl
+      have := mv_seq (cS := cS) (X := X) (allS := allS) (σ₀ := σ₀) (m_loopNil cS X ops ens p)
+        (xs₁ := []) (xs₂ := []) (τ := τ) (M := M + J) (r := r)
+      simp only [List.nil_append, List.map_nil, List.append_nil] at this
+      apply this
+      rw [e']; exact ih' _ (junk_cons _ hJ)
+
+omit hS hall hX in
+theorem drainable_tails (p : Bool) (v : ℕ → Bool) (c n : ℕ) :
+    ∀ x ∈ tails X p v c n, Drainable X x := by
+  intro x hx
+  simp only [tails, Multiset.mem_coe, List.mem_map, List.mem_range'] at hx
+  obtain ⟨a, -, rfl⟩ := hx
+  refine Or.inr (Or.inl ⟨p, rfl, fun x hx => ?_⟩)
+  simp only [tailC, rbs, List.mem_cons, List.mem_map, List.mem_reverse, List.mem_range] at hx
+  rcases hx with rfl | ⟨j, hj, rfl⟩
+  · exact Or.inl ⟨_, _, rfl⟩
+  · exact Or.inr (Or.inl ⟨_, _, _, hj, rfl⟩)
+
+/-! ## The start of a round -/
+
+omit hS hall hX in
+/-- **The start of a round** of the loop `ρ`: one more block (split off the loop), whose tree
+is expanded into `2 ^ m` fresh threads. -/
+theorem play_start (ρ : Bool) (M : Multiset (LCh ℕ ℕ)) (r : Rec (Ctl S))
+    (hpre : ∀ c ∈ M, c.tag = preT ρ → c.lab = []) (hpost : ∀ c ∈ M, c.tag = postT ρ → c.lab = [])
+    (h : ∀ J, Junk J → MW cS X allS ops ens σ₀
+      (2 ^ mm X • {freshC ρ} + (⟨[nL (.loop ρ)], postT ρ⟩ ::ₘ ⟨[nL (.reT ρ)], preT ρ⟩ ::ₘ M) + J) r) :
+    MW cS X allS ops ens σ₀ (⟨[nL (.loop ρ)], postT ρ⟩ ::ₘ M) r := by
+  have := mv_seq (cS := cS) (X := X) (allS := allS) (σ₀ := σ₀) (m_loop cS X ops ens ρ)
+    (xs₁ := []) (xs₂ := []) (τ := postT ρ) (M := M) (r := r)
+  simp only [List.nil_append, List.map_cons, List.map_nil, toLab_lN, List.append_nil] at this
+  apply this
+  have hs : MW cS X allS ops ens σ₀ (⟨[nL (.loop ρ)], postT ρ⟩ ::ₘ ⟨[nL (.block ρ)], preT ρ⟩ ::ₘ M) r → 
+      MW cS X allS ops ens σ₀ (⟨[nL (.block ρ)] ++ [nL (.loop ρ)], postT ρ⟩ ::ₘ M) r :=
+    MWin.split hpre hpost
+  apply hs
+  rw [Multiset.cons_swap]
+  apply mv_set (m_block cS X ops ens ρ)
+  simp only [List.map_cons, List.map_nil, toLab_lN, ← Multiset.cons_coe, Multiset.coe_nil]
+  have e : (⟨[], preT ρ⟩ ::ₘ ((⟨[nL (.loop ρ)], postT ρ⟩ ::ₘ M) +
+        ((⟨[nL (.tree ρ (mm X))], preT ρ⟩ : LCh ℕ ℕ) ::ₘ (⟨[nL (.reT ρ)], preT ρ⟩ : LCh ℕ ℕ) ::ₘ 0)) :
+        Multiset (LCh ℕ ℕ)) =
+      ⟨[nL (.tree ρ (mm X))], preT ρ⟩ ::ₘ
+        ((⟨[nL (.loop ρ)], postT ρ⟩ ::ₘ ⟨[nL (.reT ρ)], preT ρ⟩ ::ₘ M) + {⟨[], preT ρ⟩}) := by
+    simp only [← Multiset.singleton_add]; abel
+  rw [e]
+  refine play_tree ρ (mm X) le_rfl _ r fun J hJ => ?_
+  have e2 : (⟨[nL (.loop ρ)], postT ρ⟩ ::ₘ ⟨[nL (.reT ρ)], preT ρ⟩ ::ₘ M) + {⟨[], preT ρ⟩} + J +
+        2 ^ mm X • {freshC ρ} =
+      2 ^ mm X • {freshC ρ} + (⟨[nL (.loop ρ)], postT ρ⟩ ::ₘ ⟨[nL (.reT ρ)], preT ρ⟩ ::ₘ M) +
+        (⟨[], preT ρ⟩ ::ₘ J) := by
+    simp only [← Multiset.singleton_add]; abel
+  rw [e2]
+  exact h _ (junk_cons _ hJ)
+
 end TD
 
 end HardTR
