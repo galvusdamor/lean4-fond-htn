@@ -597,6 +597,29 @@ proof route and the gaps in the published proofs.
   \lean{complete_ACYC_mpFair}.
 \end{deviation}
 
+\begin{deviation}[Tail-recursive problems are 2-EXPTIME-hard: a new construction]
+  The proof of [CB22, Thm.~5] is a sketch. We use the counter idea of the ideas file with a
+  concrete \emph{tableau transducer} (\lean{HardTR/Tab.lean}). The source is the tableau game of
+  a deterministic machine on the doubly exponentially padded input (\lean{exptime2_tabWin_pow'}):
+  a claim is a time $t$, a cell $i$ and a symbol, and nature chooses which of the three cells of
+  the previous row to verify. A claim is stored as two interleaved $2^e$-bit counters on a tape
+  of $2^{e+2}$ cells. A round sweeps the tape once and is played by one of two loops
+  $\mathit{loop}\,p\to\mathit{block}\,p\cdot\mathit{loop}\,p$, which alternate between writer and
+  reader. Each block expands into $2^{e+2}$ threads, one per cell: the thread writes the cell
+  address, reads the tail stored by the previous round, applies a transducer operation that
+  decrements $t$ and updates $i$, and stores the new tail. The first cell guesses the interval of
+  the first row containing $i$. A round end lets nature choose the next claim. The recursion is
+  only in the last task of the loop, so the problems are tail-recursive (\lean{desc_TR}).
+  Soundness goes through a word game on the language of the loops (\lean{TSound.lean}).
+  Completeness plays the canonical strategy in a game on tagged label chains: the threads of the
+  current block precede the loop task, the tails of the previous round are unconstrained
+  (\lean{TPlay.lean}). The intervals of the first row and the interval bounds are numbers with
+  exponentially many bits. They are only accessed bitwise at polynomially many special
+  positions, so the description is computed in polynomial time (\lean{TPT.lean},
+  \lean{TMain.lean}). Result: \lean{complete_TR_mpStrong}. The fair version is open: we expect
+  fair and strong to coincide on this family, because every round strictly decreases $t$.
+\end{deviation}
+
 \begin{deviation}[Open problems with documented obstacles]
   \begin{itemize}
     \item Semi-decidability of fair strong cyclic solvability for unrestricted problems is open

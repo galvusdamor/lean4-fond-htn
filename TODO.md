@@ -29,14 +29,19 @@ Legend: **[WIP]** partial Lean files exist · **[PLAN]** construction on paper, 
   `doc/notes_acyc_expspace.md` (chain game, FIFO cell queue, supply, Savitch program `SavProg`,
   single-method hierarchy `Hier*`, transfer to coded names, instance `Inst*`, PT `InstPT`).
 
-### 1.4 Counters — TR 2-EXPTIME-hard (MP strong and fair = CB22 Thm 5) **[WIP]**
-- Proved: `FondHtn/HardTR/{Source,WGame,Round}.lean` (source game with all-ones counters,
-  word game layer, abstract round lemma `round_sound`, `boot_sound`).
-- Partial: `FondHtn/HardTR/{Lang,Row,SrcTab,Tab}.lean` (compile, sorry-free; intermediate).
-- Plan: `doc/notes_cb22_thm5_progress2.md`.
-- Next: P3a (tableau transducer as `Mach`, induction on `t`), P1/P2 (refinements accepted by the
-  automaton, encoding, descriptions, PT, TR certificate), P4 (completeness on real networks),
-  P5/P6 (assembly, completeness with `strongMP_TR_mem` / `fairMP_TR_mem`).
+### 1.4 Counters — TR 2-EXPTIME-hard (MP strong and fair = CB22 Thm 5) **[MP strong DONE; fair OPEN]**
+- Proved: `FOND.HardTR.hard_TR_mpStrong`, with membership `FOND.HardTR.complete_TR_mpStrong`
+  (2-EXPTIME-complete), `FondHtn/HardTR/` (plan `doc/notes_cb22_thm5_progress2.md`):
+  source game `Source.lean`/`SrcTab.lean`, tableau transducer `Tab.lean`, round lemma `Round.lean`,
+  encoding `Enc*.lean`, description `TDesc*.lean`, soundness `TSound.lean` (word game `WTrans.lean`,
+  language `TLang.lean`), completeness `TPlay.lean` (tagged chain game `TChains.lean`/`TGame.lean`,
+  canonical run `TComp.lean`), TR certificate `TClass.lean`, instance `TInst.lean`, PT `TPT.lean`,
+  assembly `TMain.lean`.
+- Open: the fair version (`PlanExMPFair FClass.TR` 2-EXPTIME-hard). The same reduction should
+  work: every round strictly decreases the tape value `t`, so a fair policy has at most `t₀ + 1`
+  nature branchings on every path and its finitely branching policy tree is finite, i.e. fair
+  implies strong on this family. This needs a "bounded branching ⇒ fair = strong" lemma for the
+  fair semantics and an invariant on *all* reachable configurations (not only the canonical play).
 
 ### 1.5 PCP — TR / Bercher-REG FM strong OD undecidable **[DONE]**
 - Proved: `FOND.PCP.undecidable_strongOD_REG_TR` (`FondHtn/PCP/Reduction.lean`). It reduces
@@ -63,7 +68,7 @@ Legend: **[WIP]** partial Lean files exist · **[PLAN]** construction on paper, 
 
 ## 3. CB22
 
-- Thm 2 lower bound: see 1.3. Thm 5 lower bound: see 1.4.
+- Thm 2 lower bound: see 1.3. Thm 5 lower bound: see 1.4 (MP strong done, fair open).
 - **Literal strong cyclic** (Def. 7 as written): only the separation from plan existence is
   proved (`LoopEx.literal_not_planExistence`). Upper/lower bounds for the literal reading are
   not done; we treat the fair reading as the intended one. **[OPEN — decide whether wanted]**
