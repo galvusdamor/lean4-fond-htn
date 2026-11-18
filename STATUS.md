@@ -1,5 +1,7 @@
 # Status of the complexity results
 
+Open work and next steps: `TODO.md`.
+
 Specification: `doc/results_catalogue.md` (all results of [CB21], [CB22], [DB25] and the ideas file,
 with proof routes and the gaps found in the published proofs).  Deviations: `modifications/main.tex`.
 
@@ -89,3 +91,13 @@ FOND-specific lower bounds:
 | CB22 arbitrary PO: MP weak and strong semi-decidable and undecidable | ✅ `FondHtn/MPSemi/Strong.lean` (`mp_weak_strong_semi_undec`); fair: open, `doc/notes_fair_semidec.md` |
 | ideas: TO MP strong ∈ 2-EXPTIME | ✅ `strongMP_TO_mem` (`FondHtn/MPStrong/TOGame.lean`, `TODesc.lean`; rank argument = sequential composition) |
 | ideas: TO MP fair strong cyclic ∈ 2-EXPTIME | ✅ `fairMP_TO_mem` via summary game with exit sets/targets (`FondHtn/MPStrong/TOFair2*.lean`, `FondHtn/Alt/Buchi2.lean`, `doc/notes_to_fair_3.md`); the ideas-file table itself is wrong for the fair reading (`doc/notes_to_fair.md`) |
+
+## Ideas file (`doc/ideas_for_pascal_spring_2025.md`) at a glance
+
+| idea | status |
+| --- | --- |
+| Total order, membership (strong / fair) | ✅ `strongMP_TO_mem`, `fairMP_TO_mem` (fair needs a corrected summary game) |
+| Total order, 2-EXPTIME hardness | construction completed on paper (`doc/notes_to_hard.md`), formalisation partial (`FondHtn/TOHard2/`) |
+| Counters, ACYC EXPSPACE-hard | core proved (`FondHtn/AcycHard/`), remaining layers in `doc/notes_acyc_expspace.md` |
+| Counters, TR 2-EXPTIME-hard | source + round lemma proved (`FondHtn/HardTR/`), encoding open |
+| PCP | blocked: sketch needs a mode mechanism (`doc/notes_pcp_strongOD.md`) |

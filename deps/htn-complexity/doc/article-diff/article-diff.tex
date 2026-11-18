@@ -1,0 +1,303 @@
+\documentclass[manuscript, screen]{jair}
+
+\setcopyright{none}
+\acmDOI{}
+\JAIRAE{}
+\JAIRTrack{}
+\acmVolume{}
+\acmArticle{}
+\acmMonth{10}
+\acmYear{2026}
+
+\RequirePackage[
+  datamodel=acmdatamodel,
+  style=acmauthoryear,
+  backend=biber,
+  giveninits=true,
+  uniquename=init
+  ]{biblatex}
+\renewcommand*{\bibopenbracket}{(}
+\renewcommand*{\bibclosebracket}{)}
+\addbibresource{references.bib}
+
+\usepackage{tabularx}
+
+\newcommand{\lean}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\cls}[1]{\textsc{#1}}
+\newcommand{\Sol}{\mathit{Sol}}
+\newcommand{\precm}{\mathit{prec}}
+\newcommand{\tnI}{\mathit{tn}_I}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+\begin{document}
+
+\title[Formal Proofs vs.\ the Article]{Where the Lean Formalisation Differs from
+  ``Propositional HTN Planning: Problem Classes and Complexity Results''}
+
+\author{Gregor Behnke}
+\email{g.behnke@uva.nl}
+\affiliation{%
+  \institution{University of Amsterdam}
+  \city{Amsterdam}
+  \country{The Netherlands}}
+
+\renewcommand{\shortauthors}{Behnke}
+
+\begin{abstract}
+  All results of the article by \textcite{bercher:et:al:htn-complexity} have been formalised in
+  Lean~4 with Mathlib \parencite{moura:ullrich:cade-21,mathlib:cpp-20}. Every theorem depends
+  only on the standard axioms \lean{propext}, \lean{Classical.choice} and \lean{Quot.sound}.
+  This report lists every place where the formal development deviates from the article. Three
+  lemmas state bounds that are false (Lemmas~4.2.4, 4.2.15 and 4.2.21), one lemma misses a case
+  (Lemma~4.2.2), one corollary needs $h \ge 1$ (Corollary~4.3.3), and two printed constructions are
+  wrong (Theorems~4.3.7 and~4.3.8). Five proofs follow a different route than the article,
+  either because the article's step is wrong or imprecise, or because it rests on a cited result
+  that we replaced by a self-contained argument. The proofs of all remaining results follow the
+  article.
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}
+
+The formalisation is spread over four Lean repositories: \lean{complexity-theory} (machines,
+languages and complexity classes), \lean{htn-planning} (the HTN model and the problem classes),
+\lean{htn-complexity} (the complexity results of the article) and \lean{htn-compilability}. The
+article's results live in the namespace \lean{HTN.Article}; the file \lean{ARTICLE.md} in
+\lean{htn-complexity} maps every numbered result to its Lean name.
+
+We followed three rules. First, the article's own model is formalised literally and related to
+an older, simpler model by bridge lemmas. Second, every complexity result is stated about a
+literal language of bit-encoded problems. Third, the article's proof route is always tried
+first. When it fails, the error is recorded and repaired, and only when no repair is possible
+is a different route used.
+
+Section~\ref{sec:setting} describes how the formal setting differs from the article's.
+Section~\ref{sec:statements} lists the results whose statement had to change.
+Section~\ref{sec:defs} lists corrections to definitions and constructions that leave the
+statements intact. Section~\ref{sec:routes} describes the proofs that take a different route.
+Section~\ref{sec:status} gives the complete status.
+
+\section{The Formal Setting}\label{sec:setting}
+
+\paragraph{Model.} The article's model, with negative preconditions and goals, the requirement
+that all linearisations of a solution be executable, ordering insertion and task insertion
+(TIHTN), is formalised in \lean{HtnPlanning/Article/}. The development predating this work uses
+a simpler model with positive preconditions only and a single executable linearisation. Bridge
+lemmas connect the two: negative preconditions are compiled away by dual-rail facts, and
+ordering insertion corresponds to choosing one executable linearisation. The existing proofs
+remain on the old model; the article versions of the theorems are derived through the bridges.
+
+\paragraph{Decomposition trees.} Definitions~2.8--2.10 use an explicit mapping $\beta$ and
+isomorphisms of task networks. The formal trees are indexed by the task ids of the applied
+method, so $\beta$ and the isomorphisms are implicit. Yields are action sequences.
+
+\paragraph{Missing references.} The draft leaves the references for TIHTN solutions, for the
+lemma that acyclic decompositions suffice under task insertion, and for Proposition~2.1.1 as
+``??''. We defined TIHTN solutions following \textcite{geier:bercher:ijcai-11} and
+\textcite{alford:et:al:icaps-15}, and proved the missing lemma
+(\lean{solvableTI_iff_acyc_trees}).
+
+\paragraph{Inputs.} Definition~4.1 speaks of plan-existence problems without fixing an
+encoding. We state every result about a language of bit strings that encode a problem
+description (domain and instance). This requires recognising the codes of descriptions, and
+membership in each problem class, within the resources of the class at hand: polynomial time
+for most results, and logarithmic space for Theorem~4.2.10.
+
+\paragraph{Complexity classes.} \cls{P}, \cls{NP} and \cls{PSPACE} are defined via
+Cobham-style function classes, which are proved equal to the classes defined by Turing
+machines. \cls{EXPTIME} is defined as \cls{P} on exponentially padded inputs. \cls{L} is
+defined by deterministic register programs: while programs over a fixed number of registers,
+each bounded by a polynomial in the input length and thus holding $O(\log n)$ bits, that read
+the input bit by bit. Both are standard characterisations.
+
+\paragraph{Cited results.} The article cites the undecidability of the intersection of
+context-free languages, the \cls{PSPACE}-hardness of STRIPS \parencite{bylander:aij-94}, the
+\cls{NP}-hardness of SAT \parencite{cook:stoc-71} and the \cls{EXPTIME}-hardness of the game
+$G_6$ \parencite{stockmeyer:chandra:siamjc-79}. The first three are proved in the
+formalisation: CFG intersection from two-stack machines \parencite{minsky:67}, STRIPS by
+Bylander's encoding of space-bounded machines, and SAT by the Cook--Levin construction. The
+fourth is avoided; see Section~\ref{sec:routes}.
+
+\section{Results Whose Statement Changed}\label{sec:statements}
+
+\paragraph{Lemma 4.2.4 (number of decompositions).} The article bounds the number of
+decompositions of an acyclic problem by $k \cdot m^{h-1} \le r^h$. This bound is false. A
+decomposition tree of height $h$ and branching $m$ has up to $1 + m + \dots + m^{h-1}$ inner
+nodes, not $m^{h-1}$. A counterexample has $\tnI = \{A, A\}$ and methods $A \to \{B, B\}$ and
+$B \to \{a\}$. Here $h = k = m = r = 2$, but a solution needs $2 + 4 = 6 > 4$ decompositions. The
+formal lemma \lean{lem_4_2_4} proves the corrected bound
+\[
+  k \cdot (1 + m + \dots + m^{h-1}) < (r+1)^h .
+\]
+The uses of the lemma in Theorems~4.2.5 and~4.2.6 and Corollary~4.2.8 only need an exponential
+bound and are unaffected.
+
+\paragraph{Lemma 4.2.15 (progression bound for tail-recursive problems).} The bound
+$k \cdot m^h$ is $0$ when $m = 0$ and $h \ge 1$, which is wrong. The formal lemma assumes
+$m \ge 1$. This is harmless, since any upper bound on method sizes can be taken to be at least~1.
+
+\paragraph{Lemma 4.2.21.} The bound $k \cdot m \cdot h$ fails for $h = 0$ (problems without
+compound tasks, where the bound would be $0$) and for $m = 0$. The formal version
+\lean{lem_4_2_21_article} proves $k \cdot (1 + (m-1) \cdot h)$. This is at most $k \cdot m
+\cdot h$ whenever $m, h \ge 1$, so the article's bound holds in that range.
+
+\paragraph{Lemma 4.2.2 (mostly acyclic to acyclic).} The construction collapses only strata
+with at least two elements. A singleton stratum $\{c\}$ with a method $(c, [c])$, which
+Definition~3.7 allows, therefore stays cyclic. The formal construction drops every method that
+becomes a self-loop (\lean{HTN.Method.IsLoop}).
+
+\paragraph{Proposition 2.1.1 and Corollary 4.2.3.} Both claim an equality of solution sets,
+$\Sol(P) = \Sol(P')$. Since decomposition creates fresh task ids, the two sets agree only up to
+renaming of ids. The formal statements prove equality up to isomorphism, for HTN and TIHTN
+solutions, and equality of plan existence exactly.
+
+\paragraph{Corollary 4.3.3.} The corollary claims \cls{PSPACE}-hardness of
+$\cls{TAIL-REC}_h$ for a fixed constant $h$. For $h = 0$ the class has no compound tasks, so it
+lies in \cls{NP} (Corollary~4.2.9). The formal statement requires $h \ge 1$.
+
+\section{Corrected Definitions and Constructions}\label{sec:defs}
+
+The following corrections do not change the statement of any result.
+Table~\ref{tab:defs} summarises them.
+
+\begin{table}
+  \caption{Corrections that leave the statements of the results unchanged.}
+  \label{tab:defs}
+  \small
+  \begin{tabularx}{\linewidth}{@{}lLL@{}}
+    \toprule
+    Place & In the article & In the formalisation \\
+    \midrule
+    \S2, $\gamma$ & $\gamma(s, a)$ defined iff $s \subseteq \precm^+(a)$ & $\precm^+(a) \subseteq s$ \\
+    Def.~2.5 & Inserting $(t, t')$ with $t' \prec^* t$ or $t = t'$ does not give a strict partial
+      order, contrary to the remark after the definition
+      & Insertion requires the result to be a strict partial order \\
+    Def.~4.2 & Inserted tasks get the ancestors $a(t) \cup \{\alpha(t)\}$, so a name may repeat once
+      ($c \to d \to d$) & Formalised literally; harmless \\
+    Def.~4.3 & Progression bound quantifies over runs from the initial state only
+      & All reachable states \\
+    Thm.~4.2.12 & Second item reads $\Sol(P)$ & TIHTN solutions \\
+    Thm.~4.3.4 & Bound $2^{\#V}$, $\#V$ not defined & $\#V$ = facts of the initial state and of
+      positive effects, the only facts a reachable state contains \\
+    Thm.~4.3.8 & The formal $\tnI$ mislabels ids ($t_2$ gets two labels) & Each of the $2n+1$
+      actions occurs once \\
+    Thm.~4.3.8, 4.3.12 & Variables numbered $x_1, \dots, x_n$ & Variables are arbitrary numbers in
+      the code of a formula; the encoding renumbers the distinct ones (otherwise it is not
+      polynomial) \\
+    Thm.~4.3.12 & Breaks for formulas without variables (no initial task $x_1$)
+      & A dummy variable is added \\
+    Thm.~4.1.1 & Assumes Chomsky normal form & Not needed; the encoding handles arbitrary rules
+      including $\varepsilon$-rules \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{Proofs That Take a Different Route}\label{sec:routes}
+
+\paragraph{Lemma 4.2.11 ($\cls{ACYC} \cap \cls{REG} \in \cls{NP}$).} The article argues that
+a regular problem has height~1 by Theorem~3.0.1, so Corollary~4.2.8 applies. But
+Theorem~3.0.1 is about $\le_r$-stratifications, while Corollary~4.2.8 uses the height of a
+$\le_0$-stratification. A $\le_0$-stratification of an acyclic problem is a total order of its
+reachable compound tasks, so its height is their number. For example, the chain $A_1 \to a\,A_2
+\to \dots \to a\,A_n$ is acyclic and regular, but has height $n$. The claim itself is true. The
+formal proof (\lean{size_le_of_reg}) shows that decomposition trees of regular acyclic problems
+are caterpillars of polynomial size, which gives polynomial certificates directly.
+
+\paragraph{Theorem 4.2.5 ($\cls{ACYC} \in \cls{NEXPTIME}$).} The article's guess-and-check
+argument is kept, but it bounds the certificate size by Lemma~4.2.4, whose bound is false. The
+formal proof bounds the certificate directly: a decomposition tree rooted at a task of rank $r$
+has at most $(B+1)^{r+1}$ nodes, where $B$ bounds method sizes (\lean{size_le_of_acycCert}).
+
+\paragraph{Corollary 4.2.23 ($\cls{UNRES} \cap \cls{TO-M}$ under task insertion is in
+\cls{PSPACE}).} The article restricts to ``the acyclic variant'' and uses the progression bounds
+of Lemmas~4.2.15--4.2.21. Those bounds rely on a stratification, which unrestricted problems do
+not have, and the restriction is not made precise. We prove a new bound
+(\lean{tihtn_bound_TOM}). Acyclic progression on a problem is ordinary progression on the
+problem unfolded by ancestor sets. That unfolding is acyclic, with rank $2(N - |S|) + [c \in S]$
+for a task $c$ with ancestor set $S$ among $N$ compound tasks. The resulting progression bound is
+$k \cdot (1 + (m-1)(2N+2))$, which is polynomial.
+
+\paragraph{Theorem 4.3.6 (\cls{TO} is \cls{EXPTIME}-hard).} The article reduces from the game
+$G_6$ and cites its \cls{EXPTIME}-hardness \parencite{stockmeyer:chandra:siamjc-79}, which is
+not formalised. The formal proof uses the same technique on a different source problem. Methods
+whose actions are followed by inverse actions restore the state, so a sequence of tasks acts as
+a universal branching, while the choice of a method acts as an existential one. This is
+applied to the tableau check of an alternating characterisation of \cls{EXPTIME}
+\parencite{chandra:et:al:jacm-81}. A deterministic machine decides an exponentially padded
+language of \cls{P} in exponential time, and a task $\mathit{chk}(a)$ checks the tableau entry at
+time $t$ and cell $i$ using binary counters of polynomially many bits
+(\lean{HTN.Article.TabData.solvable_iff}).
+
+\paragraph{Theorem 4.3.7, acyclic part (\cls{NEXPTIME}-hard).} The printed construction is
+unsound: the head counter runs one unit ahead of the tape, and the head positions count up to
+$K + 2$ instead of $K$. The formal proof keeps the article's approach with a repaired
+construction (\lean{TMEnc.problemFix}). The simulated machine is first made to return its head
+to the start before accepting (a ``homing'' machine).
+
+\paragraph{Theorem 4.3.7, tail-recursive part (\cls{EXPSPACE}-hard).} The article extends the
+acyclic encoding by recursion but does not spell out the construction precisely enough to be
+formalised. We use the tail-recursive encoding that was already proved correct in the
+development. It has two alternating loops, one round per machine step; tape cells are stored in
+the tails of words, and addresses are checked by binary counters.
+
+\paragraph{Theorem 4.2.10 ($\cls{noHTN} \cap \cls{TO} \in \cls{L}$).} The article's idea is
+kept, but two steps are left implicit. First, the proof iterates over the tasks of $\tnI$ in
+their order, but the input lists the order only as a relation. The formal proof finds the task
+of rank $k$, that is, the one with $k$ predecessors, by counting. Second, the article does not
+discuss how to recognise, in logarithmic space, that the input encodes a well-formed problem of
+the class. The formal proof parses codes by positions: a value nested inside $d$
+self-delimiting strings sits in the input at stride $2^d$. Finally, execution is checked per
+occurrence of a fact in a precondition or in the goal, rather than per state variable. This is
+the same idea, with one bit of state.
+
+\paragraph{Theorem 4.1.1 (\cls{UNRES} undecidable).} The reduction is the article's. The cited
+undecidability of the intersection of context-free languages is proved from two-stack machines,
+via the classical construction with triples.
+
+\section{Status}\label{sec:status}
+
+Table~\ref{tab:status} lists every numbered result with its Lean name in
+\lean{HTN.Article}. ``Article'' means the proof follows the article; ``corrected'' and ``other
+route'' refer to Sections~\ref{sec:statements} and~\ref{sec:routes}.
+
+\begin{table}
+  \caption{Status of all results. Lean names are relative to \lean{HTN.Article}, some in sub-namespaces such as \lean{Problem}.}
+  \label{tab:status}
+  \small
+  \begin{tabularx}{\linewidth}{@{}lLl@{}}
+    \toprule
+    Result & Lean & Route \\
+    \midrule
+    Prop.~2.1.1 & \lean{prop_2_1_1} & article; up to ids \\
+    Thm.~3.0.1 & \lean{Problem.thm_3_0_1} & article \\
+    Thm.~4.1.1, Cors.~4.1.2--4.1.3 & \lean{thm_4_1_1}, \lean{cor_4_1_2}, \lean{cor_4_1_3} & article \\
+    Thm.~4.1.4 & \lean{thm_4_1_4} & article \\
+    Thm.~4.2.1 & \lean{thm_4_2_1} & article \\
+    Lem.~4.2.2, Cor.~4.2.3 & \lean{Problem.lem_4_2_2}, \lean{cor_4_2_3} & corrected \\
+    Lem.~4.2.4 & \lean{Problem.lem_4_2_4} & corrected \\
+    Thm.~4.2.5 & \lean{thm_4_2_5} & other route \\
+    Thm.~4.2.6, Cor.~4.2.7 & \lean{thm_4_2_6}, \lean{cor_4_2_7} & article \\
+    Cor.~4.2.8, 4.2.9 & \lean{cor_4_2_8}, \lean{cor_4_2_9} & article \\
+    Thm.~4.2.10 & \lean{thm_4_2_10} & article, gaps filled \\
+    Lem.~4.2.11 & \lean{lem_4_2_11}, \lean{lem_4_2_11_TO} & other route \\
+    Thm.~4.2.12, Cor.~4.2.13 & \lean{thm_4_2_12_htn}/\lean{_tihtn}, \lean{cor_4_2_13_htn}/\lean{_tihtn} & article \\
+    Prop.~4.2.14 & \lean{prop_4_2_14} & article \\
+    Lems.~4.2.15, 4.2.19 & \lean{lem_4_2_15}, \lean{lem_4_2_19} & corrected (4.2.15) \\
+    Lem.~4.2.21 & \lean{lem_4_2_21_article} & corrected \\
+    Cors.~4.2.16--4.2.22 & \lean{cor_4_2_16} \dots\ \lean{cor_4_2_22} & article \\
+    Cor.~4.2.23 & \lean{cor_4_2_23_tr}, \lean{_acyc}, \lean{_unres} & other route (\cls{UNRES}) \\
+    Cors.~4.2.24, 4.2.25 & \lean{cor_4_2_24}, \lean{cor_4_2_25} (variants) & article \\
+    Thm.~4.3.1, Cors.~4.3.2--4.3.3 & \lean{thm_4_3_1}, \lean{cor_4_3_2}, \lean{cor_4_3_3} & article; 4.3.3 for $h \ge 1$ \\
+    Thms.~4.3.4, 4.3.5 & \lean{thm_4_3_4}, \lean{thm_4_3_5} & article \\
+    Thm.~4.3.6 & \lean{thm_4_3_6} & other source problem \\
+    Thm.~4.3.7 & \lean{thm_4_3_7_acyc}, \lean{thm_4_3_7_tr} & repaired / other route \\
+    Thm.~4.3.8, Cors.~4.3.9--4.3.11 & \lean{thm_4_3_8}, \lean{cor_4_3_9} \dots\ \lean{cor_4_3_11} & article \\
+    Thm.~4.3.12 & \lean{thm_4_3_12_TO}, \lean{thm_4_3_12_TOM} & article \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\printbibliography
+
+\end{document}

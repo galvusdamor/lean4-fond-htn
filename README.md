@@ -10,9 +10,12 @@ The papers are in `doc/`.
 
 ## Dependencies
 
-Builds on the local `HtnPlanning` library (`../htn-split/htn-planning`, which pulls in
-`ComplexityTheory`), reusing its task networks, methods, isomorphism, decomposition and problem classes.
-Lean / Mathlib `v4.28.0`.
+Builds on the HTN formalisation libraries `HtnComplexity`, `HtnPlanning` and `ComplexityTheory`,
+reusing their task networks, methods, isomorphism, decomposition, problem classes and complexity
+theory. They are **vendored, read-only, in `deps/`** (see `deps/README.md`): do not modify them;
+new material goes into `FondHtn/`. Lean / Mathlib `v4.28.0`.
+
+Build: `lake exe cache get` (Mathlib) then `lake build`. Status: `STATUS.md`; open work: `TODO.md`.
 
 ## Modules
 
