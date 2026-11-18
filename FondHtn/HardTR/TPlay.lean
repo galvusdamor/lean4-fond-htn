@@ -18,7 +18,7 @@ namespace HardTR
 
 namespace TD
 
-open TL TT TE HardMP HTN HTN.Syn HTN.Article AcycHard.Sav
+open TL TT TE HardMP HTN HTN.Syn HTN.Article AcycHard.Sav ATM
 
 variable {S : Type} {cS : S → ℕ} {X : Spec S} {allS : List S} {ops : List Op} {ens : List (En S)}
   {σ₀ : S}
@@ -796,6 +796,100 @@ theorem play_normal (ρ : Bool) (rd : ℕ → Bool) (σ : S) (cy dec y : Bool) (
       simp only [← Multiset.singleton_add]; abel
     rw [e2]
     exact hend _ (junk_add (junk_add hJ hJ') hJ'') y' hG'
+
+/-- **The finish**: execute `fin`, then drain every remaining chain. -/
+theorem play_fin (ρ : Bool) (w' : ℕ → Bool) (g' : Ctl S) (y' : Bool) (J : Multiset (LCh ℕ ℕ))
+    (hJ : Junk J) (hfin : X.finOK g') (hG : Good X ⟨.fin, 0, ρ, y', g'⟩) :
+    MW cS X allS ops ens σ₀
+      (tails X ρ w' 0 (2 ^ mm X) +
+        (⟨[nL (.loop ρ)], postT ρ⟩ ::ₘ ⟨[nL (.reT ρ)], preT ρ⟩ ::ₘ ⟨[nL (.loop (!ρ))], postT (!ρ)⟩ ::ₘ
+          ⟨[nL .finT], none⟩ ::ₘ J))
+      ⟨.fin, 0, ρ, y', g'⟩ := by
+  set D : Multiset (LCh ℕ ℕ) := tails X ρ w' 0 (2 ^ mm X) +
+    (⟨[nL (.loop ρ)], postT ρ⟩ ::ₘ ⟨[nL (.reT ρ)], preT ρ⟩ ::ₘ {⟨[nL (.loop (!ρ))], postT (!ρ)⟩}) with hD
+  have e : tails X ρ w' 0 (2 ^ mm X) +
+      (⟨[nL (.loop ρ)], postT ρ⟩ ::ₘ ⟨[nL (.reT ρ)], preT ρ⟩ ::ₘ ⟨[nL (.loop (!ρ))], postT (!ρ)⟩ ::ₘ
+        ⟨[nL .finT], none⟩ ::ₘ J) = ⟨[nL .finT], none⟩ ::ₘ (D + J) := by
+    rw [hD]; simp only [← Multiset.singleton_add]; abel
+  rw [e]
+  have := mv_seq (cS := cS) (X := X) (allS := allS) (σ₀ := σ₀) (m_finT cS X ops ens)
+    (xs₁ := []) (xs₂ := []) (τ := none) (M := D + J) (r := ⟨.fin, 0, ρ, y', g'⟩)
+  simp only [List.nil_append, List.map_cons, List.map_nil, toLab_lA, List.append_nil] at this
+  apply this
+  refine mv_prim hS hall hX (a := .fin)
+    (by rw [mem_acts_iff]; exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr
+      (Or.inr (Or.inr rfl))))))))) hG ⟨rfl, hfin⟩ (fun g h => by simp at h) fun r' hr' hG' => ?_
+  simp only [Mach.outs, Set.mem_singleton_iff] at hr'
+  subst hr'
+  have e2 : (⟨[], none⟩ ::ₘ (D + J) : Multiset (LCh ℕ ℕ)) = D + (⟨[], none⟩ ::ₘ J) := by
+    simp only [← Multiset.singleton_add]; abel
+  rw [e2]
+  refine drain_all hS hall hX rfl hG' D (fun c hc => ?_) _ (junk_cons _ hJ)
+  rw [hD] at hc
+  simp only [Multiset.mem_add, Multiset.mem_cons, Multiset.mem_singleton] at hc
+  rcases hc with hc | rfl | rfl | rfl
+  · exact drainable_tails ρ w' 0 _ c hc
+  · exact Or.inr (Or.inr ⟨ρ, rfl⟩)
+  · exact Or.inr (Or.inl ⟨ρ, rfl, fun x hx => by
+      simp only [List.mem_singleton] at hx; subst hx; exact Or.inr (Or.inr ⟨ρ, rfl⟩)⟩)
+  · exact Or.inr (Or.inr ⟨!ρ, rfl⟩)
+
+/-- **All normal rounds**: a true claim (`TabWin`) at the start of a normal round is won, by
+induction on the time `t`. -/
+theorem play_rounds (hcover : ∀ i < 2 ^ (X.B + 1), ∃ ℓ < X.no, X.lo ℓ ≤ i ∧ i < X.hi ℓ)
+    (hops : ∀ o g b c, X.opOK o g b c → (∀ ℓ, g.gs = some ℓ → ℓ < X.no) → o ∈ ops)
+    (hens : ∀ e g, X.endOK e g → e ∈ ens) :
+    ∀ t (ρ : Bool) (rd : ℕ → Bool) (σ : S) (cy dec y : Bool) (i : ℕ) (J : Multiset (LCh ℕ ℕ)),
+      Junk J → ev rd (2 * X.B) = t →
+      (if dec then i + cy.toNat = od rd (2 * X.B) else i = od rd (2 * X.B) + cy.toNat) →
+      i + t < 2 ^ (X.B + 1) → TabWin X.F X.row0 t i σ →
+      MW cS X allS ops ens σ₀ (St X ρ rd J) ⟨.wb 0, 0, ρ, y, rst σ cy dec⟩ := by
+  intro t
+  induction t with
+  | zero =>
+    intro ρ rd σ cy dec y i J hJ ht hi hb htab
+    obtain ⟨G, hG, h⟩ := X.normal_round hX hcover hi (by rw [ht]; exact hb) (by rw [ht]; exact htab)
+    rcases h with ⟨-, hfin⟩ | ⟨t', ht', -⟩
+    · exact play_normal hS hall hX ρ rd σ cy dec y J hJ hG hops fun J' hJ' y' hG' =>
+        play_fin hS hall hX ρ _ _ y' J' hJ' hfin hG'
+    · omega
+  | succ t ih =>
+    intro ρ rd σ cy dec y i J hJ ht hi hb htab
+    obtain ⟨G, hG, h⟩ := X.normal_round hX hcover hi (by rw [ht]; exact hb) (by rw [ht]; exact htab)
+    rcases h with ⟨h0, -⟩ | ⟨t', ht', hevw, e, hok, hnext⟩
+    · omega
+    have htt : t' = t := by omega
+    subst htt
+    refine play_normal hS hall hX ρ rd σ cy dec y J hJ hG hops fun J' hJ' y' hG' => ?_
+    set g' := X.gAt G rd (rst σ cy dec) (4 * X.B) with hg'
+    set w' := X.wAt G rd (rst σ cy dec) with hw'
+    have e1 : tails X ρ w' 0 (2 ^ mm X) +
+        (⟨[nL (.loop ρ)], postT ρ⟩ ::ₘ ⟨[nL (.reT ρ)], preT ρ⟩ ::ₘ ⟨[nL (.loop (!ρ))], postT (!ρ)⟩ ::ₘ
+          ⟨[nL .finT], none⟩ ::ₘ J') =
+        ⟨[nL (.reT ρ)], preT ρ⟩ ::ₘ (tails X ρ w' 0 (2 ^ mm X) +
+          (⟨[nL (.loop ρ)], postT ρ⟩ ::ₘ ⟨[nL (.loop (!ρ))], postT (!ρ)⟩ ::ₘ ⟨[nL .finT], none⟩ ::ₘ J')) := by
+      simp only [← Multiset.singleton_add]; abel
+    rw [e1]
+    have he := hens e g' hok
+    have := mv_seq (cS := cS) (X := X) (allS := allS) (σ₀ := σ₀) (m_re cS X ops ens ρ he)
+      (xs₁ := []) (xs₂ := []) (τ := preT ρ) (r := ⟨.fin, 0, ρ, y', g'⟩)
+      (M := tails X ρ w' 0 (2 ^ mm X) +
+          (⟨[nL (.loop ρ)], postT ρ⟩ ::ₘ ⟨[nL (.loop (!ρ))], postT (!ρ)⟩ ::ₘ ⟨[nL .finT], none⟩ ::ₘ J'))
+    simp only [List.nil_append, List.map_cons, List.map_nil, toLab_lA, List.append_nil] at this
+    apply this
+    refine mv_prim hS hall hX (a := .rend ρ e)
+      (by rw [mem_acts_iff]; exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr
+        (Or.inr (Or.inl ⟨ρ, e, he, rfl⟩))))))))) hG' ⟨rfl, rfl, hok⟩ (fun g h => by simp at h)
+      fun r' hr' hG'' => ?_
+    simp only [Mach.outs, Set.mem_setOf_eq] at hr'
+    obtain ⟨g'', hg'', rfl⟩ := hr'
+    obtain ⟨σ'', cy'', dec'', i'', rfl, hi'', hb'', htab''⟩ := hnext g'' hg''
+    have e2 : (⟨[], preT ρ⟩ ::ₘ (tails X ρ w' 0 (2 ^ mm X) +
+          (⟨[nL (.loop ρ)], postT ρ⟩ ::ₘ ⟨[nL (.loop (!ρ))], postT (!ρ)⟩ ::ₘ ⟨[nL .finT], none⟩ ::ₘ J')) :
+          Multiset (LCh ℕ ℕ)) = St X (!ρ) w' (⟨[], preT ρ⟩ ::ₘ J') := by
+      simp only [St, Bool.not_not, ← Multiset.singleton_add]; abel
+    rw [e2]
+    exact ih (!ρ) w' σ'' cy'' dec'' y' i'' _ (junk_cons _ hJ') hevw hi'' hb'' htab''
 
 end TD
 
