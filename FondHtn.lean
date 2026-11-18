@@ -157,6 +157,7 @@ import FondHtn.HardTR.Lang
 import FondHtn.HardTR.Row
 import FondHtn.HardTR.SrcTab
 import FondHtn.HardTR.Tab
+import FondHtn.HardTR.TMain
 import FondHtn.DB25Games.Build
 import FondHtn.DB25Games.Game
 import FondHtn.DB25Games.HardDesc
