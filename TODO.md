@@ -17,17 +17,11 @@ Legend: **[WIP]** partial Lean files exist · **[PLAN]** construction on paper, 
   corrected summary game; the proposed table is wrong for the fair reading,
   `doc/notes_to_fair.md`, `notes_to_fair_2.md`, `notes_to_fair_3.md`).
 
-### 1.2 Total order — hardness (2-EXPTIME-hard, strong MP) **[WIP]**
-- Construction completed on paper: `doc/notes_to_hard.md` (deviates from the ideas file: CKS
-  tableau claims, three-way L/C/R challenge, enforced chain length).
-- Partial Lean: `FondHtn/TOHard2/` (Auto, Bits, Chain, Desc, Game, Shape, Sound, State, Transfer),
-  compile and are sorry-free (intermediate lemmas).
-- Next:
-  1. Soundness of a claim task `K` (the agent stopped right after `Transfer`).
-  2. Completeness of `K`.
-  3. `padExp2` copies of `good_dOf` / `solvable_dOf_iff`.
-  4. Validity, class TO, PT layer, final theorem; then `Cx.Complete` with `strongMP_TO_mem`.
-  5. Fair version (`hardFair_TO` is only EXPTIME).
+### 1.2 Total order — hardness (2-EXPTIME-hard, strong MP) **[DONE]**
+- Proved: `FOND.TOHard2.hard_TO_mpStrong`, with membership `FOND.TOHard2.complete_TO_mpStrong`
+  (2-EXPTIME-complete), `FondHtn/TOHard2/` (construction `doc/notes_to_hard.md`; soundness
+  `SoundK.lean`, completeness `CompleteK.lean`, machine link `Red.lean`, PT `PT.lean`).
+- Open follow-up: the fair strong cyclic version (`hardFair_TO` is only EXPTIME).
 
 ### 1.3 Counters — ACYC EXPSPACE-hard (FM strong OD and MP strong = CB22 Thm 2) **[WIP]**
 - Core proved: `FondHtn/AcycHard/` (chain game, FIFO cell queue, supply, `beliefSolvable_iff_qi`).
@@ -64,7 +58,8 @@ Legend: **[WIP]** partial Lean files exist · **[PLAN]** construction on paper, 
 
 - **Thm 5.3 for Bercher-style REG** (tn_I arbitrary): membership open; parallel chains
   interleave with unbounded lag (`doc/notes_reg_strongOD.md`). EXPSPACE-hardness is proved
-  (`strongOD_REG_expspaceHard`). Possibly undecidable (cf. 1.5). **[OPEN]**
+  (`strongOD_REG_expspaceHard`). **Settled**: undecidable, since `REG ∩ TR ⊆ REG`
+  (`FOND.PCP.undecidable_strongOD_REG_TR`), so no EXPSPACE membership.
 - Everything else of CB21 is done (see `STATUS.md`).
 
 ## 3. CB22

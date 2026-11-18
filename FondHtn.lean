@@ -133,6 +133,12 @@ import FondHtn.TOHard2.Shape
 import FondHtn.TOHard2.Sound
 import FondHtn.TOHard2.State
 import FondHtn.TOHard2.Transfer
+import FondHtn.TOHard2.SoundK
+import FondHtn.TOHard2.CompleteK
+import FondHtn.TOHard2.Correct
+import FondHtn.TOHard2.Red
+import FondHtn.TOHard2.PT
+import FondHtn.TOHard2.Main
 import FondHtn.HardTR.Lang
 import FondHtn.HardTR.Row
 import FondHtn.HardTR.SrcTab

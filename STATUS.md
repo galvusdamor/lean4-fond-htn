@@ -69,7 +69,7 @@ FOND-specific lower bounds:
 | DB25 Thm 4/5: REG(tn) FM strong OD EXPSPACE-hard | ✅ `FondHtn/DB25/Hard.lean` (direct reduction from exp-space NTMs, positive preconditions only); REGtn EXPSPACE-complete `strongOD_REGtn_complete` |
 | ideas: PCP, TR/Bercher-REG FM strong OD undecidable | ✅ `undecidable_strongOD_REG_TR` (`FondHtn/PCP/`): the sketch repaired by gated cheat tasks in separate supply chains, reduced directly from two-stack-machine halting (`doc/notes_pcp_check.md`) |
 | ideas: counters, ACYC EXPSPACE-hard / TR 2-EXPTIME-hard | ❓ construction and missing pieces (ATM source EXPSPACE ⊆ AEXPTIME, parallel-chain semantics) in `doc/notes_acyc_strongOD.md` |
-| ideas: TO MP strong 2-EXPTIME-hard | ❓ |
+| ideas: TO MP strong 2-EXPTIME-hard | ✅ `hard_TO_mpStrong`, 2-EXPTIME-complete `complete_TO_mpStrong` (`FondHtn/TOHard2/`) |
 
 ## Upper bounds
 
@@ -83,7 +83,7 @@ FOND-specific lower bounds:
 | CB22 Prop 2 consequences: MP weak for PRIM(∩TO), ACYC(∩TO), REG(∩TO), TR(∩TO), TO complete | ✅ `FondHtn/MP/WeakComplexity.lean`, `WeakReg.lean` |
 | CB21 Thm 5.1: PRIM strong OD ∈ PSPACE | ✅ `FondHtn/StrongOD/Prim.lean` |
 | CB21 Thm 5.2: ACYC strong OD ∈ EXPSPACE | ✅ `FondHtn/StrongOD/Acyc.lean` |
-| CB21 Thm 5.3: REGtn strong OD ∈ EXPSPACE | ✅ `FondHtn/StrongOD/Reg.lean` (sequential composition `bsw_comp`, belief-set chains); Bercher REG (tn_I arbitrary) ⬜ (parallel chains) |
+| CB21 Thm 5.3: REGtn strong OD ∈ EXPSPACE | ✅ `FondHtn/StrongOD/Reg.lean` (sequential composition `bsw_comp`, belief-set chains); Bercher REG (tn_I arbitrary): undecidable (`undecidable_strongOD_REG_TR`) |
 | CB21 Thm 3.1: semi-decidable and undecidable for all four FM criteria (and MP weak) | ✅ `FondHtn/Upper/SemiDec.lean`, `FondHtn/StrongOD/SemiDec.lean` (`thm_3_1_all`) |
 | CB22 Thms 1, 3, 4: MP strong ∈ EXPTIME (ACYC∩TO, REG(∩TO), TR∩TO) | ✅ `FondHtn/MPStrong/Mem.lean` (hardness ⏳) |
 | CB22 Thms 1–5 for **fair** strong cyclic: ACYC∩TO, REG(∩TO), TR∩TO ∈ EXPTIME, ACYC ∈ EXPSPACE (fair = strong on ACYC), TR ∈ 2-EXPTIME; G8 holds for the fair reading | ✅ `FondHtn/MPStrong/Cyclic*.lean`, `FondHtn/Alt/Buchi.lean` (hardness ⬜) |
@@ -97,7 +97,7 @@ FOND-specific lower bounds:
 | idea | status |
 | --- | --- |
 | Total order, membership (strong / fair) | ✅ `strongMP_TO_mem`, `fairMP_TO_mem` (fair needs a corrected summary game) |
-| Total order, 2-EXPTIME hardness | construction completed on paper (`doc/notes_to_hard.md`), formalisation partial (`FondHtn/TOHard2/`) |
+| Total order, 2-EXPTIME hardness | ✅ `complete_TO_mpStrong` (`FondHtn/TOHard2/`, `doc/notes_to_hard.md`) |
 | Counters, ACYC EXPSPACE-hard | core proved (`FondHtn/AcycHard/`), remaining layers in `doc/notes_acyc_expspace.md` |
 | Counters, TR 2-EXPTIME-hard | source + round lemma proved (`FondHtn/HardTR/`), encoding open |
 | PCP | ✅ `undecidable_strongOD_REG_TR`: strong OD undecidable for REG (Bercher) ∩ TR (`FondHtn/PCP/`, `doc/notes_pcp_check.md`) |
