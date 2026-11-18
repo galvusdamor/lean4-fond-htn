@@ -29,6 +29,12 @@ abbrev ASK (k : ℕ) := AS (Fin k)
 abbrev DK (k : ℕ) := Fct (ASK k) (SymK k)
 abbrev OK (k : ℕ) := ASK k × SymK k × SymK k × ASK k
 
+set_option synthInstance.maxSize 2000 in
+set_option synthInstance.maxHeartbeats 400000 in
+instance instDecSymK (k : ℕ) : DecidableEq (SymK k) := inferInstance
+
+instance instDecOK (k : ℕ) : DecidableEq (OK k) := inferInstance
+
 /-! ## Codes -/
 
 def codeTS : Option Bool → ℕ
