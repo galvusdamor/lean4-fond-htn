@@ -147,3 +147,6 @@ import FondHtn.PCP.Words
 import FondHtn.PCP.ChainNet
 import FondHtn.PCP.Decomp
 import FondHtn.PCP.Chains4
+import FondHtn.PCP.ChainTn
+import FondHtn.PCP.Construction
+import FondHtn.PCP.ConstrSem
