@@ -27,6 +27,8 @@ structure LCh (A C : Type) where
   lab : List (A ⊕ C)
   tag : Option (Bool × Bool)
 
+deriving instance DecidableEq for LCh
+
 /-- The labels of a tagged chain. -/
 def TCh.proj (c : TCh A C) : LCh A C := ⟨c.lab, c.tag⟩
 
@@ -205,6 +207,102 @@ theorem mpAndOr_of_twin {ls : List (LCh A C)} {s : Set F} (h : TWin P ls s) :
     refine ih hsp ?_
     rw [List.map_append, List.map_set, he]
     simp [TCh.proj, hl₁, hl₂]
+
+/-! ## The game on multisets of chains -/
+
+variable (P)
+
+/-- **The game on multisets of tagged label chains**: the chosen chain is split off. -/
+inductive MWin : Multiset (LCh A C) → Set F → Prop
+  | empty {M : Multiset (LCh A C)} {s : Set F} (h : ∀ c ∈ M, c.lab = []) : MWin M s
+  | prim {M : Multiset (LCh A C)} {s : Set F} {a : A} {rest : List (A ⊕ C)}
+      {τ : Option (Bool × Bool)}
+      (hfree : ∀ g, τ = some (g, true) → ∀ c ∈ M, c.tag = some (g, false) → c.lab = [])
+      (happ : (P.δ a).Applicable s)
+      (hall : ∀ s' ∈ (P.δ a).outcomes s, MWin (⟨rest, τ⟩ ::ₘ M) s') :
+      MWin (⟨.inl a :: rest, τ⟩ ::ₘ M) s
+  | seq {M : Multiset (LCh A C)} {s : Set F} {xs₁ xs₂ : List (A ⊕ C)} {c : C}
+      {τ : Option (Bool × Bool)} {m : Method ℕ A C} (hm : m ∈ P.methods) (hmc : m.abstractTask = c)
+      {bs : List (A ⊕ C)} (hseq : ∃ l, m.subtasks.IsSeqNet l bs)
+      (h : MWin (⟨xs₁ ++ bs ++ xs₂, τ⟩ ::ₘ M) s) : MWin (⟨xs₁ ++ .inr c :: xs₂, τ⟩ ::ₘ M) s
+  | set {M : Multiset (LCh A C)} {s : Set F} {c : C} {τ : Option (Bool × Bool)}
+      {m : Method ℕ A C} (hm : m ∈ P.methods) (hmc : m.abstractTask = c) {bs : List (A ⊕ C)}
+      (hset : ∃ l, SetNet m.subtasks l bs)
+      (h : MWin (⟨[], τ⟩ ::ₘ (M + (bs.map fun b => (⟨[b], τ⟩ : LCh A C) : Multiset (LCh A C)))) s) :
+      MWin (⟨[.inr c], τ⟩ ::ₘ M) s
+  | split {M : Multiset (LCh A C)} {s : Set F} {xs₁ xs₂ : List (A ⊕ C)} {g : Bool}
+      (hpre : ∀ c ∈ M, c.tag = some (g, false) → c.lab = [])
+      (hpost : ∀ c ∈ M, c.tag = some (g, true) → c.lab = [])
+      (h : MWin (⟨xs₂, some (g, true)⟩ ::ₘ ⟨xs₁, some (g, false)⟩ ::ₘ M) s) :
+      MWin (⟨xs₁ ++ xs₂, some (g, true)⟩ ::ₘ M) s
+
+variable {P}
+
+theorem coe_eraseIdx {α : Type} : ∀ (ls : List α) {k : ℕ} (hk : k < ls.length),
+    (ls : Multiset α) = ls[k] ::ₘ ((ls.eraseIdx k : List α) : Multiset α)
+  | [], _, hk => by simp at hk
+  | a :: l, 0, _ => by simp
+  | a :: l, k + 1, hk => by
+    simp only [List.eraseIdx_cons_succ, List.getElem_cons_succ, ← Multiset.cons_coe]
+    rw [coe_eraseIdx l (by simpa using hk), Multiset.cons_swap]
+
+theorem coe_set_idx {α : Type} : ∀ (ls : List α) {k : ℕ} (hk : k < ls.length) (x : α),
+    ((ls.set k x : List α) : Multiset α) = x ::ₘ ((ls.eraseIdx k : List α) : Multiset α)
+  | [], _, hk, _ => by simp at hk
+  | a :: l, 0, _, x => by simp
+  | a :: l, k + 1, hk, x => by
+    simp only [List.set_cons_succ, List.eraseIdx_cons_succ, ← Multiset.cons_coe]
+    rw [coe_set_idx l (by simpa using hk), Multiset.cons_swap]
+
+theorem pick {α : Type} {ls : List α} {c : α} {M : Multiset α} (he : (ls : Multiset α) = c ::ₘ M) :
+    ∃ k, ∃ hk : k < ls.length, ls[k] = c ∧ ((ls.eraseIdx k : List α) : Multiset α) = M := by
+  have hc : c ∈ ls := by
+    have : c ∈ (ls : Multiset α) := by rw [he]; exact Multiset.mem_cons_self _ _
+    simpa using this
+  obtain ⟨k, hk, hkc⟩ := List.getElem_of_mem hc
+  refine ⟨k, hk, hkc, ?_⟩
+  have := coe_eraseIdx ls hk
+  rw [he, hkc] at this
+  exact (Multiset.cons_inj_right c).1 this.symm
+
+theorem mem_rest {α : Type} {ls : List α} {k i : ℕ} (hi : i < ls.length) (hik : i ≠ k) :
+    ls[i] ∈ ((ls.eraseIdx k : List α) : Multiset α) := by
+  rw [Multiset.mem_coe, List.mem_eraseIdx_iff_getElem]
+  exact ⟨i, hi, hik, rfl⟩
+
+/-- **The multiset game is the list game.** -/
+theorem twin_of_mwin [DecidableEq A] [DecidableEq C] {M : Multiset (LCh A C)} {s : Set F}
+    (h : MWin P M s) : ∀ ls : List (LCh A C), (ls : Multiset (LCh A C)) = M → TWin P ls s := by
+  induction h with
+  | @empty M s hM =>
+    intro ls he
+    exact .empty fun c hc => hM c (by rw [← he]; simpa using hc)
+  | @prim M s a rest τ hfree happ hall ih =>
+    intro ls he
+    obtain ⟨k, hk, hkc, hM⟩ := pick he
+    refine .prim hk hkc (fun g hg i hi hti => ?_) happ fun s' hs' => ih s' hs' _ ?_
+    · have hik : i ≠ k := fun e => by subst e; rw [hkc] at hti; rw [hg] at hti; simp at hti
+      exact hfree g hg _ (by rw [← hM]; exact mem_rest hi hik) hti
+    · rw [coe_set_idx ls hk, hM]
+  | @seq M s xs₁ xs₂ c τ m hm hmc bs hseq hw ih =>
+    intro ls he
+    obtain ⟨k, hk, hkc, hM⟩ := pick he
+    refine .seq hk hkc hm hmc hseq (ih _ ?_)
+    rw [coe_set_idx ls hk, hM]
+  | @set M s c τ m hm hmc bs hset hw ih =>
+    intro ls he
+    obtain ⟨k, hk, hkc, hM⟩ := pick he
+    refine .set hk hkc hm hmc hset (ih _ ?_)
+    rw [← Multiset.coe_add, coe_set_idx ls hk, hM, Multiset.cons_add]
+  | @split M s xs₁ xs₂ g hpre hpost hw ih =>
+    intro ls he
+    obtain ⟨k, hk, hkc, hM⟩ := pick he
+    refine .split hk hkc (fun i hi hti => ?_) (fun i hi hik hti => ?_) (ih _ ?_)
+    · have hik : i ≠ k := fun e => by subst e; rw [hkc] at hti; simp at hti
+      exact hpre _ (by rw [← hM]; exact mem_rest hi hik) hti
+    · exact hpost _ (by rw [← hM]; exact mem_rest hi hik) hti
+    · rw [← Multiset.coe_add, coe_set_idx ls hk, hM, Multiset.coe_singleton, Multiset.cons_add,
+        Multiset.add_comm, Multiset.singleton_add]
 
 end HardTR
 
