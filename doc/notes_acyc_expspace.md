@@ -298,6 +298,25 @@ is invariant under decomposition. Consequences: every achievable primitive netwo
 `IsChains` with the expanded label lists (FM), and `MPAndOr tn s ↔ CWin (expansions) s` (MP).
 Then a CWin renaming lemma (facts and action names as numbers) connects the described problem
 to `X.cwin_iff_qi`.
+
+**L1 status.** Done: `FondHtn/AcycHard/Hier.lean` (chains `UC`, `step_seq`, `step_set`),
+`HierInv.lean` (`HSpec`, expansions `exI`/`exMI`/`exC`, `HInv`, `HInv.step`, `HInv.isChains`,
+`exists_primitive`), `HierGame.lean` (`strongOD_iff_hier`, `mpAndOr_iff_hier`).
+
+**Remaining plan for the instance.**
+1. Transfer lemma: `CWin` with control `u ++ refill^R` (`u` refill-free) is invariant under an
+   injective fact encoding and action naming, provided the encoded actions are the images
+   except `refill`, which only has to make all remaining pool actions applicable (the abstract
+   `refill` adds `Set.univ`, which a finite description cannot).
+2. Description: facts `Tok Gate (Fct (AS Q) (Sym Q Γ))` coded as numbers; actions: `opn/cls g`,
+   plain `toRd/half/halfChk/acc`, `refill` (adds the codes of all needed facts), pool `init τ`,
+   `tick`, `res`, `fin τ`, `opt o` for the (finitely many) options of `Sav.Δ`.
+3. Hierarchy: control = `preC ++ sweepC ++ [toRd] ++ (sweepC ++ [half])^K ++ sweepC ++ [halfChk]
+   ++ sweepC ++ [acc] ++ refill^R` with `sweepC = stepC^S`, `stepC = (W T)^S (W R)^S W F W I W U`,
+   powers by binary doubling (seq-kind); pool root (set-kind) = `S` blank cells + `n` fresh cells
+   per symbol + `n` copies per option, multiplicities by set-kind doubling.
+4. `HInv` of `tn_I` (two unordered roots), `Fit`, method existence, validity, ACYC (rank),
+   PT, final theorems (FM via `strongOD_iff_hier`, MP via `mpAndOr_iff_hier`).
 * The NFA `Chk` is the only machine-specific part.
 * `X`, `Q`, `Γ` are finite and fixed (`Fin k`, `Space.TapeSym`); only the `In` states depend
   on `w`.

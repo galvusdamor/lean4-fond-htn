@@ -130,6 +130,8 @@ import FondHtn.AcycHard.SavProg
 import FondHtn.AcycHard.Hier
 import FondHtn.AcycHard.HierInv
 import FondHtn.AcycHard.HierGame
+import FondHtn.AcycHard.Transfer
+import FondHtn.AcycHard.InstEnc
 import FondHtn.TOHard2.Auto
 import FondHtn.TOHard2.Bits
 import FondHtn.TOHard2.Chain
