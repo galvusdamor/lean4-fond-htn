@@ -310,6 +310,145 @@ theorem play_read (ρ γ : Bool) {c : ℕ} (M : Multiset (LCh ℕ ℕ)) (y : Boo
   rw [hph] at hG' ⊢
   exact play_rbs hS hall hX ρ M γ g (mm X) le_rfl hG' h
 
+/-! ## Phase: the operation and the counter increment -/
+
+omit hS hall hX in
+/-- The lowest zero bit of a counter, or all bits are set. -/
+theorem low_zero {c m : ℕ} (hc : c < 2 ^ m) :
+    (c + 1 < 2 ^ m ∧ ∃ k < m, c.testBit k = false ∧ ∀ j < k, c.testBit j = true) ∨
+      (¬ c + 1 < 2 ^ m ∧ ∀ j < m, c.testBit j = true) := by
+  have hex : ∃ k, c.testBit k = false := ⟨m, Nat.testBit_lt_two_pow hc⟩
+  classical
+  set k := Nat.find hex with hk
+  have hkf : c.testBit k = false := Nat.find_spec hex
+  have hlow : ∀ j < k, c.testBit j = true := fun j hj => by
+    have := Nat.find_min hex hj
+    simpa using this
+  by_cases hkm : k < m
+  · refine Or.inl ⟨?_, k, hkm, hkf, hlow⟩
+    have hne : c ≠ 2 ^ m - 1 := by
+      rintro rfl
+      rw [Nat.testBit_two_pow_sub_one] at hkf
+      simp [hkm] at hkf
+    omega
+  · have hall' : ∀ j < m, c.testBit j = true := fun j hj => hlow j (by omega)
+    refine Or.inr ⟨?_, hall'⟩
+    have hc1 : c = 2 ^ m - 1 := by
+      refine TL.Mach.eq_of_testBit_lt (m := m) hc (by have := Nat.one_le_two_pow (n := m); omega) ?_
+      intro j hj
+      rw [hall' j hj, Nat.testBit_two_pow_sub_one]; simp [hj]
+    omega
+
+/-- The record after the counter increment. -/
+def incR (X : Spec S) (c : ℕ) (ρ y : Bool) (g : Ctl S) : Rec (Ctl S) :=
+  if c + 1 < 2 ^ mm X then ⟨.wb 0, c + 1, ρ, y, g⟩ else ⟨.fin, 0, ρ, y, g⟩
+
+/-- **The operation and the increment.** -/
+theorem play_core (ρ : Bool) {c : ℕ} (M : Multiset (LCh ℕ ℕ)) (y : Bool) (g : Ctl S) {o : Op}
+    (ho : o ∈ ops) (hok : X.opOK o g y c) (hG : Good X ⟨.op, c, ρ, y, g⟩)
+    (h : Good X (incR X c ρ y (X.opEff o g)) →
+      MW cS X allS ops ens σ₀ (tailC X ρ c (Spec.opW o) ::ₘ M) (incR X c ρ y (X.opEff o g))) :
+    MW cS X allS ops ens σ₀
+      (⟨aL cS (.op ρ o) :: nL (.incT ρ) :: nL (.rvT ρ (Spec.opW o)) :: rbs ρ c (mm X), preT ρ⟩ ::ₘ M)
+      ⟨.op, c, ρ, y, g⟩ := by
+  refine mv_prim hS hall hX (a := .op ρ o)
+    (by rw [mem_acts_iff]; exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr
+      (Or.inl ⟨ρ, o, ho, rfl⟩)))))))) hG
+    ⟨rfl, rfl, hok⟩ (fun g h => by simp at h) fun r' hr' hG' => ?_
+  simp only [Mach.outs, Set.mem_singleton_iff] at hr'
+  subst hr'
+  have hc := hG.c_lt
+  rcases low_zero hc with ⟨hlt, k, hk, hk0, hlow⟩ | ⟨hlt, hall'⟩
+  · have := mv_seq (cS := cS) (X := X) (allS := allS) (σ₀ := σ₀) (m_inc cS X ops ens ρ hk)
+      (xs₁ := []) (xs₂ := nL (.rvT ρ (Spec.opW o)) :: rbs ρ c (mm X)) (τ := preT ρ) (M := M)
+      (r := ⟨.inc, c, ρ, y, X.mach.opEff o g⟩)
+    simp only [List.nil_append, List.map_cons, List.map_nil, toLab_lA, List.cons_append] at this
+    apply this
+    refine mv_prim hS hall hX (a := .inc ρ k)
+      (by rw [mem_acts_iff]; exact Or.inr (Or.inr (Or.inl ⟨ρ, k, hk, rfl⟩))) hG'
+      ⟨rfl, rfl, by simpa [Spec.mach, mm] using hk, hk0, hlow⟩ (fun g h => by simp at h)
+      fun r'' hr'' hG'' => ?_
+    simp only [Mach.outs, Set.mem_singleton_iff] at hr''
+    subst hr''
+    have e : incR X c ρ y (X.opEff o g) = ⟨.wb 0, c + 1, ρ, y, X.opEff o g⟩ := by
+      simp [incR, hlt]
+    rw [e] at h
+    exact h hG''
+  · have := mv_seq (cS := cS) (X := X) (allS := allS) (σ₀ := σ₀) (m_wrap cS X ops ens ρ)
+      (xs₁ := []) (xs₂ := nL (.rvT ρ (Spec.opW o)) :: rbs ρ c (mm X)) (τ := preT ρ) (M := M)
+      (r := ⟨.inc, c, ρ, y, X.mach.opEff o g⟩)
+    simp only [List.nil_append, List.map_cons, List.map_nil, toLab_lA, List.cons_append] at this
+    apply this
+    refine mv_prim hS hall hX (a := .wrap ρ)
+      (by rw [mem_acts_iff]; exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl ⟨ρ, rfl⟩))))) hG'
+      ⟨rfl, rfl, by simpa [Spec.mach, mm] using hall'⟩ (fun g h => by simp at h)
+      fun r'' hr'' hG'' => ?_
+    simp only [Mach.outs, Set.mem_singleton_iff] at hr''
+    subst hr''
+    have e : incR X c ρ y (X.opEff o g) = ⟨.fin, 0, ρ, y, X.opEff o g⟩ := by
+      simp [incR, hlt]
+    rw [e] at h
+    exact h hG''
+
+/-! ## One position of a round -/
+
+/-- **One position of a normal round**: write the address, read the old value `γ`, apply the
+operation `o`, store the new value and increment the counter. -/
+theorem play_pos (ρ γ : Bool) {c : ℕ} (M : Multiset (LCh ℕ ℕ)) (y : Bool) (g : Ctl S) {o : Op}
+    (ho : o ∈ ops) (hok : X.opOK o g γ c) (hG : Good X ⟨.wb 0, c, ρ, y, g⟩)
+    (h : Good X (incR X c ρ γ (X.opEff o g)) →
+      MW cS X allS ops ens σ₀ (tailC X ρ c (Spec.opW o) ::ₘ ⟨[], preT (!ρ)⟩ ::ₘ M)
+        (incR X c ρ γ (X.opEff o g))) :
+    MW cS X allS ops ens σ₀ (freshC ρ ::ₘ tailC X (!ρ) c γ ::ₘ M) ⟨.wb 0, c, ρ, y, g⟩ := by
+  have hph : phk X 0 = .wb 0 := by simp [phk, mm]
+  have h0 := play_bits (ops := ops) (ens := ens) (σ₀ := σ₀) hS hall hX ρ (tailC X (!ρ) c γ ::ₘ M) y g (mm X) 0 (by simp)
+    (by rw [hph]; exact hG) ?_
+  · simpa [hph, rbs] using h0
+  rw [Multiset.cons_swap]
+  refine play_read hS hall hX ρ γ _ y g
+    ⟨hG.c_lt, (fun _ h => by cases h), (fun _ h => by cases h), hG.gs_lt, hG.s_le⟩ ?_
+  rw [Multiset.cons_swap]
+  have := mv_seq (cS := cS) (X := X) (allS := allS) (σ₀ := σ₀) (m_bitM cS X ops ens ρ)
+    (xs₁ := []) (xs₂ := rbs ρ c (mm X)) (τ := preT ρ) (M := ⟨[], preT (!ρ)⟩ ::ₘ M)
+    (r := ⟨.op, c, ρ, γ, g⟩)
+  simp only [List.nil_append, List.map_cons, List.map_nil, toLab_lN, List.cons_append] at this
+  apply this
+  have := mv_seq (cS := cS) (X := X) (allS := allS) (σ₀ := σ₀) (m_core cS X ops ens ρ ho)
+    (xs₁ := []) (xs₂ := rbs ρ c (mm X)) (τ := preT ρ) (M := ⟨[], preT (!ρ)⟩ ::ₘ M)
+    (r := ⟨.op, c, ρ, γ, g⟩)
+  simp only [List.nil_append, List.map_cons, List.map_nil, toLab_lN, toLab_lA,
+    List.cons_append] at this
+  apply this
+  exact play_core hS hall hX ρ _ γ g ho hok
+    ⟨hG.c_lt, (fun _ h => by cases h), (fun _ h => by cases h), hG.gs_lt, hG.s_le⟩ h
+
+/-- **One position of the boot round**: no tail is read (`nrd`), the read bit is `false`. -/
+theorem play_posB (ρ : Bool) {c : ℕ} (M : Multiset (LCh ℕ ℕ)) (y : Bool) (g : Ctl S) {o : Op}
+    (ho : o ∈ ops) (hb : g.boot = true) (hok : X.opOK o g false c)
+    (hG : Good X ⟨.wb 0, c, ρ, y, g⟩)
+    (h : Good X (incR X c ρ false (X.opEff o g)) →
+      MW cS X allS ops ens σ₀ (tailC X ρ c (Spec.opW o) ::ₘ M) (incR X c ρ false (X.opEff o g))) :
+    MW cS X allS ops ens σ₀ (freshC ρ ::ₘ M) ⟨.wb 0, c, ρ, y, g⟩ := by
+  have hph : phk X 0 = .wb 0 := by simp [phk, mm]
+  have h0 := play_bits (ops := ops) (ens := ens) (σ₀ := σ₀) hS hall hX ρ M y g (mm X) 0 (by simp) (by rw [hph]; exact hG) ?_
+  · simpa [hph, rbs] using h0
+  have := mv_seq (cS := cS) (X := X) (allS := allS) (σ₀ := σ₀) (m_bitM cS X ops ens ρ)
+    (xs₁ := []) (xs₂ := rbs ρ c (mm X)) (τ := preT ρ) (M := M) (r := ⟨.rv, c, ρ, y, g⟩)
+  simp only [List.nil_append, List.map_cons, List.map_nil, toLab_lN, List.cons_append] at this
+  apply this
+  have := mv_seq (cS := cS) (X := X) (allS := allS) (σ₀ := σ₀) (m_coreN cS X ops ens ρ ho)
+    (xs₁ := []) (xs₂ := rbs ρ c (mm X)) (τ := preT ρ) (M := M) (r := ⟨.rv, c, ρ, y, g⟩)
+  simp only [List.nil_append, List.map_cons, List.map_nil, toLab_lN, toLab_lA,
+    List.cons_append] at this
+  apply this
+  refine mv_prim (ops := ops) (ens := ens) (r := ⟨.rv, c, ρ, y, g⟩) hS hall hX (a := .nrd ρ)
+    (by rw [mem_acts_iff]; exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl ⟨ρ, rfl⟩))))))
+    ⟨hG.c_lt, (fun _ h => by cases h), (fun _ h => by cases h), hG.gs_lt, hG.s_le⟩
+    ⟨rfl, rfl, hb⟩ (fun g h => by simp at h) fun r' hr' hG' => ?_
+  simp only [Mach.outs, Set.mem_singleton_iff] at hr'
+  subst hr'
+  exact play_core hS hall hX ρ M false g ho hok hG' h
+
 end TD
 
 end HardTR
