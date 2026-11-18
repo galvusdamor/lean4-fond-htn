@@ -449,6 +449,156 @@ theorem play_posB (ρ : Bool) {c : ℕ} (M : Multiset (LCh ℕ ℕ)) (y : Bool) 
   subst hr'
   exact play_core hS hall hX ρ M false g ho hok hG' h
 
+/-! ## A sweep over all positions -/
+
+omit hS hall hX in
+/-- The stored tails of the cells `c, …, c + n - 1`. -/
+def tails (X : Spec S) (p : Bool) (v : ℕ → Bool) (c n : ℕ) : Multiset (LCh ℕ ℕ) :=
+  ((List.range' c n).map fun a => tailC X p a (v a) : List (LCh ℕ ℕ))
+
+omit hS hall hX in
+theorem tails_succ (p : Bool) (v : ℕ → Bool) (c n : ℕ) :
+    tails X p v c (n + 1) = tailC X p c (v c) ::ₘ tails X p v (c + 1) n := by
+  simp [tails, List.range'_succ]
+
+omit hS hall hX in
+theorem tails_snoc (p : Bool) (v : ℕ → Bool) (c : ℕ) :
+    tails X p v 0 (c + 1) = tailC X p c (v c) ::ₘ tails X p v 0 c := by
+  simp only [tails]
+  rw [List.range'_concat, List.map_append, ← Multiset.coe_add, add_comm]
+  simp
+
+omit hS hall hX in
+theorem srun_cases {rd w' : ℕ → Bool} {c : ℕ} {g g' : Ctl S} (h : Mach.SRun X.mach rd w' c g g') :
+    (c = 2 ^ mm X ∧ g = g') ∨ (c < 2 ^ mm X ∧ ∃ o, X.opOK o g (rd c) c ∧ w' c = Spec.opW o ∧
+      Mach.SRun X.mach rd w' (c + 1) (X.opEff o g) g') := by
+  cases h with
+  | done => exact Or.inl ⟨rfl, rfl⟩
+  | step hc hok hw h => exact Or.inr ⟨hc, _, hok, hw, h⟩
+
+/-- **A normal sweep**: following a run of the transducer, every position reads the tail of the
+previous round and stores a new tail. -/
+theorem play_sweep (ρ : Bool) (rd w' : ℕ → Bool) (g' : Ctl S)
+    (hops : ∀ o g b c, X.opOK o g b c → (∀ ℓ, g.gs = some ℓ → ℓ < X.no) → o ∈ ops) :
+    ∀ n c (g : Ctl S) (y : Bool) (Rest : Multiset (LCh ℕ ℕ)), c + (n + 1) = 2 ^ mm X →
+      Mach.SRun X.mach rd w' c g g' → Good X ⟨.wb 0, c, ρ, y, g⟩ →
+      (∀ J, Junk J → ∀ y', Good X ⟨.fin, 0, ρ, y', g'⟩ →
+        MW cS X allS ops ens σ₀ (tails X ρ w' 0 (2 ^ mm X) + J + Rest) ⟨.fin, 0, ρ, y', g'⟩) →
+      MW cS X allS ops ens σ₀
+        ((n + 1) • {freshC ρ} + tails X (!ρ) rd c (n + 1) + tails X ρ w' 0 c + Rest)
+        ⟨.wb 0, c, ρ, y, g⟩ := by
+  intro n
+  induction n with
+  | zero =>
+    intro c g y Rest hc hrun hG hend
+    rcases srun_cases hrun with ⟨hcW, -⟩ | ⟨-, o, hok, hw, hrun'⟩
+    · omega
+    have hc1 : c + 1 = 2 ^ mm X := by simpa using hc
+    rcases srun_cases hrun' with ⟨-, rfl⟩ | ⟨hlt, -⟩
+    swap; · omega
+    have e : (0 + 1) • ({freshC ρ} : Multiset (LCh ℕ ℕ)) + tails X (!ρ) rd c (0 + 1) +
+        tails X ρ w' 0 c + Rest = freshC ρ ::ₘ tailC X (!ρ) c (rd c) ::ₘ (tails X ρ w' 0 c + Rest) := by
+      rw [tails_succ]
+      simp only [zero_add, one_nsmul, tails, List.range'_zero, List.map_nil, Multiset.coe_nil,
+        ← Multiset.singleton_add]
+      abel
+    rw [e]
+    refine play_pos hS hall hX ρ (rd c) _ y g (hops _ _ _ _ hok hG.gs_lt) hok hG fun hG' => ?_
+    have hi : incR X c ρ (rd c) (X.opEff o g) = ⟨.fin, 0, ρ, rd c, X.opEff o g⟩ := by
+      simp [incR, hc1]
+    rw [hi] at hG' ⊢
+    have e2 : tailC X ρ c (Spec.opW o) ::ₘ ⟨[], preT (!ρ)⟩ ::ₘ (tails X ρ w' 0 c + Rest) =
+        tails X ρ w' 0 (2 ^ mm X) + {⟨[], preT (!ρ)⟩} + Rest := by
+      rw [← hc1, tails_snoc, ← hw]
+      simp only [← Multiset.singleton_add]
+      abel
+    rw [e2]
+    exact hend _ (junk_cons _ (fun _ h => by simp at h)) _ hG'
+  | succ n ih =>
+    intro c g y Rest hc hrun hG hend
+    rcases srun_cases hrun with ⟨hcW, -⟩ | ⟨-, o, hok, hw, hrun'⟩
+    · omega
+    have hc1 : c + 1 < 2 ^ mm X := by omega
+    have e : (n + 1 + 1) • ({freshC ρ} : Multiset (LCh ℕ ℕ)) + tails X (!ρ) rd c (n + 1 + 1) +
+        tails X ρ w' 0 c + Rest = freshC ρ ::ₘ tailC X (!ρ) c (rd c) ::ₘ
+          ((n + 1) • {freshC ρ} + tails X (!ρ) rd (c + 1) (n + 1) + tails X ρ w' 0 c + Rest) := by
+      rw [tails_succ, succ_nsmul]
+      simp only [← Multiset.singleton_add]
+      abel
+    rw [e]
+    refine play_pos hS hall hX ρ (rd c) _ y g (hops _ _ _ _ hok hG.gs_lt) hok hG fun hG' => ?_
+    have hi : incR X c ρ (rd c) (X.opEff o g) = ⟨.wb 0, c + 1, ρ, rd c, X.opEff o g⟩ := by
+      simp [incR, hc1]
+    rw [hi] at hG' ⊢
+    have e2 : tailC X ρ c (Spec.opW o) ::ₘ ⟨[], preT (!ρ)⟩ ::ₘ
+          ((n + 1) • {freshC ρ} + tails X (!ρ) rd (c + 1) (n + 1) + tails X ρ w' 0 c + Rest) =
+        (n + 1) • {freshC ρ} + tails X (!ρ) rd (c + 1) (n + 1) + tails X ρ w' 0 (c + 1) +
+          (⟨[], preT (!ρ)⟩ ::ₘ Rest) := by
+      rw [tails_snoc, hw]
+      simp only [← Multiset.singleton_add]
+      abel
+    rw [e2]
+    refine ih (c + 1) _ _ _ (by omega) hrun' hG' fun J hJ y' hG'' => ?_
+    have e3 : tails X ρ w' 0 (2 ^ mm X) + J + (⟨[], preT (!ρ)⟩ ::ₘ Rest) =
+        tails X ρ w' 0 (2 ^ mm X) + (⟨[], preT (!ρ)⟩ ::ₘ J) + Rest := by
+      simp only [← Multiset.singleton_add]
+      abel
+    rw [e3]
+    exact hend _ (junk_cons _ hJ) _ hG''
+
+/-- **The boot sweep**: every position writes the canonical boot tape for the index `i`. -/
+theorem play_sweepB (ρ : Bool) (i : ℕ) (σ : S)
+    (hops : ∀ o g b c, X.opOK o g b c → (∀ ℓ, g.gs = some ℓ → ℓ < X.no) → o ∈ ops) :
+    ∀ n c (y : Bool) (Rest : Multiset (LCh ℕ ℕ)), c + (n + 1) = 2 ^ mm X →
+      Good X ⟨.wb 0, c, ρ, y, g0 σ⟩ →
+      (∀ J, Junk J → ∀ y', Good X ⟨.fin, 0, ρ, y', g0 σ⟩ →
+        MW cS X allS ops ens σ₀ (tails X ρ (X.wB i) 0 (2 ^ mm X) + J + Rest) ⟨.fin, 0, ρ, y', g0 σ⟩) →
+      MW cS X allS ops ens σ₀ ((n + 1) • {freshC ρ} + tails X ρ (X.wB i) 0 c + Rest)
+        ⟨.wb 0, c, ρ, y, g0 σ⟩ := by
+  intro n
+  induction n with
+  | zero =>
+    intro c y Rest hc hG hend
+    have hc1 : c + 1 = 2 ^ mm X := by simpa using hc
+    have e : (0 + 1) • ({freshC ρ} : Multiset (LCh ℕ ℕ)) + tails X ρ (X.wB i) 0 c + Rest =
+        freshC ρ ::ₘ (tails X ρ (X.wB i) 0 c + Rest) := by
+      simp only [zero_add, one_nsmul, ← Multiset.singleton_add]
+      abel
+    rw [e]
+    refine play_posB hS hall hX ρ _ y _ (hops _ _ _ _ (X.opOK_opB i c σ false) hG.gs_lt) rfl
+      (X.opOK_opB i c σ false) hG fun hG' => ?_
+    have hi : incR X c ρ false (X.opEff (X.opB i c) (g0 σ)) = ⟨.fin, 0, ρ, false, g0 σ⟩ := by
+      simp [incR, hc1, TT.Spec.opEff_opB]
+    rw [hi] at hG' ⊢
+    have e2 : tailC X ρ c (Spec.opW (X.opB i c)) ::ₘ (tails X ρ (X.wB i) 0 c + Rest) =
+        tails X ρ (X.wB i) 0 (2 ^ mm X) + 0 + Rest := by
+      rw [← hc1, tails_snoc]
+      simp only [← Multiset.singleton_add, add_zero, Spec.wB]
+      abel
+    rw [e2]
+    exact hend _ (fun _ h => by simp at h) _ hG'
+  | succ n ih =>
+    intro c y Rest hc hG hend
+    have hc1 : c + 1 < 2 ^ mm X := by omega
+    have e : (n + 1 + 1) • ({freshC ρ} : Multiset (LCh ℕ ℕ)) + tails X ρ (X.wB i) 0 c + Rest =
+        freshC ρ ::ₘ ((n + 1) • {freshC ρ} + tails X ρ (X.wB i) 0 c + Rest) := by
+      rw [succ_nsmul]
+      simp only [← Multiset.singleton_add]
+      abel
+    rw [e]
+    refine play_posB hS hall hX ρ _ y _ (hops _ _ _ _ (X.opOK_opB i c σ false) hG.gs_lt) rfl
+      (X.opOK_opB i c σ false) hG fun hG' => ?_
+    have hi : incR X c ρ false (X.opEff (X.opB i c) (g0 σ)) = ⟨.wb 0, c + 1, ρ, false, g0 σ⟩ := by
+      simp [incR, hc1, TT.Spec.opEff_opB]
+    rw [hi] at hG' ⊢
+    have e2 : tailC X ρ c (Spec.opW (X.opB i c)) ::ₘ ((n + 1) • {freshC ρ} + tails X ρ (X.wB i) 0 c + Rest) =
+        (n + 1) • {freshC ρ} + tails X ρ (X.wB i) 0 (c + 1) + Rest := by
+      rw [tails_snoc]
+      simp only [← Multiset.singleton_add, Spec.wB]
+      abel
+    rw [e2]
+    exact ih (c + 1) _ _ (by omega) hG' hend
+
 end TD
 
 end HardTR
