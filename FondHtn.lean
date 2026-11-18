@@ -124,6 +124,9 @@ import FondHtn.AcycHard.Fifo
 import FondHtn.AcycHard.Supply
 import FondHtn.AcycHard.Chains
 import FondHtn.AcycHard.Assembly
+import FondHtn.AcycHard.SavGame
+import FondHtn.AcycHard.SavChk
+import FondHtn.AcycHard.SavProg
 import FondHtn.TOHard2.Auto
 import FondHtn.TOHard2.Bits
 import FondHtn.TOHard2.Chain
