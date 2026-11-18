@@ -718,6 +718,85 @@ theorem play_start (ρ : Bool) (M : Multiset (LCh ℕ ℕ)) (r : Rec (Ctl S))
   rw [e2]
   exact h _ (junk_cons _ hJ)
 
+/-! ## The rounds -/
+
+omit hS hall hX in
+/-- The chains at the start of a round of the loop `ρ`: both loops, the finish, and the tails of
+the previous round (tape `v`). -/
+def St (X : Spec S) (ρ : Bool) (v : ℕ → Bool) (J : Multiset (LCh ℕ ℕ)) : Multiset (LCh ℕ ℕ) :=
+  ⟨[nL (.loop ρ)], postT ρ⟩ ::ₘ ⟨[nL (.loop (!ρ))], postT (!ρ)⟩ ::ₘ ⟨[nL .finT], none⟩ ::ₘ
+    (tails X (!ρ) v 0 (2 ^ mm X) + J)
+
+omit hS hall hX in
+theorem tag_tails {p : Bool} {v : ℕ → Bool} {c n : ℕ} :
+    ∀ x ∈ tails X p v c n, x.tag = preT p := by
+  intro x hx
+  simp only [tails, Multiset.mem_coe, List.mem_map] at hx
+  obtain ⟨a, -, rfl⟩ := hx
+  rfl
+
+omit hS hall hX in
+theorem good_rst (ρ y : Bool) (σ : S) (cy dec : Bool) : Good X ⟨.wb 0, 0, ρ, y, rst σ cy dec⟩ where
+  c_lt := Nat.two_pow_pos _
+  wb_lt k h := by cases h; simp [mm]
+  rb_lt k h := by cases h
+  gs_lt ℓ h := by cases h
+  s_le := Nat.zero_le _
+
+/-- **A normal round** following the canonical run with guess `G`: the round start, the sweep,
+then the continuation at the round end. -/
+theorem play_normal (ρ : Bool) (rd : ℕ → Bool) (σ : S) (cy dec y : Bool) (J : Multiset (LCh ℕ ℕ))
+    (hJ : Junk J) {G : Option ℕ} (hG : ∀ ℓ, G = some ℓ → ℓ < X.no ∧ σ = X.sg ℓ)
+    (hops : ∀ o g b c, X.opOK o g b c → (∀ ℓ, g.gs = some ℓ → ℓ < X.no) → o ∈ ops)
+    (hend : ∀ J', Junk J' → ∀ y', Good X ⟨.fin, 0, ρ, y', X.gAt G rd (rst σ cy dec) (4 * X.B)⟩ →
+      MW cS X allS ops ens σ₀
+        (tails X ρ (X.wAt G rd (rst σ cy dec)) 0 (2 ^ mm X) +
+          (⟨[nL (.loop ρ)], postT ρ⟩ ::ₘ ⟨[nL (.reT ρ)], preT ρ⟩ ::ₘ ⟨[nL (.loop (!ρ))], postT (!ρ)⟩ ::ₘ
+            ⟨[nL .finT], none⟩ ::ₘ J'))
+        ⟨.fin, 0, ρ, y', X.gAt G rd (rst σ cy dec) (4 * X.B)⟩) :
+    MW cS X allS ops ens σ₀ (St X ρ rd J) ⟨.wb 0, 0, ρ, y, rst σ cy dec⟩ := by
+  unfold St
+  refine play_start ρ _ _ (fun c hc ht => ?_) (fun c hc ht => ?_) fun J' hJ' => ?_
+  · simp only [Multiset.mem_cons, Multiset.mem_add] at hc
+    rcases hc with rfl | rfl | hc | hc
+    · cases ρ <;> simp at ht
+    · simp at ht
+    · rw [tag_tails c hc] at ht; cases ρ <;> simp at ht
+    · exact hJ c hc
+  · simp only [Multiset.mem_cons, Multiset.mem_add] at hc
+    rcases hc with rfl | rfl | hc | hc
+    · cases ρ <;> simp at ht
+    · simp at ht
+    · rw [tag_tails c hc] at ht; simp at ht
+    · exact hJ c hc
+  have hW : 2 ^ mm X = (2 ^ mm X - 1) + 1 := by have := Nat.two_pow_pos (mm X); omega
+  have hrun := TT.Spec.srun_canon (X := X) (G := G) (rd := rd) (g₀ := rst σ cy dec) rfl
+    (fun ℓ h => hG ℓ h) X.mach.W 0 (by simp)
+  rw [X.mach_W] at hrun
+  have e : 2 ^ mm X • {freshC ρ} + (⟨[nL (.loop ρ)], postT ρ⟩ ::ₘ ⟨[nL (.reT ρ)], preT ρ⟩ ::ₘ
+      ⟨[nL (.loop (!ρ))], postT (!ρ)⟩ ::ₘ ⟨[nL .finT], none⟩ ::ₘ (tails X (!ρ) rd 0 (2 ^ mm X) + J)) + J' =
+      (2 ^ mm X - 1 + 1) • {freshC ρ} + tails X (!ρ) rd 0 (2 ^ mm X - 1 + 1) +
+        tails X ρ (X.wAt G rd (rst σ cy dec)) 0 0 +
+        (⟨[nL (.loop ρ)], postT ρ⟩ ::ₘ ⟨[nL (.reT ρ)], preT ρ⟩ ::ₘ ⟨[nL (.loop (!ρ))], postT (!ρ)⟩ ::ₘ
+          ⟨[nL .finT], none⟩ ::ₘ (J + J')) := by
+    rw [← hW]
+    simp only [tails, List.range'_zero, List.map_nil, Multiset.coe_nil, ← Multiset.singleton_add]
+    abel
+  rw [e]
+  refine play_sweep hS hall hX ρ rd (X.wAt G rd (rst σ cy dec)) (X.gAt G rd (rst σ cy dec) (4 * X.B)) hops
+    (2 ^ mm X - 1) 0 (rst σ cy dec) y _ (by omega) ?_ (good_rst ρ y σ cy dec)
+    fun J'' hJ'' y' hG' => ?_
+  · exact hrun
+  · have e2 : tails X ρ (X.wAt G rd (rst σ cy dec)) 0 (2 ^ mm X) + J'' +
+        (⟨[nL (.loop ρ)], postT ρ⟩ ::ₘ ⟨[nL (.reT ρ)], preT ρ⟩ ::ₘ ⟨[nL (.loop (!ρ))], postT (!ρ)⟩ ::ₘ
+          ⟨[nL .finT], none⟩ ::ₘ (J + J')) =
+        tails X ρ (X.wAt G rd (rst σ cy dec)) 0 (2 ^ mm X) +
+          (⟨[nL (.loop ρ)], postT ρ⟩ ::ₘ ⟨[nL (.reT ρ)], preT ρ⟩ ::ₘ ⟨[nL (.loop (!ρ))], postT (!ρ)⟩ ::ₘ
+            ⟨[nL .finT], none⟩ ::ₘ (J + J' + J'')) := by
+      simp only [← Multiset.singleton_add]; abel
+    rw [e2]
+    exact hend _ (junk_add (junk_add hJ hJ') hJ'') y' hG'
+
 end TD
 
 end HardTR
