@@ -127,6 +127,9 @@ import FondHtn.AcycHard.Assembly
 import FondHtn.AcycHard.SavGame
 import FondHtn.AcycHard.SavChk
 import FondHtn.AcycHard.SavProg
+import FondHtn.AcycHard.Hier
+import FondHtn.AcycHard.HierInv
+import FondHtn.AcycHard.HierGame
 import FondHtn.TOHard2.Auto
 import FondHtn.TOHard2.Bits
 import FondHtn.TOHard2.Chain

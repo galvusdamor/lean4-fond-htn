@@ -281,8 +281,23 @@ where:
 
 ## 6. Remaining proof obligations
 
-**L3 (queue game → Savitch game).** As in §5: L3b–L3d. L3a is done. This is pure
-combinatorics, independent of HTN syntax. Estimate: ~1000–1500 lines.
+**L3 (queue game → Savitch game).** **Done** (`FondHtn/AcycHard/SavGame.lean`, `SavChk.lean`,
+`SavProg.lean`): `qi_prog_iff`. Deviations from §4: the check automaton has states
+`start/eqp/eqd/pre/pl q/pr q/dn` (equality branch, before the head, pending left/right move,
+done) with correctness `acc_iff`/`acc_zip_iff` (accepted lists encode equal or successive
+configurations; validity by counting markers); plain actions delete only the states of their
+mode (`toRd` the `inp` states, `half`/`halfChk` the two `rd` states), so no shape invariant is
+needed; `prog S K` has `K + 1` rounds.
+
+**L1 design (in progress).** Generic *hierarchy* module: every compound name has one body,
+either a sequence (seq-kind) or a set (set-kind, unordered); seq bodies contain only primitives
+and seq-kind compounds; a rank makes the hierarchy acyclic. Invariant on partially decomposed
+networks: a control chain and a multiset of pool chains of *items* (primitive or seq-kind
+compound tasks), plus singleton pool chains of set-kind compounds; the expansion of the items
+is invariant under decomposition. Consequences: every achievable primitive network is
+`IsChains` with the expanded label lists (FM), and `MPAndOr tn s ↔ CWin (expansions) s` (MP).
+Then a CWin renaming lemma (facts and action names as numbers) connects the described problem
+to `X.cwin_iff_qi`.
 * The NFA `Chk` is the only machine-specific part.
 * `X`, `Q`, `Γ` are finite and fixed (`Fin k`, `Space.TapeSym`); only the `In` states depend
   on `w`.
