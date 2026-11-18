@@ -891,6 +891,112 @@ theorem play_rounds (hcover : ∀ i < 2 ^ (X.B + 1), ∃ ℓ < X.no, X.lo ℓ �
     rw [e2]
     exact ih (!ρ) w' σ'' cy'' dec'' y' i'' _ (junk_cons _ hJ') hevw hi'' hb'' htab''
 
+/-! ## The opening and completeness -/
+
+/-- **The opening**: decompose `main`, tag the loops, play the boot round writing the index `i`,
+and end it with the accepting claim `σ`. -/
+theorem play_open (hcover : ∀ i < 2 ^ (X.B + 1), ∃ ℓ < X.no, X.lo ℓ ≤ i ∧ i < X.hi ℓ)
+    (hops : ∀ o g b c, X.opOK o g b c → (∀ ℓ, g.gs = some ℓ → ℓ < X.no) → o ∈ ops)
+    (hens : ∀ e g, X.endOK e g → e ∈ ens) {σ : S} {i : ℕ} (hσ : σ ∈ X.acc) (hi : i < 2 ^ X.B)
+    (htab : TabWin X.F X.row0 (2 ^ X.B - 1) i σ) :
+    MW cS X allS ops ens σ₀ {⟨[nL .main], none⟩} (r₀ σ₀) := by
+  apply mv_set (M := 0) (m_main cS X ops ens)
+  simp only [List.map_cons, List.map_nil, toLab_lN, ← Multiset.cons_coe, Multiset.coe_nil, zero_add]
+  -- tag the loops
+  have e0 : (⟨[], none⟩ ::ₘ ⟨[nL (.loop true)], none⟩ ::ₘ ⟨[nL (.loop false)], none⟩ ::ₘ
+      ⟨[nL .finT], none⟩ ::ₘ 0 : Multiset (LCh ℕ ℕ)) =
+      ⟨[nL (.loop true)], none⟩ ::ₘ (⟨[], none⟩ ::ₘ ⟨[nL (.loop false)], none⟩ ::ₘ
+        ⟨[nL .finT], none⟩ ::ₘ 0) := by
+    simp only [← Multiset.singleton_add]; abel
+  rw [e0]
+  refine MWin.retag (g := true) (fun c hc ht => ?_) ?_
+  · simp at hc
+    rcases hc with rfl | rfl | rfl <;> simp at ht ⊢
+  have e1 : (⟨[nL (.loop true)], postT true⟩ ::ₘ (⟨[], none⟩ ::ₘ ⟨[nL (.loop false)], none⟩ ::ₘ
+      ⟨[nL .finT], none⟩ ::ₘ 0) : Multiset (LCh ℕ ℕ)) =
+      ⟨[nL (.loop false)], none⟩ ::ₘ (⟨[nL (.loop true)], postT true⟩ ::ₘ ⟨[], none⟩ ::ₘ
+        ⟨[nL .finT], none⟩ ::ₘ 0) := by
+    simp only [← Multiset.singleton_add]; abel
+  rw [e1]
+  refine MWin.retag (g := false) (fun c hc ht => ?_) ?_
+  · simp at hc
+    rcases hc with rfl | rfl | rfl <;> simp at ht ⊢
+  have e2 : (⟨[nL (.loop false)], postT false⟩ ::ₘ (⟨[nL (.loop true)], postT true⟩ ::ₘ ⟨[], none⟩ ::ₘ
+      ⟨[nL .finT], none⟩ ::ₘ 0) : Multiset (LCh ℕ ℕ)) =
+      ⟨[nL (.loop true)], postT true⟩ ::ₘ (⟨[nL (.loop false)], postT false⟩ ::ₘ
+        ⟨[nL .finT], none⟩ ::ₘ {⟨[], none⟩}) := by
+    simp only [← Multiset.singleton_add]; abel
+  rw [e2]
+  -- the boot round
+  refine play_start true _ _ (fun c hc ht => ?_) (fun c hc ht => ?_) fun J hJ => ?_
+  · simp at hc
+    rcases hc with rfl | rfl | rfl <;> simp at ht ⊢
+  · simp at hc
+    rcases hc with rfl | rfl | rfl <;> simp at ht ⊢
+  have hW : 2 ^ mm X = (2 ^ mm X - 1) + 1 := by have := Nat.two_pow_pos (mm X); omega
+  set R : Multiset (LCh ℕ ℕ) := ⟨[nL (.loop true)], postT true⟩ ::ₘ ⟨[nL (.reT true)], preT true⟩ ::ₘ
+    ⟨[nL (.loop false)], postT false⟩ ::ₘ ⟨[nL .finT], none⟩ ::ₘ (⟨[], none⟩ ::ₘ J) with hR
+  have e : 2 ^ mm X • {freshC true} + (⟨[nL (.loop true)], postT true⟩ ::ₘ ⟨[nL (.reT true)], preT true⟩ ::ₘ
+      ⟨[nL (.loop false)], postT false⟩ ::ₘ ⟨[nL .finT], none⟩ ::ₘ {⟨[], none⟩}) + J =
+      (2 ^ mm X - 1 + 1) • {freshC true} + tails X true (X.wB i) 0 0 + R := by
+    rw [← hW, hR]
+    simp only [tails, List.range'_zero, List.map_nil, Multiset.coe_nil, ← Multiset.singleton_add]
+    abel
+  rw [e]
+  refine play_sweepB hS hall hX true i σ₀ hops (2 ^ mm X - 1) 0 false R (by omega) good_r₀
+    fun J' hJ' y' hG' => ?_
+  -- the end of the boot round
+  have e1 : tails X true (X.wB i) 0 (2 ^ mm X) + J' + R =
+      ⟨[nL (.reT true)], preT true⟩ ::ₘ (tails X true (X.wB i) 0 (2 ^ mm X) +
+        (⟨[nL (.loop true)], postT true⟩ ::ₘ ⟨[nL (.loop false)], postT false⟩ ::ₘ
+          ⟨[nL .finT], none⟩ ::ₘ (⟨[], none⟩ ::ₘ (J + J')))) := by
+    rw [hR]; simp only [← Multiset.singleton_add]; abel
+  rw [e1]
+  have he := hens (.boot σ) (g0 σ₀) ⟨rfl, hσ⟩
+  have := mv_seq (cS := cS) (X := X) (allS := allS) (σ₀ := σ₀) (m_re cS X ops ens true he)
+    (xs₁ := []) (xs₂ := []) (τ := preT true) (r := ⟨.fin, 0, true, y', g0 σ₀⟩)
+    (M := tails X true (X.wB i) 0 (2 ^ mm X) +
+        (⟨[nL (.loop true)], postT true⟩ ::ₘ ⟨[nL (.loop false)], postT false⟩ ::ₘ
+          ⟨[nL .finT], none⟩ ::ₘ (⟨[], none⟩ ::ₘ (J + J'))))
+  simp only [List.nil_append, List.map_cons, List.map_nil, toLab_lA, List.append_nil] at this
+  apply this
+  refine mv_prim hS hall hX (a := .rend true (.boot σ))
+    (by rw [mem_acts_iff]; exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr
+      (Or.inr (Or.inl ⟨true, _, he, rfl⟩))))))))) hG' ⟨rfl, rfl, rfl, hσ⟩ (fun g h => by simp at h)
+    fun r' hr' hG'' => ?_
+  simp only [Mach.outs, Set.mem_setOf_eq, Spec.mach, TT.Spec.endOut, Set.mem_singleton_iff] at hr'
+  obtain ⟨g'', rfl, rfl⟩ := hr'
+  have e2 : (⟨[], preT true⟩ ::ₘ (tails X true (X.wB i) 0 (2 ^ mm X) +
+        (⟨[nL (.loop true)], postT true⟩ ::ₘ ⟨[nL (.loop false)], postT false⟩ ::ₘ
+          ⟨[nL .finT], none⟩ ::ₘ (⟨[], none⟩ ::ₘ (J + J')))) : Multiset (LCh ℕ ℕ)) =
+      St X false (X.wB i) (⟨[], preT true⟩ ::ₘ ⟨[], none⟩ ::ₘ (J + J')) := by
+    simp only [St, Bool.not_false, ← Multiset.singleton_add]; abel
+  rw [e2]
+  have hB1 : 1 ≤ 2 ^ X.B := Nat.one_le_two_pow
+  exact play_rounds hS hall hX hcover hops hens (2 ^ X.B - 1) false (X.wB i) σ false false y' i _
+    (junk_cons _ (junk_cons _ (junk_add hJ hJ'))) (X.ev_wB i) (by simp [X.od_wB hi])
+    (by rw [pow_succ]; omega) htab
+
+/-- **Completeness of the description**: an accepting claim with a won tableau at the top time
+gives a strong method-based policy. -/
+theorem complete (hcover : ∀ i < 2 ^ (X.B + 1), ∃ ℓ < X.no, X.lo ℓ ≤ i ∧ i < X.hi ℓ)
+    (hops : ∀ o g b c, X.opOK o g b c → (∀ ℓ, g.gs = some ℓ → ℓ < X.no) → o ∈ ops)
+    (hens : ∀ e g, X.endOK e g → e ∈ ens) {σ : S} {i : ℕ} (hσ : σ ∈ X.acc) (hi : i < 2 ^ X.B)
+    (htab : TabWin X.F X.row0 (2 ^ X.B - 1) i σ) :
+    (desc cS X allS ops ens σ₀).toProblem.MPStrongSolvable := by
+  have hv := valid cS X allS ops ens σ₀ hS
+  have hP := FProbDesc.toProblem_wf hv
+  rw [Problem.mpStrongSolvable_iff_mpAndOr hP]
+  have hseq : (desc cS X allS ops ens σ₀).toProblem.tnI.IsSeqNet (List.range 1) [nL .main] := by
+    have : (desc cS X allS ops ens σ₀).toProblem.tnI = (seqTn [lN .main]).toTaskNetwork := by
+      simp only [FProbDesc.toProblem, tnI_desc]
+    rw [this]
+    simpa using isSeqNet_seqTn [lN .main]
+  have hW := play_open hS hall hX hcover hops hens (allS := allS) (σ₀ := σ₀) hσ hi htab
+  have hT := twin_of_mwin hW [⟨[nL .main], none⟩] rfl
+  have := mpAndOr_of_twin hT (TC.of_isSeqNet hseq) rfl
+  rwa [init_enc]
+
 end TD
 
 end HardTR
