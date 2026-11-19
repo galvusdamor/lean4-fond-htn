@@ -428,6 +428,252 @@ theorem cover_of_mem {a : ℕ} {s : St} {Ψ : Set Cfg} {Y : List (Bool × ℕ) �
   obtain ⟨n, hn⟩ := hY _ _ hYs
   exact cover_fair H n a s Ψ Y hY hYs hn hs
 
+/-! ### Pinning -/
+
+/-- **A challenge, pinning**: coverage of the inner claim forces `t = t' + 1`, and the inner
+claim is sound by the induction hypothesis on the time. -/
+theorem pick_modeF {T : ℕ} (ihT : PinS P tabC T) {k j mm : ℕ} {X : ℕ → ℕ}
+    {postP : List (ℕ × List ASpec)} (hpost : ∀ q ∈ postP, q ∈ (gram P).insL) {s : St} (hs : Shaped s)
+    (hbodies : ∀ bs, (subN k j, bs) ∈ meths P → ∃ mm' < 3, bs = modeBody mm' (X mm') ++ syms postP ∧
+      (s.val (4 + mm') = true → mm' = mm))
+    {Ψ : Set Cfg} {Y : List (Bool × ℕ) → Cfg → Prop} (hY : FSet (gram P) Ψ Y)
+    (hYs : Y [(true, subN k j)] s.cfg) :
+    Cover P (wpP (inss postP) Ψ) ∧
+      ∀ tg ig, Pin P (wpP (inss postP) Ψ) tg ig → ofB tg (2 ^ P.b) < T + 1 → ∃ t' i',
+        ofB tg (2 ^ P.b) = t' + 1 ∧
+        (mm = 0 → ofB ig (2 ^ P.b) = i' + 1) ∧ (mm = 1 → ofB ig (2 ^ P.b) = i') ∧
+        (mm = 2 → ofB ig (2 ^ P.b) + 1 = i') ∧ i' < 2 ^ 2 ^ P.b ∧ tabC t' i' = X mm := by
+  obtain ⟨bs, hb, hYb⟩ := y_comp hY hYs
+  rw [gram_methL] at hb
+  obtain ⟨mm', hmm', rfl, honly⟩ := hbodies bs hb
+  rw [List.append_nil] at hYb
+  obtain ⟨n, hn⟩ := hY _ _ hYb
+  obtain ⟨hv, asT, asI, hT, hI, hYi, -⟩ := fa_mode P hY H.two_le hmm' hYb hn
+  obtain rfl := honly hv
+  obtain ⟨hFS, hrel⟩ := split_claim P hY H.two_le hT hI hpost
+  have hYi' : (fun u c => Y (u ++ syms (tailP P asI asT postP)) c) [(true, KN (X mm'))] s.cfg := hYi
+  have hcov := cover_of_mem H hFS hYi' hs
+  obtain ⟨hcov', hl₁, hl₂, htr⟩ := transfer H.cs (run_reg hT) (reg_modeI hI) hrel hcov
+  refine ⟨hcov', fun tg ig hpin hlt => ?_⟩
+  obtain ⟨tg', ig', hpin', hrT, hrI⟩ := htr tg ig hpin
+  have hT' := run_inc hT hrT
+  simp only [one_ne_zero, if_false, add_zero, hl₁] at hT'
+  have hx := ihT (X mm') s _ _ hFS hYi' hs tg' ig' hpin' (by have := hT'.2; omega)
+  refine ⟨ofB tg' (2 ^ P.b), ofB ig' (2 ^ P.b), hT'.2, ?_, ?_, ?_, ofB_lt _ _, hx⟩
+  · rintro rfl
+    have := run_inc (rg := false) (by simpa [modeI] using hI) hrI
+    simp only [Comp.aut, one_ne_zero, if_false, add_zero, hl₂] at this
+    exact this.2
+  · rintro rfl
+    have := run_cpy (by simpa [modeI] using hI) hrI
+    exact ofB_congr fun r hr => this r (by omega)
+  · rintro rfl
+    have := run_dec (rg := false) (by simpa [modeI] using hI) hrI
+    simp only [Comp.aut, one_ne_zero, if_false, add_zero, hl₂] at this
+    exact this.2.symm
+
+/-- Soundness of a claim up to the time `T`. -/
+def SoundT (P : Par) (tabC : ℕ → ℕ → ℕ) (T a : ℕ) (Ψ : Set Cfg) : Prop :=
+  ∀ tg ig, Pin P Ψ tg ig → ofB tg (2 ^ P.b) < T → tabC (ofB tg (2 ^ P.b)) (ofB ig (2 ^ P.b)) = a
+
+/-- **The middle rule** (fair). -/
+theorem sound_midF {T : ℕ} (ihT : PinS P tabC T) {a j : ℕ} (hj : j < P.mid.length)
+    (ha : (P.mid.getI j).1 = a) {s : St} (hs : Shaped s) {Ψ : Set Cfg}
+    {Y : List (Bool × ℕ) → Cfg → Prop} (hY : FSet (gram P) Ψ Y)
+    (h : Y [(false, pick3I.1), (true, subN 0 j)] s.cfg) : SoundT P tabC (T + 1) a Ψ := by
+  set q := P.mid.getI j with hq
+  have h1 := y_ins (I := pick3I.2) hY (gram_good P).nodup (insRaw_mem_of_mem P (q := pick3I) (by simp)) h
+  rw [wp_pick3] at h1
+  obtain ⟨hL, hC, hR⟩ := h1
+  let X : ℕ → ℕ := fun mm => if mm = 0 then q.2.1 else if mm = 1 then q.2.2.1 else q.2.2.2
+  have hb : ∀ (l c r : Bool) (mm : ℕ), (∀ mm' < 3, (modeSt s l c r).val (4 + mm') = true → mm' = mm) →
+      ∀ bs, (subN 0 j, bs) ∈ meths P → ∃ mm' < 3, bs = modeBody mm' (X mm') ++ syms [] ∧
+        ((modeSt s l c r).val (4 + mm') = true → mm' = mm) := by
+    intro l c r mm honly bs hbs
+    rcases meth_sub P hbs with ⟨-, -, rfl | rfl | rfl⟩ | ⟨h0, -⟩ | ⟨h0, -⟩
+    · exact ⟨0, by norm_num, by simp [X, hq], honly 0 (by norm_num)⟩
+    · exact ⟨1, by norm_num, by simp [X, hq], honly 1 (by norm_num)⟩
+    · exact ⟨2, by norm_num, by simp [X, hq], honly 2 (by norm_num)⟩
+    · omega
+    · omega
+  have rL := pick_modeF H ihT (mm := 0) (postP := []) (by simp) (shaped_modeSt hs _ _ _)
+    (hb true false false 0 (by intro mm' hmm' hv; interval_cases mm' <;> first | rfl | (simp [modeSt, St.val] at hv))) hY hL
+  have rC := pick_modeF H ihT (mm := 1) (postP := []) (by simp) (shaped_modeSt hs _ _ _)
+    (hb false true false 1 (by intro mm' hmm' hv; interval_cases mm' <;> first | rfl | (simp [modeSt, St.val] at hv))) hY hC
+  have rR := pick_modeF H ihT (mm := 2) (postP := []) (by simp) (shaped_modeSt hs _ _ _)
+    (hb false false true 2 (by intro mm' hmm' hv; interval_cases mm' <;> first | rfl | (simp [modeSt, St.val] at hv))) hY hR
+  intro tg ig hpin hlt
+  obtain ⟨tL, iL, eL1, eL2, -, -, -, hxL⟩ := rL.2 tg ig hpin hlt
+  obtain ⟨tC, iC, eC1, -, eC2, -, -, hxC⟩ := rC.2 tg ig hpin hlt
+  obtain ⟨tR, iR, eR1, -, -, eR2, hiR, hxR⟩ := rR.2 tg ig hpin hlt
+  specialize eL2 rfl; specialize eC2 rfl; specialize eR2 rfl
+  simp only [X, if_pos rfl, if_neg (show (1 : ℕ) ≠ 0 by norm_num),
+    if_neg (show (2 : ℕ) ≠ 0 by norm_num), if_neg (show (2 : ℕ) ≠ 1 by norm_num)] at hxL hxC hxR
+  have hqm : q ∈ d.mid := by
+    rw [← H.mid, hq, ← List.getD_default_eq_getI, List.getD_eq_getElem _ _ hj]
+    exact List.getElem_mem _
+  have hB := H.hB
+  have := H.good.mid_s q hqm tC (ofB ig (2 ^ P.b)) (by omega) (by rw [hB]; omega)
+    (by rw [show ofB ig (2 ^ P.b) - 1 = iL by omega, show tC = tL by omega]; exact hxL)
+    (by rw [eC2]; exact hxC)
+    (by rw [eR2, show tC = tR by omega]; exact hxR)
+  rw [eC1, this, ← ha]
+
+/-- **Cell `0`** (fair). -/
+theorem sound_lftF {T : ℕ} (ihT : PinS P tabC T) {a j : ℕ} (hj : j < P.lft.length)
+    (ha : (P.lft.getI j).1 = a) {s : St} (hs : Shaped s) {Ψ : Set Cfg}
+    {Y : List (Bool × ℕ) → Cfg → Prop} (hY : FSet (gram P) Ψ Y)
+    (h : Y [(false, pickCRI.1), (true, subN 1 j)] s.cfg) : SoundT P tabC (T + 1) a Ψ := by
+  set q := P.lft.getI j with hq
+  have h1 := y_ins (I := pickCRI.2) hY (gram_good P).nodup (insRaw_mem_of_mem P (q := pickCRI) (by simp)) h
+  rw [wp_pickCR] at h1
+  obtain ⟨hC, hR⟩ := h1
+  let X : ℕ → ℕ := fun mm => if mm = 1 then q.2.1 else q.2.2
+  have hpost : ∀ q ∈ [assertIBI false], q ∈ (gram P).insL := by
+    intro q hq; exact insRaw_mem_of_mem P (by simp at hq; subst hq; simp)
+  have hb : ∀ (l c r : Bool) (mm : ℕ), (∀ mm' < 3, mm' ≠ 0 → (modeSt s l c r).val (4 + mm') = true → mm' = mm) →
+      ∀ bs, (subN 1 j, bs) ∈ meths P → ∃ mm' < 3, bs = modeBody mm' (X mm') ++ syms [assertIBI false] ∧
+        ((modeSt s l c r).val (4 + mm') = true → mm' = mm) := by
+    intro l c r mm honly bs hbs
+    rcases meth_sub P hbs with ⟨h0, -⟩ | ⟨-, -, rfl | rfl⟩ | ⟨h0, -⟩
+    · omega
+    · exact ⟨1, by norm_num, by simp [X, hq], honly 1 (by norm_num) (by norm_num)⟩
+    · exact ⟨2, by norm_num, by simp [X, hq], honly 2 (by norm_num) (by norm_num)⟩
+    · omega
+  have rC := pick_modeF H ihT (mm := 1) hpost (shaped_modeSt hs _ _ _)
+    (hb s.ml true false 1 (by intro mm' hmm' h0 hv; interval_cases mm' <;> first | rfl | omega | (simp [modeSt, St.val] at hv))) hY hC
+  have rR := pick_modeF H ihT (mm := 2) hpost (shaped_modeSt hs _ _ _)
+    (hb s.ml false true 2 (by intro mm' hmm' h0 hv; interval_cases mm' <;> first | rfl | omega | (simp [modeSt, St.val] at hv))) hY hR
+  obtain ⟨-, hpost'⟩ := post_IB H rC.1
+  intro tg ig hpin hlt
+  obtain ⟨hpin', hz⟩ := hpost' tg ig hpin
+  have hi0 : ofB ig (2 ^ P.b) = 0 := ofB_eq_zero hz
+  obtain ⟨tC, iC, eC1, -, eC2, -, -, hxC⟩ := rC.2 tg ig hpin' hlt
+  obtain ⟨tR, iR, eR1, -, -, eR2, -, hxR⟩ := rR.2 tg ig hpin' hlt
+  specialize eC2 rfl; specialize eR2 rfl
+  simp only [X, if_pos rfl, if_neg (show (2 : ℕ) ≠ 1 by norm_num)] at hxC hxR
+  have hqm : q ∈ d.lft := by
+    rw [← H.lft, hq, ← List.getD_default_eq_getI, List.getD_eq_getElem _ _ hj]
+    exact List.getElem_mem _
+  have := H.good.lft_s q hqm tC (by rw [← hxC, ← eC2, hi0]) (by rw [← hxR, ← eR2, hi0, show tC = tR by omega])
+  rw [eC1, hi0, this, ← ha]
+
+/-- **The last cell** (fair). -/
+theorem sound_rgtF {T : ℕ} (ihT : PinS P tabC T) {a j : ℕ} (hj : j < P.rgt.length)
+    (ha : (P.rgt.getI j).1 = a) {s : St} (hs : Shaped s) {Ψ : Set Cfg}
+    {Y : List (Bool × ℕ) → Cfg → Prop} (hY : FSet (gram P) Ψ Y)
+    (h : Y [(false, pickLCI.1), (true, subN 2 j)] s.cfg) : SoundT P tabC (T + 1) a Ψ := by
+  set q := P.rgt.getI j with hq
+  have h1 := y_ins (I := pickLCI.2) hY (gram_good P).nodup (insRaw_mem_of_mem P (q := pickLCI) (by simp)) h
+  rw [wp_pickLC] at h1
+  obtain ⟨hL, hC⟩ := h1
+  let X : ℕ → ℕ := fun mm => if mm = 0 then q.2.1 else q.2.2
+  have hpost : ∀ q ∈ [assertIBI true], q ∈ (gram P).insL := by
+    intro q hq; exact insRaw_mem_of_mem P (by simp at hq; subst hq; simp)
+  have hb : ∀ (l c r : Bool) (mm : ℕ), (∀ mm' < 3, mm' ≠ 2 → (modeSt s l c r).val (4 + mm') = true → mm' = mm) →
+      ∀ bs, (subN 2 j, bs) ∈ meths P → ∃ mm' < 3, bs = modeBody mm' (X mm') ++ syms [assertIBI true] ∧
+        ((modeSt s l c r).val (4 + mm') = true → mm' = mm) := by
+    intro l c r mm honly bs hbs
+    rcases meth_sub P hbs with ⟨h0, -⟩ | ⟨h0, -⟩ | ⟨-, -, rfl | rfl⟩
+    · omega
+    · omega
+    · exact ⟨0, by norm_num, by simp [X, hq], honly 0 (by norm_num) (by norm_num)⟩
+    · exact ⟨1, by norm_num, by simp [X, hq], honly 1 (by norm_num) (by norm_num)⟩
+  have rL := pick_modeF H ihT (mm := 0) hpost (shaped_modeSt hs _ _ _)
+    (hb true false s.mr 0 (by intro mm' hmm' h0 hv; interval_cases mm' <;> first | rfl | omega | (simp [modeSt, St.val] at hv))) hY hL
+  have rC := pick_modeF H ihT (mm := 1) hpost (shaped_modeSt hs _ _ _)
+    (hb false true s.mr 1 (by intro mm' hmm' h0 hv; interval_cases mm' <;> first | rfl | omega | (simp [modeSt, St.val] at hv))) hY hC
+  obtain ⟨-, hpost'⟩ := post_IB H rC.1
+  intro tg ig hpin hlt
+  obtain ⟨hpin', hz⟩ := hpost' tg ig hpin
+  have hi1 : ofB ig (2 ^ P.b) + 1 = 2 ^ 2 ^ P.b := ofB_all_true hz
+  obtain ⟨tL, iL, eL1, eL2, -, -, -, hxL⟩ := rL.2 tg ig hpin' hlt
+  obtain ⟨tC, iC, eC1, -, eC2, -, -, hxC⟩ := rC.2 tg ig hpin' hlt
+  specialize eL2 rfl; specialize eC2 rfl
+  simp only [X, if_pos rfl, if_neg (show (1 : ℕ) ≠ 0 by norm_num)] at hxL hxC
+  have hqm : q ∈ d.rgt := by
+    rw [← H.rgt, hq, ← List.getD_default_eq_getI, List.getD_eq_getElem _ _ hj]
+    exact List.getElem_mem _
+  have hB := H.hB
+  have hmx := H.good.hmx
+  have htlt := ofB_lt tg (2 ^ P.b)
+  have := H.good.rgt_s q hqm tC (by rw [hB]; omega)
+    (by rw [hmx, hB, show 2 ^ 2 ^ P.b - 1 - 1 = iL by omega, show tC = tL by omega]; exact hxL)
+    (by rw [hmx, hB, show 2 ^ 2 ^ P.b - 1 = iC by omega]; exact hxC)
+  rw [eC1, show ofB ig (2 ^ P.b) = d.mx by rw [hmx, hB]; omega, this, ← ha]
+
+/-- **Pinning of the claims**, by induction on the time. -/
+theorem pin_fair : ∀ T, PinS P tabC T := by
+  intro T
+  induction T with
+  | zero => intro a s Ψ Y _ _ _ tg ig _ hlt; omega
+  | succ T ih =>
+    intro a s Ψ Y hY hYs hs tg ig hpin hlt
+    obtain ⟨bs, hb, hYb⟩ := y_comp hY hYs
+    rw [gram_methL] at hb
+    rcases meth_K P hb with ⟨j, hj, ha, rfl⟩ | ⟨j, hj, ha, rfl⟩ | ⟨j, hj, ha, rfl⟩ | ⟨c, hc, ha, rfl⟩ |
+      ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+    · exact sound_midF H ih hj ha hs hY (by simpa using hYb) tg ig hpin hlt
+    · exact sound_lftF H ih hj ha hs hY (by simpa using hYb) tg ig hpin hlt
+    · exact sound_rgtF H ih hj ha hs hY (by simpa using hYb) tg ig hpin hlt
+    · exact (sound_prefF H hc ha hs hY hYb).2 tg ig hpin
+    · exact (sound_trueF H hs hY (by simpa using hYb)).2 tg ig hpin
+    · exact (sound_noneF H hs hY (by simpa using hYb)).2 tg ig hpin
+
+/-- **Soundness of the claims for fair policies.** -/
+theorem sound_fair {a : ℕ} {s : St} {Ψ : Set Cfg} {Y : List (Bool × ℕ) → Cfg → Prop}
+    (hY : FSet (gram P) Ψ Y) (hYs : Y [(true, KN a)] s.cfg) (hs : Shaped s) : SoundC P tabC a Ψ :=
+  ⟨cover_of_mem H hY hYs hs, fun tg ig hpin =>
+    pin_fair H (ofB tg (2 ^ P.b) + 1) a s Ψ Y hY hYs hs tg ig hpin (by omega)⟩
+
+/-- **Soundness of the root for fair policies.** -/
+theorem root_soundF {Y : List (Bool × ℕ) → Cfg → Prop} (hY : FSet (gram P) Set.univ Y)
+    (h : Y [(true, rootN)] s₀.cfg) : ∃ i < 2 ^ d.B, tabC (2 ^ d.B - 1) i ∈ d.acc := by
+  obtain ⟨bs, hb, h⟩ := y_comp hY h
+  rw [gram_methL] at hb
+  obtain ⟨a, ha, rfl⟩ := meth_root P hb
+  simp only [List.cons_append, List.nil_append] at h
+  obtain ⟨as₁, as₂, hr₁, hr₂, h, -⟩ := y_ch2 P hY h
+  set ys := syms (chain P.b P.cs as₂ ++ chain P.b P.cs as₁ ++ [assertTBI]) ++ [] with hys
+  have h' : (fun u c => Y (u ++ ys) c) [(true, KN a)] s₀.cfg := by
+    simpa [hys, List.append_assoc] using h
+  obtain ⟨hcov, hsnd⟩ := sound_fair H (fset_split hY ys) h' shaped_s₀
+  have hp : ∀ q ∈ chain P.b P.cs as₂ ++ chain P.b P.cs as₁ ++ [assertTBI], q ∈ (gram P).insL := by
+    intro q hq
+    simp only [List.mem_append, List.mem_singleton] at hq
+    rcases hq with (hq | hq) | rfl
+    · exact chain_mem P (run_ok (A := .bits) trivial hr₂) q hq
+    · exact chain_mem P (run_ok (A := .cpy) trivial hr₁) q hq
+    · exact insRaw_mem_of_mem P (by simp)
+  have hreg₁ : ∀ a ∈ as₁, a = .id ∨ a.reg = true := fun a ha => Or.inl (run_cpy_mem hr₁ a ha)
+  have hreg₂ : ∀ a ∈ as₂, a = .id ∨ a.reg = false := fun a ha => by
+    rcases run_reg hr₂ a ha with h | h
+    · exact Or.inl h
+    · exact Or.inr h
+  let β : ℕ → Bool := fun d => match as₂.getD d .id with
+    | .bit b => b
+    | _ => false
+  have hpost : ∀ s', Shaped s' → s'.cfg ∈ {c | Y ys c} → s'.tb = true ∧ s'.ib = β (s'.chkV P.b) := by
+    intro s' hs' h1
+    have h2 := wpP_mono _ (fun c' hc' => y_nil hY hc') (y_prog hY (gram_good P).nodup hp h1)
+    rw [inss_append, wpP_append, wp_chain2 H.cs hreg₁ hreg₂ hs'] at h2
+    obtain ⟨hl₂, hl₁, v₂, v₁, e2, e1, h3⟩ := h2
+    simp only [inss_cons, inss_nil, wpP_cons, wpP_nil, wp_assertTB] at h3
+    have hk : s'.chkV P.b < as₂.length := hl₂ ▸ ofB_lt _ _
+    have hk1 : s'.chkV P.b < as₁.length := hl₁ ▸ ofB_lt _ _
+    rw [run_cpy_mem hr₁ _ (List.getD_mem' hk1), rho_id] at e1
+    obtain ⟨β', hβ'⟩ := run_bits_mem hr₂ _ (List.getD_mem' hk)
+    rw [hβ', rho_bit] at e2
+    refine ⟨?_, ?_⟩
+    · rw [← e1]; exact h3.1
+    · simp only [β, hβ']; exact e2.1
+  have hpin : Pin P {c | Y ys c} (fun _ => true) β := fun s' hs' h1 => hpost s' hs' h1
+  have hx := hsnd _ _ hpin
+  have hall := ofB_all_true (g := fun _ => true) (n := 2 ^ P.b) (fun _ _ => rfl)
+  refine ⟨ofB β (2 ^ P.b), by rw [H.hB]; exact ofB_lt _ _, ?_⟩
+  rw [H.hB, show 2 ^ 2 ^ P.b - 1 = ofB (fun _ => true) (2 ^ P.b) by omega, hx, ← H.acc]
+  exact ha
+
 end Claims
 
 end TOHard2
