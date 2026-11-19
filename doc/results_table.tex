@@ -11,11 +11,13 @@
 \definecolor{corr}{HTML}{D00000}  % corrected results
 \definecolor{dbC}{HTML}{1E8449}   % DB25
 \definecolor{dD}{HTML}{8E44AD}    % D26
+\definecolor{dbc}{HTML}{0E7C86}   % DBC26
 
 \newcommand{\CBa}[1]{\textcolor{cbA}{\textbf{[CB21}\if\relax\detokenize{#1}\relax\else\,#1\fi\textbf{]}}}
 \newcommand{\CBb}[1]{\textcolor{cbB}{\textbf{[CB22}\if\relax\detokenize{#1}\relax\else\,#1\fi\textbf{]}}}
 \newcommand{\DBc}[1]{\textcolor{dbC}{\textbf{[DB25}\if\relax\detokenize{#1}\relax\else\,#1\fi\textbf{]}}}
 \newcommand{\Dd}[1]{\textcolor{dD}{\textbf{[D26}#1\textbf{]}}}
+\newcommand{\DBC}[1]{\textcolor{dbc}{\textbf{[DBC26}#1\textbf{]}}}
 \newcommand{\ok}{\ensuremath{\checkmark}}
 \newcommand{\Pp}{(P)}
 \newcommand{\W}{(W)}
@@ -42,14 +44,15 @@
 \CBa{} Chen \& Bercher, ICAPS 2021 \quad
 \CBb{} Chen \& Bercher, ICAPS 2022 \quad
 \DBc{} Dekker \& Behnke, ICAPS 2025 \quad
-\Dd{} ideas and the repairs and new constructions of this formalisation.\\[2pt]
+\Dd{} the ideas file (sketches and conjectures) \quad
+\DBC{} repairs, completions and new constructions of this formalisation.\\[2pt]
 \textbf{Marks:} \ok{} formalised in Lean (both bounds unless stated) \quad
 \Pp{} paper only, not formalised \quad
 \wip{} formalisation in progress \quad
 \W{} published proof wrong \quad
 \I{} published proof incomplete \quad
 \inh{} inherited from deterministic HTN planning.
-\\ \textbf{Results:} \New{bold} = result rests on \Dd{} \quad \Cor{red} = result claimed in a paper whose proof was wrong or incomplete; the proof was corrected or completed \Dd{}.
+\\ \textbf{Results:} \New{bold} = result not claimed in \CBa{}, \CBb{}, \DBc{} (conjectured in \Dd{} or new in \DBC{}) \quad \Cor{red} = result claimed in a paper whose proof was wrong or incomplete; the proof was corrected or completed \DBC{}.
 
 \vspace{4pt}
 \rowcolors{2}{gray!8}{white}
@@ -69,42 +72,42 @@ in P \ok{} \CBb{Cor 1} \\
 primitive, PO &
 NP-c \ok{} \CBa{Cor 4.2} &
 NP-c \ok{} \CBa{Thm 4.7} &
-\Cor{PSPACE-c} \ok{}: membership \CBa{Thm 5.1}; hardness \CBa{Thm 5.1} \W{}, corrected via TQBF \Dd{} &
+\Cor{PSPACE-c} \ok{}: membership \CBa{Thm 5.1}; hardness \CBa{Thm 5.1} \W{}, corrected via TQBF \DBC{} &
 NP-c \ok{} \CBb{Prop 2} &
-\Cor{PSPACE-c} \ok{}: membership \CBb{Cor 1}; hardness \CBb{Cor 1} inherits \W{}, corrected via TQBF \Dd{} &
-\Cor{PSPACE-c} \ok{}: membership \CBb{Cor 1}; hardness \CBb{Cor 1} inherits \W{}, corrected via TQBF \Dd{} \\
+\Cor{PSPACE-c} \ok{}: membership \CBb{Cor 1}; hardness \CBb{Cor 1} inherits \W{}, corrected via TQBF \DBC{} &
+\Cor{PSPACE-c} \ok{}: membership \CBb{Cor 1}; hardness \CBb{Cor 1} inherits \W{}, corrected via TQBF \DBC{} \\
 acyclic, TO &
 PSPACE-c \ok{} \CBa{Thm 4.4} &
 PSPACE-c \ok{} \CBa{Cor 4.8} &
 PSPACE-c \ok{} \CBa{Cor 4.8} &
 PSPACE-c \ok{} \CBb{Prop 2} &
-\Cor{EXPTIME-c} \ok{}: membership \CBb{Thm 1}; hardness \CBb{Thm 1} \W{}, new reduction \Dd{} &
-\Cor{EXPTIME-c} \ok{}: membership \CBb{Thm 1}; hardness \CBb{Thm 1} \W{}, new reduction \Dd{} \\
+\Cor{EXPTIME-c} \ok{}: membership \CBb{Thm 1}; hardness \CBb{Thm 1} \W{}, new reduction \DBC{} &
+\Cor{EXPTIME-c} \ok{}: membership \CBb{Thm 1}; hardness \CBb{Thm 1} \W{}, new reduction \DBC{} \\
 acyclic, PO &
 NEXPTIME-c \ok{} \CBa{Thm 4.4} &
 NEXPTIME-c \ok{} \CBa{Thm 4.7} &
-\New{EXPSPACE-c} \ok{}: membership \CBa{Thm 5.2}; hardness \Dd{} (counters) &
+\New{EXPSPACE-c} \ok{}: membership \CBa{Thm 5.2}; hardness: idea \Dd{} (counters) \I{}, new construction \DBC{} (Savitch game) &
 NEXPTIME-c \ok{} \CBb{Prop 2} &
-\Cor{EXPSPACE-c} \ok{}: membership \CBb{Thm 2}; hardness \CBb{Thm 2} \I{}, proved by \Dd{} &
-\Cor{EXPSPACE-c} \ok{}: membership \CBb{Thm 2}; hardness \CBb{Thm 2} \I{}, proved by \Dd{} \\
+\Cor{EXPSPACE-c} \ok{}: membership \CBb{Thm 2}; hardness \CBb{Thm 2} \I{}, proved by \DBC{} (counter idea of \Dd{}) &
+\Cor{EXPSPACE-c} \ok{}: membership \CBb{Thm 2}; hardness \CBb{Thm 2} \I{}, proved by \DBC{} (counter idea of \Dd{}) \\
 regular, TO &
-\Cor{PSPACE-c} \ok{}: membership \CBa{Cor 4.5} \I{}, completed \Dd{}; hardness \inh{} &
+\Cor{PSPACE-c} \ok{}: membership \CBa{Cor 4.5} \I{}, completed \DBC{}; hardness \inh{} &
 PSPACE-c \ok{} \CBa{Cor 4.8} &
 PSPACE-c \ok{} \CBa{Cor 4.8} &
 PSPACE-c \ok{} \CBb{Prop 2} &
-\Cor{EXPTIME-c} \ok{}: membership \CBb{Thm 3}; hardness \CBb{Thm 3} \I{}, completed \Dd{} &
-\Cor{EXPTIME-c} \ok{}: membership \CBb{Thm 3}; hardness \CBb{Thm 3} \W{}, corrected with a round counter \Dd{} \\
+\Cor{EXPTIME-c} \ok{}: membership \CBb{Thm 3}; hardness \CBb{Thm 3} \I{}, completed \DBC{} &
+\Cor{EXPTIME-c} \ok{}: membership \CBb{Thm 3}; hardness \CBb{Thm 3} \W{}, corrected with a round counter \DBC{} \\
 regular, PO, $tn_I$ regular &
-\Cor{PSPACE-c} \ok{}: membership \CBa{Cor 4.5} \I{}, completed \Dd{}; hardness \inh{} &
+\Cor{PSPACE-c} \ok{}: membership \CBa{Cor 4.5} \I{}, completed \DBC{}; hardness \inh{} &
 PSPACE-c \ok{} \CBa{Thm 4.7} &
-\Cor{EXPSPACE-c} \ok{}: membership \CBa{Thm 5.3} \I{}, completed \Dd{}; hardness \DBc{Thm 4} \I{}, completed \Dd{} &
+\Cor{EXPSPACE-c} \ok{}: membership \CBa{Thm 5.3} \I{}, completed \DBC{}; hardness \DBc{Thm 4} \I{}, completed \DBC{} &
 PSPACE-c \ok{} \CBb{Prop 2} &
-\Cor{EXPTIME-c} \ok{}: membership \CBb{Thm 3}; hardness \CBb{Thm 3} \I{}, completed \Dd{} &
-\Cor{EXPTIME-c} \ok{}: membership \CBb{Thm 3}; hardness \CBb{Thm 3} \W{}, corrected \Dd{} \\
+\Cor{EXPTIME-c} \ok{}: membership \CBb{Thm 3}; hardness \CBb{Thm 3} \I{}, completed \DBC{} &
+\Cor{EXPTIME-c} \ok{}: membership \CBb{Thm 3}; hardness \CBb{Thm 3} \W{}, corrected \DBC{} \\
 regular, PO, $tn_I$ arbitrary (Bercher) &
 PSPACE-c \ok{} \CBa{Cor 4.5} &
 PSPACE-c \ok{} \CBa{Thm 4.7} &
-\New{undecidable} \ok{} \Dd{} (PCP; gated cheat tasks) &
+\New{undecidable} \ok{}: idea \Dd{} (PCP) \I{}, repaired \DBC{} (gated cheat tasks) &
 PSPACE-c \ok{} \CBb{Prop 2} &
 EXPTIME-c \ok{} \CBb{Thm 3} &
 EXPTIME-c \ok{} \CBb{Thm 3} \\
@@ -118,23 +121,23 @@ EXPTIME-c \ok{} \CBb{Thm 4} \\
 tail-rec., PO &
 EXPSPACE-c \ok{} \CBa{Thm 4.4} &
 EXPSPACE-c \ok{} \CBa{Thm 4.7} &
-\New{undecidable} \ok{} \Dd{} (PCP); semi-decidable \CBa{Thm 3.1} &
+\New{undecidable} \ok{}: idea \Dd{} (PCP) \I{}, repaired \DBC{}; semi-decidable \CBa{Thm 3.1} &
 EXPSPACE-c \ok{} \CBb{Prop 2} &
-\Cor{2-EXPTIME-c} \ok{}: membership \CBb{Thm 5}; hardness \CBb{Thm 5} \I{}, proved by \Dd{} (counters, tableau transducer) &
-\Cor{2-EXPTIME-c} \ok{}: membership \CBb{Thm 5}; hardness \CBb{Thm 5} \I{}, proved by \Dd{} (same reduction as strong) \\
+\Cor{2-EXPTIME-c} \ok{}: membership \CBb{Thm 5}; hardness \CBb{Thm 5} \I{}, proved by \DBC{} (tableau transducer; counter idea of \Dd{}) &
+\Cor{2-EXPTIME-c} \ok{}: membership \CBb{Thm 5}; hardness \CBb{Thm 5} \I{}, proved by \DBC{} (same reduction as strong) \\
 arbitrary, TO &
 EXPTIME-c \ok{} \CBa{Thm 4.4} &
 EXPTIME-c \ok{} \CBa{Cor 4.8} &
 EXPTIME-c \ok{} \CBa{Cor 4.8} &
 EXPTIME-c \ok{} \CBb{Prop 2} &
-\New{2-EXPTIME-c} \ok{}: membership \Dd{}; hardness \Dd{} &
-\New{in 2-EXPTIME} \ok{}: membership \Dd{}; hardness: EXPTIME \ok{} \inh{}, 2-EXPTIME open \\
+\New{2-EXPTIME-c} \ok{}: membership \Dd{} \I{}, completed \DBC{}; hardness \Dd{} \I{}, new construction \DBC{} &
+\New{in 2-EXPTIME} \ok{}: membership \Dd{} \W{} for the fair reading, corrected \DBC{}; hardness: EXPTIME \ok{} \inh{}, 2-EXPTIME open \\
 arbitrary, PO &
 semi-dec., undec.\ \ok{} \CBa{Thm 3.1} &
 semi-dec., undec.\ \ok{} \CBa{Thm 3.1} &
 semi-dec., undec.\ \ok{} \CBa{Thm 3.1} &
 semi-dec., undec.\ \ok{} \CBb{Prop 2} &
-undec.\ \ok{} \inh{}; \New{semi-decidable} \ok{} \Dd{} &
+undec.\ \ok{} \inh{}; \New{semi-decidable} \ok{} \DBC{} &
 undec.\ \ok{} \inh{}; semi-decidability open \\
 \bottomrule
 \end{tabularx}
@@ -145,8 +148,8 @@ undec.\ \ok{} \inh{}; semi-decidability open \\
 (1) \CBa{} ``regular'' requires a regular initial task network; Bercher et al.\ allow an arbitrary one.
 The two readings differ only for strong OD (EXPSPACE-complete vs.\ undecidable).
 (2) The literal strong cyclic definition of \CBb{} counts forever-looping policies as solutions;
-the results use the \emph{fair} reading \Dd{}, which coincides with strong on acyclic problems.
-(3) Column-wide gaps, completed \Dd{}: the strong LD compilation \CBa{Lem 4.6} \I{} (extended to negative
+the results use the \emph{fair} reading \DBC{}, which coincides with strong on acyclic problems.
+(3) Column-wide gaps, completed \DBC{}: the strong LD compilation \CBa{Lem 4.6} \I{} (extended to negative
 preconditions), \CBb{Prop 2} \I{}, and the unstated lemma that delaying decompositions never hurts.
 (4) Also formalised: REG $\cap$ ACYC $\cap$ TO is NP-complete. \DBc{Thm 1} (chosen-length games) is
 \Pp{}; it is not needed.
