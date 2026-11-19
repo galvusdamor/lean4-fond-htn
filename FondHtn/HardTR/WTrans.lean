@@ -55,6 +55,43 @@ theorem lwin_pull (nm : B → A) (hnm : Function.Injective nm) (enc : T → S) (
         ext w; simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false]
         exact fun hw => hres ⟨w, hw⟩)
 
+theorem exists_map_of_dec (nm : B → A) (Dec : B → Prop) :
+    ∀ w : List A, (∀ x ∈ w, ∃ b, Dec b ∧ x = nm b) → ∃ u : List B, u.map nm = w
+  | [], _ => ⟨[], rfl⟩
+  | x :: w, h => by
+    obtain ⟨b, -, rfl⟩ := h x (by simp)
+    obtain ⟨u, hu⟩ := exists_map_of_dec nm Dec w fun y hy => h y (by simp [hy])
+    exact ⟨b :: u, by simp [hu]⟩
+
+/-- **Pulling the safe word game back.** -/
+theorem lsafe_pull (nm : B → A) (enc : T → S) (Good : T → Prop)
+    (Dec : B → Prop) (hne : ∀ a s, appA a s → (outsA a s).Nonempty)
+    (happ : ∀ b t, Dec b → Good t → (appA (nm b) (enc t) ↔ appB b t))
+    (hout : ∀ b t, Dec b → Good t → appB b t → outsA (nm b) (enc t) = enc '' outsB b t)
+    (hgood : ∀ b t t', Good t → appB b t → t' ∈ outsB b t → Good t')
+    {L : Set (List A)} {s : S} (h : LSafe appA outsA L s)
+    (hL : ∀ w ∈ L, ∀ x ∈ w, ∃ b, Dec b ∧ x = nm b) {t : T} (hG : Good t) (hs : s = enc t) :
+    LSafe appB outsB {u | u.map nm ∈ L} t := by
+  obtain ⟨R, hR, hcl⟩ := h
+  refine ⟨{p | Good p.2 ∧ ∃ L', (L', enc p.2) ∈ R ∧ (∀ w ∈ L', ∀ x ∈ w, ∃ b, Dec b ∧ x = nm b) ∧
+    p.1 = {u | u.map nm ∈ L'}}, ⟨hG, L, hs ▸ hR, hL, rfl⟩, ?_⟩
+  rintro ⟨LB, t'⟩ ⟨hG', L', hL', hdec, rfl⟩
+  obtain ⟨⟨w, hw⟩, h⟩ := hcl _ hL'
+  refine ⟨?_, ?_⟩
+  · obtain ⟨u, hu⟩ := exists_map_of_dec nm Dec w (hdec w hw)
+    exact ⟨u, by simp only [Set.mem_setOf_eq, hu]; exact hw⟩
+  · rcases h with hnil | ⟨a, ha, hs'⟩
+    · exact Or.inl (by simpa using hnil)
+    · obtain ⟨s₀, hs₀⟩ := hne _ _ ha
+      obtain ⟨⟨w₀, hw₀⟩, -⟩ := hcl _ (hs' s₀ hs₀)
+      obtain ⟨b, hdb, rfl⟩ := hdec _ hw₀ a (by simp)
+      have hb := (happ b t' hdb hG').1 ha
+      refine Or.inr ⟨b, hb, fun t'' ht'' => ⟨hgood b t' t'' hG' hb ht'', {w | nm b :: w ∈ L'}, ?_,
+        fun w hw x hx => hdec _ hw x (by simp [hx]), ?_⟩⟩
+      · apply hs'
+        rw [hout b t' hdb hG' hb]; exact ⟨t'', ht'', rfl⟩
+      · ext u; simp
+
 end HardTR
 
 end FOND
