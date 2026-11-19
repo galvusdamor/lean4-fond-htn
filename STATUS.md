@@ -73,6 +73,7 @@ FOND-specific lower bounds:
 | ideas: counters, ACYC EXPSPACE-hard | ✅ `FondHtn/AcycHard/` (FIFO cell queue + Savitch game, acyclic doubling hierarchy; `doc/notes_acyc_expspace.md`) |
 | ideas: counters, TR 2-EXPTIME-hard | ✅ MP strong `complete_TR_mpStrong`, fair `complete_TR_mpFair` (`FondHtn/HardTR/`, `doc/notes_cb22_thm5_progress2.md`) |
 | ideas: TO MP strong 2-EXPTIME-hard | ✅ `hard_TO_mpStrong`, 2-EXPTIME-complete `complete_TO_mpStrong` (`FondHtn/TOHard2/`) |
+| TO MP fair strong cyclic 2-EXPTIME-hard | ✅ `hard_TO_mpFair`, 2-EXPTIME-complete `complete_TO_mpFair` (`FondHtn/TOHard2/F*.lean`: fair list game, coverage by attractor rank, pinning by induction on the time) |
 
 ## Upper bounds
 
@@ -100,7 +101,7 @@ FOND-specific lower bounds:
 | idea | status |
 | --- | --- |
 | Total order, membership (strong / fair) | ✅ `strongMP_TO_mem`, `fairMP_TO_mem` (fair needs a corrected summary game) |
-| Total order, 2-EXPTIME hardness | ✅ `complete_TO_mpStrong` (`FondHtn/TOHard2/`, `doc/notes_to_hard.md`) |
+| Total order, 2-EXPTIME hardness | ✅ `complete_TO_mpStrong`, fair `complete_TO_mpFair` (`FondHtn/TOHard2/`, `doc/notes_to_hard.md`) |
 | Counters, ACYC EXPSPACE-hard | ✅ `complete_ACYC_strongOD`, `complete_ACYC_mpStrong`, `complete_ACYC_mpFair` (`FondHtn/AcycHard/`) |
 | Counters, TR 2-EXPTIME-hard | ✅ `complete_TR_mpStrong`, `complete_TR_mpFair` (`FondHtn/HardTR/`) |
 | PCP | ✅ `undecidable_strongOD_REG_TR`: strong OD undecidable for REG (Bercher) ∩ TR (`FondHtn/PCP/`, `doc/notes_pcp_check.md`) |

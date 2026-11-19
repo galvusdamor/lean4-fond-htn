@@ -21,7 +21,10 @@ Legend: **[WIP]** partial Lean files exist · **[PLAN]** construction on paper, 
 - Proved: `FOND.TOHard2.hard_TO_mpStrong`, with membership `FOND.TOHard2.complete_TO_mpStrong`
   (2-EXPTIME-complete), `FondHtn/TOHard2/` (construction `doc/notes_to_hard.md`; soundness
   `SoundK.lean`, completeness `CompleteK.lean`, machine link `Red.lean`, PT `PT.lean`).
-- Open follow-up: the fair strong cyclic version (`hardFair_TO` is only EXPTIME).
+- Fair strong cyclic: `FOND.TOHard2.hard_TO_mpFair`, `complete_TO_mpFair` (2-EXPTIME-complete):
+  the same reduction; fair policies give the fair list game (`FGame.lean`, `FBridge.lean`), whose
+  claims are covered by induction on the attractor rank and pinned by induction on the time
+  (`FSound.lean`, `FMain.lean`).
 
 ### 1.3 Counters — ACYC EXPSPACE-hard (FM strong OD and MP strong = CB22 Thm 2) **[DONE]**
 - Proved: `FOND.AcycHard.hard_ACYC_strongOD`, `hard_ACYC_mpStrong`, `hard_ACYC_mpFair` and the

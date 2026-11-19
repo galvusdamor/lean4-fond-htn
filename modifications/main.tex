@@ -559,6 +559,12 @@ proof route and the gaps in the published proofs.
   table proposed for the strong cyclic variant computes the literal, not the fair, reading;
   neither the least nor the greatest fixpoint is correct for the fair reading
   (\lean{doc/notes_to_fair.md}, \lean{doc/notes_to_fair_2.md}).
+  The 2-EXPTIME lower bound for strong solutions (\lean{complete_TO_mpStrong}) also holds for
+  the fair reading with the same reduction (\lean{complete_TO_mpFair}). A fair policy may recurse
+  forever along some challenges, so the soundness proof is reorganised: every claim's
+  postcondition covers all challenged digits (by induction on the rank of the attractor, along
+  the challenge the attractor follows), and coverage forces the time to decrease, so the claims
+  are sound by induction on the time (\lean{TOHard2/FSound.lean}).
 \end{deviation}
 
 \begin{deviation}[PCP, ideas: strong OD undecidable for regular, tail-recursive problems]
