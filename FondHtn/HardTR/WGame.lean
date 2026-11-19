@@ -137,6 +137,83 @@ theorem NWin.false_of_empty {T : LTS Q A} {s : S}
   rw [he] at hs'
   exact hs'
 
+/-! ## Safety-closed games (for fair policies)
+
+The *safe* versions of the games are post-fixpoints instead of least fixpoints: a set of
+positions all of which are nonempty and either accept or have a move all of whose outcomes stay
+in the set.  They do not force termination; the soundness argument gets termination elsewhere
+(from the decreasing time of the tableau).  Every inductive win is a safe win. -/
+
+variable (app outs)
+
+/-- **The safe word game**: a self-supporting set of (language, state) pairs. -/
+def LSafe (L : Set (List A)) (s : S) : Prop :=
+  ∃ R : Set (Set (List A) × S), (L, s) ∈ R ∧ ∀ p ∈ R, (∃ w, w ∈ p.1) ∧
+    ([] ∈ p.1 ∨ ∃ a, app a p.2 ∧ ∀ s' ∈ outs a p.2, ({w | a :: w ∈ p.1}, s') ∈ R)
+
+/-- **The safe configuration game.** -/
+def SWin (T : LTS Q A) (X : Set Q) (s : S) : Prop :=
+  ∃ R : Set (Set Q × S), (X, s) ∈ R ∧ ∀ p ∈ R, p.1.Nonempty ∧
+    ((∃ q ∈ p.1, T.acc q) ∨ ∃ a, app a p.2 ∧ ∀ s' ∈ outs a p.2, (T.post p.1 a, s') ∈ R)
+
+variable {app outs}
+
+/-- Unfolding a safe configuration game. -/
+theorem SWin.unfold {T : LTS Q A} {X : Set Q} {s : S} (h : SWin app outs T X s) :
+    X.Nonempty ∧ ((∃ q ∈ X, T.acc q) ∨ ∃ a, app a s ∧ ∀ s' ∈ outs a s, SWin app outs T (T.post X a) s') := by
+  obtain ⟨R, hR, hcl⟩ := h
+  obtain ⟨hne, h⟩ := hcl _ hR
+  refine ⟨hne, h.imp id fun ⟨a, ha, hs⟩ => ⟨a, ha, fun s' hs' => ⟨R, hs s' hs', hcl⟩⟩⟩
+
+theorem SWin.mono {T : LTS Q A} {X : Set Q} {s : S} (h : SWin app outs T X s) :
+    ∀ {Y : Set Q}, X ⊆ Y → SWin app outs T Y s := by
+  obtain ⟨R, hR, hcl⟩ := h
+  intro Y hXY
+  refine ⟨{p | ∃ X', (X', p.2) ∈ R ∧ X' ⊆ p.1}, ⟨X, hR, hXY⟩, ?_⟩
+  rintro ⟨Y', s'⟩ ⟨X', hX', hsub⟩
+  obtain ⟨⟨q, hq⟩, h⟩ := hcl _ hX'
+  refine ⟨⟨q, hsub hq⟩, ?_⟩
+  rcases h with ⟨q', hq', hacc⟩ | ⟨a, ha, hs⟩
+  · exact Or.inl ⟨q', hsub hq', hacc⟩
+  · exact Or.inr ⟨a, ha, fun s'' hs'' => ⟨_, hs s'' hs'', fun q ⟨p, hp, hpq⟩ => ⟨p, hsub hp, hpq⟩⟩⟩
+
+theorem SWin.false_of_empty {T : LTS Q A} {s : S} (h : SWin app outs T ∅ s) : False := by
+  obtain ⟨⟨q, hq⟩, -⟩ := h.unfold
+  exact hq
+
+/-- **An inductive win is a safe win** (when applicable actions have outcomes). -/
+theorem NWin.toSWin {T : LTS Q A} (hne : ∀ a s, app a s → (outs a s).Nonempty) {X : Set Q} {s : S}
+    (h : NWin app outs T X s) : SWin app outs T X s := by
+  refine ⟨{p | NWin app outs T p.1 p.2}, h, ?_⟩
+  rintro ⟨X', s'⟩ (hp : NWin app outs T X' s')
+  refine ⟨?_, ?_⟩
+  · by_contra hX
+    rw [Set.not_nonempty_iff_eq_empty] at hX
+    subst hX
+    exact NWin.false_of_empty hne hp
+  · cases hp with
+    | nil h => exact Or.inl h
+    | step a ha h => exact Or.inr ⟨a, ha, h⟩
+
+/-- **From the safe word game to the safe configuration game.** -/
+theorem swin_of_lsafe {T : LTS Q A} {L : Set (List A)} {s : S} (h : LSafe app outs L s)
+    {X : Set Q} (hX : ∀ w ∈ L, ∃ q ∈ X, T.Acc q w) : SWin app outs T X s := by
+  obtain ⟨R, hR, hcl⟩ := h
+  refine ⟨{p | ∃ L', (L', p.2) ∈ R ∧ ∀ w ∈ L', ∃ q ∈ p.1, T.Acc q w}, ⟨L, hR, hX⟩, ?_⟩
+  rintro ⟨X', s'⟩ ⟨L', hL', hacc⟩
+  obtain ⟨⟨w, hw⟩, h⟩ := hcl _ hL'
+  refine ⟨?_, ?_⟩
+  · obtain ⟨q, hq, -⟩ := hacc w hw
+    exact ⟨q, hq⟩
+  · rcases h with hnil | ⟨a, ha, hs⟩
+    · obtain ⟨q, hq, hq'⟩ := hacc _ hnil
+      cases hq' with
+      | nil hq' => exact Or.inl ⟨q, hq, hq'⟩
+    · refine Or.inr ⟨a, ha, fun s'' hs'' => ⟨_, hs s'' hs'', fun w hw => ?_⟩⟩
+      obtain ⟨q, hq, hq'⟩ := hacc _ hw
+      cases hq' with
+      | cons hstep hw' => exact ⟨_, ⟨q, hq, hstep⟩, hw'⟩
+
 end Games
 
 /-! ## From the progression game to the word game -/

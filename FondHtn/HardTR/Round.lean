@@ -281,8 +281,9 @@ def lts : LTS Cfg (Act Op En) where
   step := M.cstep
   acc C := C.cm true = 0 ∧ C.cm false = 0 ∧ C.fp = false
 
-/-- The configuration game. -/
-abbrev Win (X : Set Cfg) (r : Rec G) : Prop := NWin M.app M.outs M.lts X r
+/-- The configuration game, in its safety-closed form (`FOND.HardTR.SWin`); every inductive win
+(`FOND.HardTR.NWin`) is one (`FOND.HardTR.NWin.toSWin`), and so is the game of a fair policy. -/
+abbrev Win (X : Set Cfg) (r : Rec G) : Prop := SWin M.app M.outs M.lts X r
 
 end Mach
 
@@ -316,15 +317,12 @@ variable {M}
 /-- A non-accepting configuration game must make a move. -/
 theorem Win.move {X : Set Cfg} {r : Rec G} (h : M.Win X r) (hX : ∀ C ∈ X, C.fp = true) :
     ∃ a, M.app a r ∧ ∀ r' ∈ M.outs a r, M.Win (M.lts.post X a) r' := by
-  cases h with
-  | nil h =>
-    obtain ⟨C, hC, -, -, hf⟩ := h
-    rw [hX C hC] at hf
+  rcases (SWin.unfold h).2 with ⟨C, hC, -, -, hf⟩ | h
+  · rw [hX C hC] at hf
     exact absurd hf (by simp)
-  | step a ha h => exact ⟨a, ha, h⟩
+  · exact h
 
-theorem Win.false_of_empty {r : Rec G} (h : M.Win ∅ r) : False :=
-  NWin.false_of_empty (fun a s ha => M.outs_nonempty a s ha) h
+theorem Win.false_of_empty {r : Rec G} (h : M.Win ∅ r) : False := SWin.false_of_empty h
 
 /-- The successors of a set of configurations under an action of the loop `p`. -/
 theorem mem_post_some {X : Set Cfg} {C' : Cfg} {a : Act Op En} {p : Bool} (hp : a.ap = some p)

@@ -107,7 +107,7 @@ theorem sound (hS : Function.Injective cS) (hall : ∀ s, s ∈ allS) (hX : X.Va
     good_r₀ (init_enc (allS := allS) (ops := ops) (ens := ens))
   have hC : (⟨fun _ => 0, true⟩ : TL.Cfg) = cfg true 0 0 := by
     unfold cfg; congr 1; funext q; split_ifs <;> rfl
-  refine nwin_of_lwin hpull ?_
+  refine NWin.toSWin (fun a s ha => X.mach.outs_nonempty a s ha) (T := X.mach.lts) (nwin_of_lwin hpull ?_)
   intro w hw
   obtain ⟨u, hu, hwu, -⟩ := hgw _ hw
   have : w = u := List.map_injective_iff.2 (nmA_inj hS) hwu
