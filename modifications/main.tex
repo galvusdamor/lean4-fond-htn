@@ -616,8 +616,7 @@ proof route and the gaps in the published proofs.
   (\lean{TPlay.lean}). The intervals of the first row and the interval bounds are numbers with
   exponentially many bits. They are only accessed bitwise at polynomially many special
   positions, so the description is computed in polynomial time (\lean{TPT.lean},
-  \lean{TMain.lean}). Result: \lean{complete_TR_mpStrong}. The fair version is open: we expect
-  fair and strong to coincide on this family, because every round strictly decreases $t$.
+  \lean{TMain.lean}). Result: \lean{complete_TR_mpStrong}. The same reduction works for the fair reading (\lean{complete_TR_mpFair}). The game of the transducer is taken as a \emph{safety-closed} game (a self-supporting set of positions, no well-foundedness); the round lemma only uses its moves, and termination comes from the time of the tableau, which decreases in every round. A fair policy yields the progression fair game of \lean{MPStrong/CyclicGame.lean} and from it the safe word game (\lean{lsafe_of_fairWin}).
 \end{deviation}
 
 \begin{deviation}[Open problems with documented obstacles]

@@ -65,12 +65,12 @@ FOND-specific lower bounds:
 | CB22 Thms 1, 3, 4 for fair strong cyclic: EXPTIME-complete (ACYC∩TO, TR∩TO, REG, REG∩TO) | ✅ `FondHtn/HardMP/Fair*.lean` (REG needs a round counter: without it a fair policy can cycle — counterexample in `FairC.lean` doc) |
 | CB22 Thm 3: REG (∩TO) MP strong EXPTIME-hard | ✅ from TO HTN (not FOND planning); complete `strongMP_REG_complete`, `strongMP_REG_TO_complete` |
 | CB22 Thm 4: TR ∩ TO MP strong EXPTIME-hard | ✅ complete `strongMP_TR_TO_complete` |
-| CB22 Thm 5: TR MP strong 2-EXPTIME-hard | ✅ new construction (counters, tableau transducer; ideas file), `FondHtn/HardTR/TMain.lean`: `hard_TR_mpStrong`, complete `complete_TR_mpStrong`; fair: hardness ⬜ |
+| CB22 Thm 5: TR MP strong 2-EXPTIME-hard | ✅ new construction (counters, tableau transducer; ideas file), `FondHtn/HardTR/TMain.lean`: `hard_TR_mpStrong`, complete `complete_TR_mpStrong`; fair: `hard_TR_mpFair`, complete `complete_TR_mpFair` (`TFair.lean`) |
 | DB25 Thm 1: chosen-length games EXPSPACE-complete | ⬜ not formalised (not needed: Thm 4/5 proved directly from NTMs) |
 | DB25 Thm 4/5: REG(tn) FM strong OD EXPSPACE-hard | ✅ `FondHtn/DB25/Hard.lean` (direct reduction from exp-space NTMs, positive preconditions only); REGtn EXPSPACE-complete `strongOD_REGtn_complete` |
 | ideas: PCP, TR/Bercher-REG FM strong OD undecidable | ✅ `undecidable_strongOD_REG_TR` (`FondHtn/PCP/`): the sketch repaired by gated cheat tasks in separate supply chains, reduced directly from two-stack-machine halting (`doc/notes_pcp_check.md`) |
 | ideas: counters, ACYC EXPSPACE-hard | ✅ `FondHtn/AcycHard/` (FIFO cell queue + Savitch game, acyclic doubling hierarchy; `doc/notes_acyc_expspace.md`) |
-| ideas: counters, TR 2-EXPTIME-hard | ✅ MP strong `complete_TR_mpStrong` (`FondHtn/HardTR/`, `doc/notes_cb22_thm5_progress2.md`); fair ⬜ |
+| ideas: counters, TR 2-EXPTIME-hard | ✅ MP strong `complete_TR_mpStrong`, fair `complete_TR_mpFair` (`FondHtn/HardTR/`, `doc/notes_cb22_thm5_progress2.md`) |
 | ideas: TO MP strong 2-EXPTIME-hard | ✅ `hard_TO_mpStrong`, 2-EXPTIME-complete `complete_TO_mpStrong` (`FondHtn/TOHard2/`) |
 
 ## Upper bounds
@@ -88,7 +88,7 @@ FOND-specific lower bounds:
 | CB21 Thm 5.3: REGtn strong OD ∈ EXPSPACE | ✅ `FondHtn/StrongOD/Reg.lean` (sequential composition `bsw_comp`, belief-set chains); Bercher REG (tn_I arbitrary): undecidable (`undecidable_strongOD_REG_TR`) |
 | CB21 Thm 3.1: semi-decidable and undecidable for all four FM criteria (and MP weak) | ✅ `FondHtn/Upper/SemiDec.lean`, `FondHtn/StrongOD/SemiDec.lean` (`thm_3_1_all`) |
 | CB22 Thms 1, 3, 4: MP strong ∈ EXPTIME (ACYC∩TO, REG(∩TO), TR∩TO) | ✅ `FondHtn/MPStrong/Mem.lean` (hardness ⏳) |
-| CB22 Thms 1–5 for **fair** strong cyclic: ACYC∩TO, REG(∩TO), TR∩TO ∈ EXPTIME, ACYC ∈ EXPSPACE (fair = strong on ACYC), TR ∈ 2-EXPTIME; G8 holds for the fair reading | ✅ `FondHtn/MPStrong/Cyclic*.lean`, `FondHtn/Alt/Buchi.lean` (ACYC hardness ✅ `complete_ACYC_mpFair`; TR hardness ⬜, see TODO 1.4) |
+| CB22 Thms 1–5 for **fair** strong cyclic: ACYC∩TO, REG(∩TO), TR∩TO ∈ EXPTIME, ACYC ∈ EXPSPACE (fair = strong on ACYC), TR ∈ 2-EXPTIME; G8 holds for the fair reading | ✅ `FondHtn/MPStrong/Cyclic*.lean`, `FondHtn/Alt/Buchi.lean` (ACYC hardness ✅ `complete_ACYC_mpFair`; TR hardness ✅ `complete_TR_mpFair`) |
 | CB22 Thms 2, 5: MP strong ACYC ∈ EXPSPACE, TR ∈ 2-EXPTIME | ✅ `FondHtn/MPStrong/Acyc.lean`, `TR.lean` (ACYC hardness ✅ `complete_ACYC_mpStrong`; TR hardness ✅ `complete_TR_mpStrong`) |
 | CB22 arbitrary PO: MP weak and strong semi-decidable and undecidable | ✅ `FondHtn/MPSemi/Strong.lean` (`mp_weak_strong_semi_undec`); fair: open, `doc/notes_fair_semidec.md` |
 | ideas: TO MP strong ∈ 2-EXPTIME | ✅ `strongMP_TO_mem` (`FondHtn/MPStrong/TOGame.lean`, `TODesc.lean`; rank argument = sequential composition) |
@@ -101,5 +101,5 @@ FOND-specific lower bounds:
 | Total order, membership (strong / fair) | ✅ `strongMP_TO_mem`, `fairMP_TO_mem` (fair needs a corrected summary game) |
 | Total order, 2-EXPTIME hardness | ✅ `complete_TO_mpStrong` (`FondHtn/TOHard2/`, `doc/notes_to_hard.md`) |
 | Counters, ACYC EXPSPACE-hard | ✅ `complete_ACYC_strongOD`, `complete_ACYC_mpStrong`, `complete_ACYC_mpFair` (`FondHtn/AcycHard/`) |
-| Counters, TR 2-EXPTIME-hard | ✅ MP strong: `complete_TR_mpStrong` (`FondHtn/HardTR/`); fair: open |
+| Counters, TR 2-EXPTIME-hard | ✅ `complete_TR_mpStrong`, `complete_TR_mpFair` (`FondHtn/HardTR/`) |
 | PCP | ✅ `undecidable_strongOD_REG_TR`: strong OD undecidable for REG (Bercher) ∩ TR (`FondHtn/PCP/`, `doc/notes_pcp_check.md`) |
