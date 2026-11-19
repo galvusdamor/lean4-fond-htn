@@ -59,6 +59,7 @@ FOND-specific lower bounds:
 | --- | --- |
 | CB21 Thm 4.1: PRIM ∩ TO weak NP-hard (SAT) | ✅ `weakLD_PRIM_TO_complete` (`FondHtn/Prim/WeakHard.lean`) |
 | CB21 Thm 5.1: PRIM (PO) strong OD PSPACE-hard | ✅ repaired via TQBF (TQBF PSPACE-hard from STRIPS by Savitch), `FondHtn/QBF/`; complete: `strongOD_PRIM_complete` |
+| CB22 Cor 1: PRIM MP strong / fair: ∩ TO in P, PO PSPACE-complete | ✅ `FondHtn/MP/StrongPrim.lean`: on primitive networks the MP AND/OR game is the strong OD game; `strongMP_PRIM_TO_mem`, `strongMP_PRIM_complete`, `fairMP_PRIM_TO_mem`, `fairMP_PRIM_complete` |
 | CB22 Thm 1: ACYC ∩ TO MP strong EXPTIME-hard | ✅ new reduction from TO HTN (path game on the DP table), `FondHtn/HardMP/`; EXPTIME-complete `strongMP_ACYC_TO_complete` (also fair) |
 | CB22 Thm 2: ACYC MP strong EXPSPACE-hard | ✅ new construction (counters/Savitch game, ideas file), `FondHtn/AcycHard/Main.lean`: `hard_ACYC_mpStrong`, complete `complete_ACYC_mpStrong`; fair: `complete_ACYC_mpFair` |
 | CB21 Thm 4.11: ACYC FM strong OD EXPSPACE-hard | ✅ same construction, `hard_ACYC_strongOD`, complete `complete_ACYC_strongOD` |

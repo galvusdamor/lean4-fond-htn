@@ -24,8 +24,8 @@ Sources:
 
 | Fragment | Fixed: weak (LD = OD) | Fixed: strong LD | Fixed: strong OD | MP: weak | MP: strong | MP: strong cyclic (fair) |
 |---|---|---|---|---|---|---|
-| primitive, TO | NP-c ✅ [CB21 Thm 4.1] | in P ✅ [CB21 Cor 4.8] | in P ✅ [CB21 Cor 4.8] | NP-c ✅ [CB22 Prop 2] | in P (P) [CB22 Cor 1] | in P (P) [CB22 Cor 1] |
-| primitive, PO | NP-c ✅ [CB21 Cor 4.2] | NP-c ✅ [CB21 Thm 4.7] | PSPACE-c ✅ [CB21 Thm 5.1]; hardness (W) (G9), re-proved from TQBF | NP-c ✅ [CB22 Prop 2] | PSPACE-c (P) [CB22 Cor 1]; hardness inherits (W) from CB21 Thm 5.1 | PSPACE-c (P) [CB22 Cor 1]; as for strong |
+| primitive, TO | NP-c ✅ [CB21 Thm 4.1] | in P ✅ [CB21 Cor 4.8] | in P ✅ [CB21 Cor 4.8] | NP-c ✅ [CB22 Prop 2] | in P ✅ [CB22 Cor 1] | in P ✅ [CB22 Cor 1] |
+| primitive, PO | NP-c ✅ [CB21 Cor 4.2] | NP-c ✅ [CB21 Thm 4.7] | PSPACE-c ✅ [CB21 Thm 5.1]; hardness (W) (G9), re-proved from TQBF | NP-c ✅ [CB22 Prop 2] | PSPACE-c ✅: membership [CB22 Cor 1]; hardness [CB22 Cor 1] inherits (W) from CB21 Thm 5.1, re-proved from TQBF | PSPACE-c ✅ [CB22 Cor 1]; as for strong |
 | acyclic, TO | PSPACE-c ✅ [CB21 Thm 4.4] | PSPACE-c ✅ [CB21 Cor 4.8] | PSPACE-c ✅ [CB21 Cor 4.8] | PSPACE-c ✅ [CB22 Prop 2] | EXPTIME-c ✅ [CB22 Thm 1]; hardness (W) (G11: no acceptance check), new reduction | EXPTIME-c ✅ [CB22 Thm 1]; hardness (W) as for strong |
 | acyclic, PO | NEXPTIME-c ✅ [CB21 Thm 4.4] | NEXPTIME-c ✅ [CB21 Thm 4.7] | EXPSPACE-c ✅: membership [CB21 Thm 5.2]; hardness [D26] counters (I) (G24), new construction | NEXPTIME-c ✅ [CB22 Prop 2] | EXPSPACE-c ✅ [CB22 Thm 2]; hardness (I) (G12), by the [D26] construction | EXPSPACE-c ✅ [CB22 Thm 2] / [D26]; hardness (I) |
 | regular, TO | PSPACE-c ✅ [CB21 Cor 4.5]; membership (I) (G13) | PSPACE-c ✅ [CB21 Cor 4.8] | PSPACE-c ✅ [CB21 Cor 4.8] | PSPACE-c ✅ [CB22 Prop 2] | EXPTIME-c ✅ [CB22 Thm 3]; hardness (I) (G17) | EXPTIME-c ✅ [CB22 Thm 3]; hardness (W) (G6: literal definition), fair version needs a round counter |
