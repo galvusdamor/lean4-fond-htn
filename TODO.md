@@ -74,8 +74,8 @@ Legend: **[WIP]** partial Lean files exist · **[PLAN]** construction on paper, 
 - **Literal strong cyclic** (Def. 7 as written): only the separation from plan existence is
   proved (`LoopEx.literal_not_planExistence`). Upper/lower bounds for the literal reading are
   not done; we treat the fair reading as the intended one. **[OPEN — decide whether wanted]**
-- **Fair strong cyclic, unrestricted problems**: semi-decidability open; conjectured not RE
-  (`doc/notes_fair_semidec.md`). **[OPEN]**
+- **Fair strong cyclic, unrestricted problems**: **not semi-decidable**
+  (`FOND.FU.fairMP_not_semiDecidable`, `FondHtn/FairUndec/`; `doc/notes_fair_semidec.md`). **[DONE]**
 
 ## 4. DB25
 

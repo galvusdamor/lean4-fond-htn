@@ -1,6 +1,6 @@
 # Is fair strong cyclic method-based plan existence semi-decidable (unrestricted problems)?
 
-Status: **open; not formalised.** For comparison, what is formalised:
+Status: **resolved: not semi-decidable** (`FOND.FU.fairMP_not_semiDecidable`, `FondHtn/FairUndec/`; see the update at the end). For comparison, what is formalised:
 
 * `FOND.strongMP_semiDecidable` (`FondHtn/MPSemi/Strong.lean`): strong method-based plan
   existence, `PlanExMP .strong FClass.UNRES`, is semi-decidable. It is also undecidable
@@ -109,3 +109,12 @@ be computable.)
 directions, prefix lemma) 1–1.5k lines; machine side (forward invariant for `simTSM`, infinite runs
 ⟺ divergence) 0.8–1.5k lines; computability glue ~0.2k. Main risks: the forward invariant of the
 two-stack simulation, and the prefix lemma for the PO stack encoding.
+
+## Formalised
+
+`FondHtn/FairUndec/`: `Det.lean` (determinism of `simTSM`, `undecTSM_inf_iff`), `Desc.lean` (the
+description with ticks and drains), `Yield.lean` (refinements), `Sound.lean` (fair ⇒ infinite
+run, via `lsafe_of_fairWin`), `ChainFair.lean` (a fair game on label chains ⇒ network fair game),
+`Complete.lean` (infinite run ⇒ fair), `Main.lean` (`fairMP_not_semiDecidable`). The
+nondeterminism of the source machine did not matter: determinism of the simulation was proved
+directly (each control state reads one stack and its transitions pop distinct symbols).

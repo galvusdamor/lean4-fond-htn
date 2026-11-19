@@ -625,11 +625,19 @@ proof route and the gaps in the published proofs.
   \lean{TMain.lean}). Result: \lean{complete_TR_mpStrong}. The same reduction works for the fair reading (\lean{complete_TR_mpFair}). The game of the transducer is taken as a \emph{safety-closed} game (a self-supporting set of positions, no well-foundedness); the round lemma only uses its moves, and termination comes from the time of the tableau, which decreases in every round. A fair policy yields the progression fair game of \lean{MPStrong/CyclicGame.lean} and from it the safe word game (\lean{lsafe_of_fairWin}).
 \end{deviation}
 
-\begin{deviation}[Open problems with documented obstacles]
-  \begin{itemize}
-    \item Semi-decidability of fair strong cyclic solvability for unrestricted problems is open
-      (\lean{doc/notes_fair_semidec.md}).
-  \end{itemize}
+\begin{deviation}[Fair strong cyclic solutions are not semi-decidable]
+  The table of [CB22] lists all three method-based criteria as semi-decidable for unrestricted
+  problems. For the fair reading of strong cyclic solutions this is false
+  (\lean{fairMP_not_semiDecidable}). The reduction is from the divergence of a universal function,
+  via the two-stack machine of the undecidability proof (\lean{undecTSM}), whose simulation is
+  deterministic, so it has an infinite run exactly when the simulated machine diverges
+  (\lean{FairUndec/Det.lean}). The HTN encoding of the machine (two unordered stack chains) gets a
+  second outcome for every transition that sets a fact $\mathit{stop}$, and drain methods that are
+  only executable after $\mathit{stop}$; the goal (the empty network) is reachable only after a
+  stop. A fair solution then exists exactly when the machine runs forever: along an infinite run
+  the stop outcome of the next transition always leads to the goal; conversely a fair policy
+  must keep executing transitions as long as nature does not stop it
+  (\lean{FairUndec/Sound.lean}, \lean{FairUndec/Complete.lean}).
 \end{deviation}
 
 \printbibliography
