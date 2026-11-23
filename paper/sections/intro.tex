@@ -1,0 +1,122 @@
+\section{Introduction}\label{sec:intro}
+
+Hierarchical task network (HTN) planning describes what an agent should do in terms of
+\emph{tasks} rather than goals \parencite{erol:et:al:amai-96,ghallab:et:al:04,bercher:et:al:ijcai-19}.
+Abstract (compound) tasks are refined by \emph{methods} into networks of simpler tasks until
+only primitive tasks, i.e.\ actions, remain, and a plan is an executable arrangement of the
+actions obtained in this way. When actions are deterministic, the computational complexity of
+deciding whether a plan exists is well understood: it ranges from \NP{} for networks without
+compound tasks to undecidability for unrestricted hierarchies, with a rich landscape in between
+determined by the shape of the methods and by whether task networks are totally or only
+partially ordered \parencite{erol:et:al:amai-96,geier:bercher:ijcai-11,alford:et:al:icaps-15}.
+
+In many applications actions do not have a single predictable effect. In \emph{fully observable
+nondeterministic} (FOND) planning an action has a set of possible outcomes; which one occurs is
+determined by the environment, and the agent observes it before acting again. A plan must now
+cope with all outcomes, and the question of what a plan \emph{is} becomes interesting. In
+classical FOND planning, \textcite{cimatti:et:al:aij-03} distinguish \emph{weak} plans (some
+execution reaches the goal), \emph{strong} plans (all executions reach the goal) and
+\emph{strong cyclic} plans (executions may loop, but from every point a goal remains
+reachable, so that under fair nondeterminism the goal is eventually reached).
+
+For HTN planning there is a second dimension: \emph{when} the refinement decisions are taken.
+\CBa{} studied solutions with \emph{fixed methods}: the planner first chooses a complete
+refinement of the initial task network and only then executes the resulting primitive network,
+either along a fixed order (\emph{linearisation-dependent}, LD) or with a policy that chooses
+the next action depending on the outcomes so far (\emph{outcome-dependent}, OD). \CBb{}
+introduced \emph{method-based policies}, which interleave refinement and execution, so that the
+choice of a method may depend on everything observed before. Both papers determined the
+complexity of plan existence for the standard structural classes of HTN problems, and
+\DB{} filled one of the remaining entries.
+
+\paragraph{Contributions.}
+This article completes the picture. Table~\ref{tab:results} summarises the state of the art
+after our work; the entries in bold are new. Concretely:
+
+\begin{itemize}
+  \item For fixed methods with strong outcome-dependent solutions we show that acyclic
+    partially ordered problems are \EXPSPACE-complete, closing a gap between the known
+    \NEXPTIME{} lower bound and the \EXPSPACE{} upper bound. We show that tail-recursive problems
+    are undecidable, and so are regular problems in the sense of \textcite{bercher:et:al:ijcai-19},
+    whose initial task network may contain several compound tasks. For regular problems whose
+    initial network is regular, the \EXPSPACE-completeness established by \CBa{} and \DB{} is
+    confirmed with a new, direct lower-bound proof.
+  \item For method-based policies we show that totally ordered problems with an arbitrary
+    hierarchy are \TWOEXP-complete, both for strong and for strong cyclic solutions; this row
+    was missing from the table of \CBb{}. We also settle the strong cyclic entry for
+    tail-recursive partially ordered problems (\TWOEXP-complete).
+  \item We point out that the definition of strong cyclic solutions of \CBb{}, read literally,
+    accepts policies that refine a recursive task forever, and that under this reading the
+    lower bounds claimed for strong cyclic solutions do not hold. With the usual fairness
+    condition of \textcite{cimatti:et:al:aij-03} they do, and all our strong cyclic results use
+    that reading.
+  \item Under this reading, strong cyclic plan existence for unrestricted problems is not
+    semi-decidable, contrary to what one might expect from the other solution concepts. It is
+    neither recursively enumerable nor co-recursively enumerable; in fact it is
+    $\Sigma^1_1$-complete and therefore outside the arithmetical hierarchy.
+  \item Several published proofs do not go through as written. The most consequential ones are
+    the \PSPACE-hardness proof for primitive partially ordered problems with strong
+    outcome-dependent solutions \parencite[Thm.~5.1]{chen:bercher:icaps-21}, whose reduction
+    from $k$-in-a-row games can be won trivially, and the \EXPTIME-hardness proof for acyclic
+    totally ordered problems with method-based policies
+    \parencite[Thm.~1]{chen:bercher:icaps-22}, which lacks an acceptance check. Further proofs
+    are outlines whose gadgets are not specified. We replace all of them by complete
+    reductions.
+\end{itemize}
+
+\paragraph{Machine-checked proofs.}
+Complexity results for planning formalisms rest on long reductions with many details, and the
+experience recorded above shows that errors are easy to make and hard to spot. We have therefore
+formalised the whole development in the proof assistant Lean~4
+\parencite{moura:ullrich:cade-21} on top of Mathlib \parencite{mathlib:cpp-20}: the planning
+formalism, all solution concepts, every membership and every hardness result of
+Table~\ref{tab:results}, and the complexity classes themselves. The only result we use without
+proof in Lean is Harel's theorem that recurrence of nondeterministic machines is
+$\Sigma^1_1$-complete \parencite{harel:jacm-86}, together with a routine consequence for
+two-stack machines; it enters only the $\Sigma^1_1$-hardness of one entry. Section~\ref{sec:formal}
+describes the formalisation. The present article is written for readers who are interested in
+the results and their proofs, not in the formalisation: we present the proofs as one would
+write them on paper and keep references to the formal development to a minimum.
+
+\paragraph{Outline.}
+Section~\ref{sec:prelim} introduces the formalism and the structural classes.
+Section~\ref{sec:solutions} defines the solution concepts, discusses the definition of strong
+cyclic solutions, and relates the concepts to each other and to games.
+Section~\ref{sec:fixed} treats fixed methods and Section~\ref{sec:policies} method-based
+policies. Section~\ref{sec:unrestricted} is devoted to unrestricted partially ordered problems,
+where the fair strong cyclic case turns out to be $\Sigma^1_1$-complete.
+Section~\ref{sec:formal} describes the formalisation and Section~\ref{sec:conclusion} concludes.
+
+\begin{table}[t]
+\caption{The complexity of plan existence for FOND HTN problems. Rows are structural classes,
+  each totally (\TO) or partially (\PO) ordered; columns are solution concepts: fixed methods
+  (weak, strong linearisation-dependent, strong outcome-dependent) and method-based policies
+  (weak, strong, strong cyclic in the fair reading). ``-c'' means complete. Bold entries are new
+  in this article; entries marked $^\dagger$ were claimed before, but the published proof is
+  incomplete or wrong and is replaced here. For regular problems, \REGtn{} requires the initial
+  task network to be regular as well \parencite{chen:bercher:icaps-21}, while \REG{} does not
+  \parencite{bercher:et:al:ijcai-19}. All entries are formally verified, except that the
+  $\Sigma^1_1$-hardness in the last row relies on Harel's theorem.}
+\label{tab:results}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\linewidth}{@{}ll YYY YYY@{}}
+  \toprule
+  & & \multicolumn{3}{c}{fixed methods} & \multicolumn{3}{c}{method-based policies} \\
+  \cmidrule(lr){3-5}\cmidrule(l){6-8}
+  class & & weak & strong LD & strong OD & weak & strong & strong cyclic \\
+  \midrule
+  \PRIM & \TO & \NP-c & in \PTIME & in \PTIME & \NP-c & in \PTIME & in \PTIME \\
+        & \PO & \NP-c & \NP-c & \PSPACE-c$^\dagger$ & \NP-c & \PSPACE-c$^\dagger$ & \PSPACE-c$^\dagger$ \\
+  \ACYC & \TO & \PSPACE-c & \PSPACE-c & \PSPACE-c & \PSPACE-c & \EXPTIME-c$^\dagger$ & \EXPTIME-c$^\dagger$ \\
+        & \PO & \NEXPTIME-c & \NEXPTIME-c & \textbf{\EXPSPACE-c} & \NEXPTIME-c & \EXPSPACE-c$^\dagger$ & \EXPSPACE-c$^\dagger$ \\
+  \REG, \REGtn & \TO & \PSPACE-c & \PSPACE-c & \PSPACE-c & \PSPACE-c & \EXPTIME-c$^\dagger$ & \EXPTIME-c$^\dagger$ \\
+  \REGtn & \PO & \PSPACE-c & \PSPACE-c & \EXPSPACE-c$^\dagger$ & \PSPACE-c & \EXPTIME-c$^\dagger$ & \EXPTIME-c$^\dagger$ \\
+  \REG  & \PO & \PSPACE-c & \PSPACE-c & \textbf{undecidable} & \PSPACE-c & \EXPTIME-c$^\dagger$ & \EXPTIME-c$^\dagger$ \\
+  \TR   & \TO & \PSPACE-c & \PSPACE-c & \PSPACE-c & \PSPACE-c & \EXPTIME-c$^\dagger$ & \EXPTIME-c$^\dagger$ \\
+        & \PO & \EXPSPACE-c & \EXPSPACE-c & \textbf{undecidable} & \EXPSPACE-c & \TWOEXP-c$^\dagger$ & \textbf{\TWOEXP-c} \\
+  \ARB  & \TO & \EXPTIME-c & \EXPTIME-c & \EXPTIME-c & \EXPTIME-c & \textbf{\TWOEXP-c} & \textbf{\TWOEXP-c} \\
+        & \PO & undec., \RE & undec., \RE & undec., \RE & undec., \RE & undec., \RE & \textbf{$\Sigma^1_1$-c} \\
+  \bottomrule
+\end{tabularx}
+\end{table}

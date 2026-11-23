@@ -1,0 +1,228 @@
+\section{Solution Concepts}\label{sec:solutions}
+
+\subsection{Fixed methods}
+
+With fixed methods \pCBa{}, the planner first decomposes $\tnI$ into a primitive network and then
+executes it. A primitive network $\tn$ is \emph{achievable} if it arises from $\tnI$ by finitely
+many decompositions. For an achievable $\tn$ there are four ways of executing it.
+
+\begin{itemize}
+  \item \emph{Weak LD}: some linearisation of $\tn$ is executable for some choice of outcomes.
+  \item \emph{Strong LD}: some linearisation $t_1\cdots t_n$ is executable for every choice of
+    outcomes, i.e.\ every $t_i$ is applicable in every state that the prefix $t_1\cdots t_{i-1}$
+    can lead to. This is a conformant plan.
+  \item \emph{Weak OD}: some policy, choosing the next task depending on the tasks executed so far
+    and the current state, executes all of $\tn$ for some choice of outcomes.
+  \item \emph{Strong OD}: some such policy executes all of $\tn$ for every choice of outcomes.
+\end{itemize}
+
+A problem has a solution of one of these kinds if some achievable primitive network does.
+
+Outcome-dependent execution is best described recursively. Call a pair $(\tn,s)$ of a primitive
+network and a state \emph{(strongly) solvable} if $\tn$ is empty, or some unconstrained task
+$t$ of $\tn$ is applicable in $s$ and $(\tn\setminus t,s')$ is solvable for every outcome
+$s'\in\Out(\alpha(t),s)$. Replacing ``every'' by ``some'' gives \emph{weak} solvability.
+These are least fixpoints: solvability is witnessed by a finite tree.
+
+\begin{proposition}\label{prop:od-belief}
+  A primitive network $\tn$ has a strong (weak) OD policy from $s$ if and only if $(\tn,s)$ is
+  strongly (weakly) solvable.
+\end{proposition}
+
+\begin{proof}
+  A policy is a function from configurations $(T',s)$, consisting of the set of executed tasks
+  and the current state, to the next task. Given a solvable pair, let the policy pick at
+  $(T',s)$ a task that witnesses solvability of the remaining network $\tn\setminus T'$ in $s$.
+  Every run of this policy then stays among solvable pairs and ends with the empty network.
+  Conversely, by induction on the number of remaining tasks, if every run of a policy from
+  $(T',s)$ completes, then $(\tn\setminus T',s)$ is solvable, witnessed by the task the policy
+  chooses.
+\end{proof}
+
+Strong OD solvability in this form is exactly the solvability of \emph{belief states} used by
+\DB{}, so their notion and that of \CBa{} agree. We note that the definition of \CBa{}, which
+goes through an execution structure and its execution sequences, cannot be taken literally. The
+structure forgets along which history a state was reached, and every prefix of an execution
+sequence is again an execution sequence. So the requirement that ``every execution sequence is
+complete'' fails for every non-trivial network. The recursive formulation is what the proofs of
+\CBa{} use, and it is the one we adopt.
+
+\begin{proposition}[\CBa, Props.~2.12, 2.13, 2.15]\label{prop:fm-relations}
+  \begin{enumerate}[label=(\roman*)]
+    \item A problem has a weak LD solution iff it has a weak OD solution.
+    \item Every strong LD solution is a strong OD solution, but not conversely.
+    \item For totally ordered problems, strong LD and strong OD solutions coincide.
+  \end{enumerate}
+\end{proposition}
+
+\begin{proof}
+  (i)~A linearisation together with a choice of outcomes is a single run, and a run is what a
+  weak policy needs. Formally, both notions are equivalent to weak solvability: a linearisation
+  of $\tn$ is an unconstrained task followed by a linearisation of the rest.
+
+  (ii)~Let $S_i$ be the set of states that the prefix $t_1\cdots t_{i-1}$ of a strong LD
+  linearisation can lead to. Every state reachable by the policy that follows the linearisation
+  lies in the corresponding $S_i$, where the next task is applicable; this gives solvability by
+  induction from the end. For the converse, let $a$ add fact $1$ or fact $2$, let $b$ require $1$
+  and add $2$, let $c$ require $2$ and add $1$, and let $a\prec b$ and $a\prec c$. The policy that
+  runs $b$ first if $1$ holds and $c$ first otherwise succeeds, but each of the two
+  linearisations $a\,b\,c$ and $a\,c\,b$ fails for one outcome of $a$.
+
+  (iii)~Decomposition preserves total order, so every achievable network is a chain, and a chain
+  has exactly one unconstrained task at every point. A solvable pair therefore forces the same
+  task in all states, which is a conformant linearisation.
+\end{proof}
+
+\subsection{Method-based policies}
+
+Method-based policies \pCBb{} interleave decomposition and execution. A \emph{node} is a pair
+$(\tn,s)$ of a (not necessarily primitive) network and a state. A \emph{policy} maps nodes to
+instructions: either an unconstrained primitive task $t$, or a compound task $t$ together with a
+method for $\alpha(t)$. It must give the same instruction, up to isomorphism, at isomorphic nodes.
+Executing a primitive task leads to $(\tn\setminus t,s')$ for each outcome $s'$; decomposing
+leads to the decomposed network in the same state. The nodes reachable from $(\tnI,\sI)$, taken
+up to isomorphism, form the \emph{execution structure} of the policy. A node is a \emph{goal} if
+its network is empty, and \emph{terminal} if the policy gives no applicable instruction.
+
+\begin{definition}[\CBb, Def.~7]\label{def:mp}
+  A policy is
+  \begin{itemize}
+    \item \emph{weak} if its execution structure is finite and some terminal node is a goal;
+    \item \emph{strong} if its execution structure is finite, acyclic, and every terminal node is
+      a goal;
+    \item \emph{strong cyclic} if every terminal node is a goal.
+  \end{itemize}
+\end{definition}
+
+We have made two harmless details explicit: executed primitive tasks must be unconstrained, as
+in all algorithms of \CBb{}, and an inapplicable instruction makes a node terminal.
+
+\subsection{Strong cyclic solutions and fairness}\label{sec:sc}
+
+The definition of strong cyclic policies contains no condition that would make the execution
+reach a goal. Consider a deterministic problem with one compound task $c$, whose only method is
+$c\to c$. No primitive network can be reached, so the problem has no solution of any other kind.
+But the policy that always decomposes $c$ has an execution structure with a single node and no
+terminal node, so it is strong cyclic in the sense of Definition~\ref{def:mp}. More generally,
+under this literal reading a deterministic recursive problem may be ``solved'' by refining
+forever. Strong cyclic plan existence then does not coincide with plan existence on deterministic
+problems, and the deterministic lower bounds that \CBb{} transfer to strong cyclic solutions do
+not hold.
+
+The intended notion is clearly that of \textcite{cimatti:et:al:aij-03}: from every node of the
+execution structure some goal node must be reachable. If the environment is fair, i.e.\ each
+outcome of an action that is executed infinitely often in the same node is eventually taken, such
+a policy reaches a goal with certainty.
+
+\begin{definition}\label{def:fair}
+  A policy is \emph{(fair) strong cyclic} if from every node of its execution structure some goal
+  node is reachable within the execution structure.
+\end{definition}
+
+Throughout the rest of this article, ``strong cyclic'' refers to Definition~\ref{def:fair}. It
+has the expected properties.
+
+\begin{proposition}\label{prop:fair-basic}
+  \begin{enumerate}[label=(\roman*)]
+    \item Every strong policy is fair strong cyclic.
+    \item For acyclic problems, a fair strong cyclic solution exists iff a strong solution does.
+    \item For deterministic problems, a fair strong cyclic solution exists iff a plan exists.
+  \end{enumerate}
+\end{proposition}
+
+\begin{proof}
+  (i)~In a finite acyclic structure every maximal path ends in a terminal node, which is a goal.
+  (ii)~In an acyclic problem every refinement terminates, so the execution structure of any
+  policy has no infinite paths and no cycles (decomposition makes a network strictly smaller in
+  a well-founded order). A fair policy is then strong.
+  (iii)~If a plan exists, the policy that follows it is strong. Conversely, the path from the
+  initial node to a goal node is a plan.
+\end{proof}
+
+\subsection{Games}\label{sec:games}
+
+Both kinds of policies have convenient game characterisations, which underlie all our membership
+proofs. They rest on the following observation, which the algorithms of \CBb{} use without
+stating it.
+
+\begin{lemma}[delaying decompositions]\label{lem:delay}
+  If a problem has a strong (fair strong cyclic) method-based solution, it has one that
+  decomposes only unconstrained compound tasks.
+\end{lemma}
+
+\begin{proof}
+  A decomposition of a task $t$ that is still preceded by other tasks commutes with the
+  execution and decomposition of those tasks. Postponing it until $t$ becomes unconstrained gives
+  a policy whose runs are those of the original policy with some steps moved later. The later
+  decision may depend on more observations, which only helps. For fair policies one checks in
+  addition that reachability of a goal is preserved, which follows because every run of the new
+  policy can be matched by a run of the old one with the same outcomes.
+\end{proof}
+
+With progression only, a strong solution is the same as a winning strategy in an AND/OR game.
+
+\begin{theorem}\label{thm:mp-andor}
+  A problem has a strong method-based solution iff the planner wins the following game from
+  $(\tnI,\sI)$: a node with the empty network is won; at a node $(\tn,s)$ the planner either picks
+  an unconstrained primitive task applicable in $s$, after which the environment picks an
+  outcome, or picks an unconstrained compound task and a method to decompose it.
+  The planner must win in finitely many moves.
+\end{theorem}
+
+\begin{proof}
+  A strong policy has a finite acyclic execution structure, so every run is shorter than the
+  number of its nodes, and the policy is a winning strategy. Conversely, rank each won node by the
+  least number of moves in which it can be won, which is invariant under isomorphism. The policy
+  that always moves to a node of smaller rank is well defined up to isomorphism, every run strictly
+  decreases the rank, and every node has finitely many successors up to isomorphism. Hence its
+  execution structure is finite and acyclic.
+\end{proof}
+
+For fair strong cyclic policies the game has a nested fixpoint. A set $X$ of nodes is
+\emph{fair-closed} if every node of $X$ is in the \emph{attractor} of $X$. The attractor is the
+least set $Z$ containing the goal nodes and such that a node is in $Z$ if
+\begin{itemize}
+  \item the planner can execute an applicable primitive task all of whose outcomes are in $X$ and
+    at least one of which is in $Z$, or
+  \item the planner can decompose a task such that the result is in $X$ and in $Z$.
+\end{itemize}
+
+\begin{theorem}\label{thm:mp-fair-game}
+  A problem has a fair strong cyclic solution iff $(\tnI,\sI)$ lies in a fair-closed set of nodes
+  that is closed under isomorphism.
+\end{theorem}
+
+\begin{proof}
+  The nodes of the execution structure of a fair policy form such a set: the policy's
+  instruction keeps all successors in the structure, and a shortest path to a goal shows that each
+  node is in the attractor. Conversely, given a fair-closed set, let the policy choose at each
+  node a move that witnesses attractor membership of minimal rank. Then all successors stay in
+  the set, and following the witnessing outcomes the rank decreases until a goal is reached.
+\end{proof}
+
+\subsection{Comparing the two families}
+
+The following facts relate the two families and are used repeatedly.
+
+\begin{proposition}[\CBb, Props.~1, 2 and Fig.~1]\label{prop:fm-vs-mp}
+  \begin{enumerate}[label=(\roman*)]
+    \item For primitive problems, strong and fair strong cyclic method-based solutions coincide
+      with strong OD solutions.
+    \item A problem has a weak method-based solution iff it has a weak fixed-method solution.
+    \item There are totally ordered problems with a strong method-based solution but no strong
+      fixed-method solution.
+  \end{enumerate}
+\end{proposition}
+
+\begin{proof}
+  (i)~Without compound tasks the game of Theorem~\ref{thm:mp-andor} is the recursive definition of
+  strong solvability, and every run is finite.
+  (ii)~A weak policy has a run ending in a goal; its decompositions give an achievable network
+  and its executed tasks a linearisation. Conversely, a weak plan can be turned into a policy by
+  following a shortest run of it. A shortest run visits no two isomorphic nodes, so the policy is
+  well defined.
+  (iii)~Let $\tnI=\langle a,c\rangle$, where $a$ adds fact $1$ or fact $2$, and $c$ has the two
+  methods $c\to b$ and $c\to b'$, with $b$ requiring $1$ and $b'$ requiring $2$. A policy can
+  decompose $c$ after observing the outcome of $a$, but a fixed decomposition must choose $b$ or
+  $b'$ in advance.
+\end{proof}

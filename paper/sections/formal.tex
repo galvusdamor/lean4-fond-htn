@@ -1,0 +1,52 @@
+\section{The Formalisation}\label{sec:formal}
+
+All results of this article are formalised in Lean~4 \parencite{moura:ullrich:cade-21} with
+Mathlib \parencite{mathlib:cpp-20}. The development builds on existing Lean libraries for
+deterministic HTN planning and its complexity, from which it takes task networks, decomposition,
+progression, the structural classes, encodings of problem descriptions, and the complexity
+classes. These libraries also contain the deterministic results that we inherit, such as the
+bounds of \textcite{erol:et:al:amai-96} and \textcite{alford:et:al:icaps-15}. Computability
+notions come from Mathlib's theory of partial recursive functions \parencite{carneiro:itp-19}.
+The FOND development itself comprises about 62{,}500 lines of Lean in 215 files, with about
+3{,}500 lemmas and theorems. Every theorem depends only on the three standard axioms of Lean's
+classical logic (propositional extensionality, choice and soundness of quotients). There are no
+unproved assumptions.
+
+\paragraph{What is stated.}
+Each entry of Table~\ref{tab:results} is a Lean theorem about a set of bit strings, namely the
+encodings of the problem descriptions of the class that have a solution of the given kind.
+Membership is stated as membership in the complexity class, hardness as the existence of a
+polynomial-time reduction from every problem in the class, and undecidability, (co-)recursive
+enumerability and membership in $\Sigma^1_1$ in terms of Mathlib's computable functions and
+recursively enumerable predicates. For $\Sigma^1_1$ we use Kleene's normal form as the definition.
+Solution concepts are defined on the semantic level (policies, execution structures, belief
+states) exactly as in the papers, with the corrections discussed in
+Section~\ref{sec:solutions}. The game characterisations used by the algorithms are proved
+equivalent to them. Both readings of strong cyclic solutions are defined, and the literal one is
+shown to differ from plan existence on a deterministic example.
+
+\paragraph{What is not formalised.}
+Harel's theorem, and the step from it to a fixed two-stack machine in the proof of
+Theorem~\ref{thm:sigma11}(iv), are used as cited results; this concerns only
+$\Sigma^1_1$-hardness. Neither the analytical hierarchy nor the completeness of ill-founded trees
+for $\Sigma^1_1$, on which Harel's proof rests, is currently available in Lean.
+
+\paragraph{Lessons.}
+The formalisation was not merely a check of finished proofs. Many of the constructions in this
+article were found because a formal proof attempt failed. Examples are the gated cheat tasks of
+Theorem~\ref{thm:reg-undec}, the two progress modes of the fair summary game for total order, and
+the round counter needed for the fair variant of Theorem~\ref{thm:exptime-hard}. The errors we found
+in the literature fall into a few recurring patterns:
+\begin{itemize}
+  \item gadgets that give the planner an unintended escape (an illegal-move detector that can be
+    triggered on purpose, a stop method without an acceptance check);
+  \item definitions that are subtly off when read literally (execution sequences that include their
+    prefixes, strong cyclic solutions without fairness);
+  \item steps that are true but not obvious and were left implicit, such as delaying
+    decompositions (Lemma~\ref{lem:delay}), well-definedness of policies on isomorphic nodes,
+    preservation of structural classes by compilations, and the treatment of negative
+    preconditions.
+\end{itemize}
+None of the published complexity \emph{claims} that we re-examined turned out to be false, with the
+exception of claims about strong cyclic solutions under the literal definition. Several of them,
+however, rest on arguments that do not establish them.

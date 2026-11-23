@@ -1,0 +1,116 @@
+\section{Preliminaries}\label{sec:prelim}
+
+We fix the formalism, which follows \CBa{} and \CBb{} with two small generalisations: actions may
+have negative preconditions (as in \DB{}), and the structural restrictions of the hierarchy are
+the standard ones of \textcite{alford:et:al:icaps-15}.
+
+\subsection{States and nondeterministic actions}
+
+Let $F$ be a finite set of \emph{facts}. A \emph{state} is a subset $s\subseteq F$. An
+\emph{action} is a triple $a=(\pre^+,\pre^-,\eff)$ of a positive precondition $\pre^+\subseteq F$,
+a negative precondition $\pre^-\subseteq F$ and a finite, non-empty set $\eff$ of
+\emph{effects} $(\add,\del)$ with $\add,\del\subseteq F$. The action is \emph{applicable} in $s$
+if $\pre^+\subseteq s$ and $\pre^-\cap s=\emptyset$; its possible \emph{outcomes} are then
+\[
+  \Out(a,s) \;=\; \{\, (s\setminus\del)\cup\add \;\mid\; (\add,\del)\in\eff \,\}.
+\]
+So, when an effect adds and deletes the same fact, the addition wins. An action with a single
+effect is \emph{deterministic}. \CBa{} and \CBb{} allow positive preconditions only; their
+actions are the special case $\pre^-=\emptyset$. All our upper bounds hold with negative
+preconditions, and so do all lower bounds. We say explicitly which reductions need them. Those that
+do not are lower bounds for the original fragment as well.
+
+The requirement $\eff\neq\emptyset$ is left implicit in the literature but matters: an action
+without effects would have no outcomes, and strong solution concepts would then hold vacuously
+after it.
+
+\subsection{Task networks, methods and decomposition}
+
+Let $A$ be a set of \emph{primitive} task names, each with an action $\delta(a)$, and $C$ a set of
+\emph{compound} task names. A \emph{task network} $\tn=(T,\prec,\alpha)$ consists of a finite set
+$T$ of task identifiers, a strict partial order ${\prec}$ on $T$ and a labelling
+$\alpha:T\to A\cup C$. A task $t$ is \emph{unconstrained} (or \emph{first}) if no task of $T$
+precedes it. Task networks are considered up to \emph{isomorphism}, i.e.\ renaming of
+identifiers that preserves order and labels. A network is \emph{primitive} if all its labels are
+primitive, and \emph{totally ordered} if ${\prec}$ is total.
+
+A \emph{method} $m=(c,\tn_m)$ with $c\in C$ refines the compound name $c$ into the network
+$\tn_m$. \emph{Decomposing} a task $t$ with $\alpha(t)=c$ by $m$ replaces $t$ by a fresh copy of
+$\tn_m$. Every task that preceded $t$ now precedes all new tasks, and every task that $t$
+preceded is now preceded by all new tasks. \emph{Progression} by an unconstrained primitive task $t$
+removes $t$ from the network; it is the network-level counterpart of executing $\alpha(t)$.
+
+A \emph{FOND HTN problem} $\Prob=(F,A,C,\delta,\M,\sI,\tnI)$ consists of the facts, the task
+names with their actions, a finite set $\M$ of methods, an initial state $\sI$ and an initial
+task network $\tnI$. As in the cited works there is no state goal: the objective is to refine
+$\tnI$ completely and execute the resulting actions. A state goal $G$ can be expressed by
+appending a task whose action has precondition $G$.
+
+\subsection{Structural classes}
+
+The following restrictions are standard. They constrain the methods (and possibly $\tnI$) only.
+
+\begin{itemize}
+  \item \PRIM: $\tnI$ is primitive (so methods play no role).
+  \item \TO: $\tnI$ and all method networks are totally ordered. Then every network reachable by
+    decomposition is totally ordered as well.
+  \item \ACYC: the graph on $C$ with an edge $c\to c'$ whenever a method for $c$ contains a task
+    labelled $c'$ is acyclic. Every refinement then terminates after boundedly many steps.
+  \item \TR\ (tail-recursive): there is a total preorder (a \emph{stratification}) on $C$ such
+    that for every method $(c,\tn_m)$ and every compound task $t$ of $\tn_m$, $\alpha(t)$ lies in
+    a strictly lower stratum than $c$, unless $t$ is the \emph{last} task of $\tn_m$ (all other
+    tasks of $\tn_m$ precede it), in which case $\alpha(t)$ lies in the same or a lower stratum.
+    Nothing is required of $\tnI$.
+  \item \REG\ (regular): every method network contains at most one compound task, and if it does,
+    that task is last. \textcite{bercher:et:al:ijcai-19} impose this on methods only;
+    \textcite{erol:et:al:amai-96} and \CBa{} also require it of $\tnI$. We write \REGtn{} for the
+    latter class. Regular problems are tail-recursive with a single stratum.
+  \item \ARB: no restriction.
+\end{itemize}
+
+\CBa{} and \CBb{} phrase the acyclic and tail-recursive classes with stratifications whose
+definitions are garbled in places (a ``total order'' with ties, an orientation of acyclicity that
+contradicts reflexivity, and an ambiguous notion of ``last''). The definitions above are those of
+\textcite{alford:et:al:icaps-15} and are what all published proofs actually use. The distinction
+between \REG{} and \REGtn{} looks innocent but matters a great deal for strong outcome-dependent
+solutions (Section~\ref{sec:fixed-reg}).
+
+\subsection{Complexity and computability}
+
+Problems are given by explicit descriptions: actions with their lists of effects, methods,
+initial state and initial network, written down in binary. Plan existence for a solution
+concept and a class is the set of descriptions in the class that have a solution. We use the
+standard classes $\PTIME\subseteq\NP\subseteq\PSPACE\subseteq\EXPTIME\subseteq\NEXPTIME\subseteq
+\EXPSPACE\subseteq\TWOEXP$, polynomial-time many-one reductions, and the alternation theorems of
+\textcite{chandra:et:al:jacm-81}: alternating polynomial time is \PSPACE, alternating polynomial
+space is \EXPTIME, alternating exponential time is \EXPSPACE, and alternating exponential space is
+\TWOEXP. By Savitch's theorem \parencite{savitch:jcss-70}, nondeterministic and deterministic
+space coincide.
+
+Most of our upper bounds are proved by exhibiting a \emph{game}. An AND/OR game is played on
+configurations; at existential configurations the planner picks a successor, at universal
+configurations the environment does. If configurations have polynomial (exponential) size and
+plays have polynomial (exponential) length, deciding the game is in \PSPACE{} (\EXPSPACE{}); if
+configurations have polynomial (exponential) size but plays may be long, an attractor computation
+over all configurations gives \EXPTIME{} (\TWOEXP). Fair games, which we need for strong cyclic
+solutions, have a nested fixpoint (Section~\ref{sec:sc}), and the same bounds apply to them.
+
+For undecidable problems we use the following notions. A set of words is \emph{recursively
+enumerable} (\RE, or semi-decidable) if some program halts exactly on its elements, and
+\emph{co-recursively enumerable} (\coRE) if its complement is \RE. A set $L$ is in
+$\Sigma^1_1$ if there is a computable relation $R$ such that
+\[
+  w\in L \iff \exists f:\mathbb N\to\mathbb N\ \forall n:\ R\bigl(w, f(0)\cdots f(n-1)\bigr),
+\]
+i.e.\ membership is witnessed by an infinite object that can be checked on its finite prefixes
+(Kleene's normal form, see \textcite{rogers:67}). Every arithmetical set is reducible to a
+$\Sigma^1_1$-complete set but not conversely, so $\Sigma^1_1$-complete sets are not arithmetical.
+
+\paragraph{Two-stack machines.}
+Several undecidability proofs use \emph{two-stack machines} \parencite{minsky:67}: a finite
+control with two stacks over a finite alphabet. Each transition is applicable in one control
+state, pops a given symbol from one of the two stacks, pushes a word onto the same stack and moves
+to a new control state. Two-stack machines simulate Turing machines step by step (the two stacks
+hold the tape left and right of the head), so their halting problem is undecidable. Moreover,
+deterministic Turing machines are simulated by deterministic two-stack machines, which we use in
+Section~\ref{sec:unrestricted}.

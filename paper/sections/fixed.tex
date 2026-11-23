@@ -1,0 +1,294 @@
+\section{Fixed Methods}\label{sec:fixed}
+
+\subsection{Weak and strong linearisation-dependent solutions}
+
+For the weak and strong LD columns the published results are correct, and we only sketch the
+arguments, pointing out where they had to be adjusted.
+
+\paragraph{Weak solutions.}
+For primitive problems, weak plan existence is \NP-complete in both the totally and the
+partially ordered case \parencite[Thm.~4.1, Cor.~4.2]{chen:bercher:icaps-21}. Membership is
+guess-and-check. Hardness comes from a reduction from SAT in which each variable is an action with
+two outcomes, adding the clauses that the true resp.\ false literal satisfies, followed by a task
+that requires all clauses. For all other classes, \CBa{} compile weak FOND problems into
+deterministic ones (Lemma~4.3): every primitive task $a$ becomes a compound task $c_a$ with one
+method per effect of $a$, whose network is a deterministic copy of $a$ with that single effect.
+Choosing an outcome becomes choosing a method. The compilation preserves acyclicity, tail recursion
+and total order (the new compound names form the lowest stratum), so weak plan existence has
+exactly the complexity of deterministic plan existence in these classes
+\parencite{erol:et:al:amai-96,alford:et:al:icaps-15}.
+
+The compilation destroys regularity, since a method may now contain several compound tasks.
+\CBa{} argue informally that the progression algorithm still works. A clean argument is
+as follows. Regular problems are tail-recursive with a single stratum, and their compilation is
+tail-recursive with two strata. Deterministic plan existence for tail-recursive problems of bounded
+height is in \PSPACE, because progression keeps the network polynomially large
+\parencite{alford:et:al:icaps-15}. Hence weak plan existence for regular problems is \PSPACE-complete.
+
+\paragraph{Strong LD solutions.}
+\CBa{} reduce strong LD plan existence to deterministic plan existence (Lemma~4.6) by replacing
+every action by a deterministic action that adds what all effects add and deletes what any effect
+deletes. The idea is that a single deterministic run tracks the intersection $\bigcap S_i$ of all
+states the conformant prefix may lead to. With only positive preconditions this is correct: an
+action is applicable in all states of $S_i$ iff its precondition is in $\bigcap S_i$. With
+negative preconditions it is not, since a negative precondition must be false in \emph{every}
+state of $S_i$, which the intersection cannot tell.
+
+We therefore track both the intersection and the union, on two copies of the facts. An action is
+applicable throughout $S$ iff its positive precondition is contained in $\bigcap S$ and its
+negative precondition is disjoint from $\bigcup S$. Both sets evolve by ordinary STRIPS effects:
+for the intersection, add what every effect adds and delete what some effect deletes without
+adding it; for the union, add what some effect adds and delete what every effect deletes. Methods
+and networks are unchanged, so every structural class is preserved, and strong LD plan existence
+has the complexity of deterministic plan existence for every class. By
+Proposition~\ref{prop:fm-relations}(iii) the same holds for strong OD solutions of totally ordered
+problems \parencite[Cor.~4.8]{chen:bercher:icaps-21}.
+
+The remaining entries of the fixed-method table concern strong OD solutions of partially ordered
+problems, where policies may react to outcomes by reordering. This is where the complexity jumps,
+and where most of our new results are.
+
+\subsection{Primitive problems}
+
+\begin{theorem}[\CBa, Thm.~5.1]\label{thm:prim-po}
+  Strong OD plan existence for primitive partially ordered problems is \PSPACE-complete, even
+  without negative preconditions and with at most two effects per action.
+\end{theorem}
+
+Membership is clear: by Proposition~\ref{prop:od-belief} we evaluate a game of depth $|T|$ on
+configurations of polynomial size. For hardness, \CBa{} reduce from $(m,n,k)$-games
+($k$-in-a-row on an $m\times n$ board). The construction does not work as stated. The first player
+may place a stone on a square already occupied by the opponent, which triggers an ``illegal move''
+task that unlocks a clean-up phase in which everything becomes executable. The task meant for the
+first player's final move can be used at any time to make an unanswered extra move. And the task
+recording a win re-enables the illegal-move check, so the final ``the opponent has no line'' test
+can be bypassed. Each of these gives the planner a trivial win. Rather than repairing the gadget
+we reduce from TQBF, the canonical \PSPACE-complete problem \parencite{stockmeyer:meyer:stoc-73}.
+
+\begin{proof}[Proof of hardness]
+  Let $\varphi=Q_1x_1\cdots Q_mx_m\,\psi$ with $\psi$ in conjunctive normal form. We use facts
+  $x_i^0,x_i^1$ (``$x_i$ is false/true''), one fact $\mathit{sat}_j$ per clause, and a fact
+  $\mathit{win}$. For each variable there is a \emph{block} of two tasks. If $x_i$ is existential,
+  one task sets $x_i$ to true and the other sets it to false (each adds one literal fact and deletes
+  the other). Both must be executed, and the one executed \emph{last} determines the value, so the
+  policy chooses the value by choosing the order. If $x_i$ is universal, both tasks are the same
+  nondeterministic action with outcomes ``set true'' and ``set false'', so the environment
+  determines the value. All tasks of block $i$ precede all tasks of later blocks and all remaining
+  tasks.
+
+  After the blocks come \emph{check} tasks, one for each occurrence of a literal $\ell$ in a clause
+  $j$, which require the fact of $\ell$ and add $\mathit{sat}_j$; a task $\mathit{fin}$, which
+  requires all $\mathit{sat}_j$ and adds $\mathit{win}$; and a task $\mathit{clear}$, which
+  requires $\mathit{win}$ and adds all literal facts. The check tasks, $\mathit{fin}$ and
+  $\mathit{clear}$ are mutually unordered.
+
+  While a block is open, only its two tasks are executable, and afterwards the state encodes the
+  assignment chosen so far. After the last block, $\mathit{clear}$ needs $\mathit{win}$, and only
+  $\mathit{fin}$ adds it. So the policy must make every clause satisfied using check tasks whose
+  literals are true under the assignment, then run $\mathit{fin}$, then $\mathit{clear}$, and then
+  the remaining check tasks (which $\mathit{clear}$ has made executable). This succeeds against
+  every behaviour of the environment iff the existential player has a winning strategy in the QBF
+  game, i.e.\ iff $\varphi$ is true. All preconditions are positive, and actions have at most two
+  effects.
+\end{proof}
+
+By Proposition~\ref{prop:fm-vs-mp}(i) the same bound holds for strong and strong cyclic
+method-based policies on primitive problems \parencite[Cor.~1]{chen:bercher:icaps-22}, whose
+published proof inherits the flaw.
+
+\subsection{Acyclic problems}\label{sec:fixed-acyc}
+
+\begin{theorem}\label{thm:acyc-od}
+  Strong OD plan existence for acyclic partially ordered problems is \EXPSPACE-complete.
+\end{theorem}
+
+The upper bound is due to \CBa{} (Thm.~5.2). In an acyclic problem every achievable network has
+at most exponentially many tasks, and a nondeterministic exponential-space procedure can guess
+the decompositions and then evaluate the game of Proposition~\ref{prop:od-belief}, which has
+exponential depth and configurations of exponential size.
+
+For the lower bound only \NEXPTIME-hardness was known, inherited from deterministic problems. An
+outline in unpublished notes proposed to simulate a Turing machine with ``counter cells''. As
+stated, it simulates a deterministic machine, and it leaves the gadgets open. We give a complete
+construction based on the same idea, but with a different source problem.
+
+\paragraph{The source: the Savitch game.}
+Let $N$ be a nondeterministic Turing machine that uses $S=2^{p(n)}$ cells on inputs of length $n$.
+Whether $N$ can move from a configuration $c$ to a configuration $c'$ in at most $2^k$ steps is
+decided by the following game, which underlies Savitch's theorem. For $k=0$ the claim is checked
+directly ($c=c'$ or $c'$ is a successor of $c$). For $k>0$ the existential player names a
+midpoint $d$, and the universal player chooses which of the two claims $(c,d)$ and $(d,c')$, each
+with $k-1$, to continue with. Configurations have exponential size and the game has exponentially
+many rounds ($k$ is exponential in $n$), which is alternating exponential time and hence enough to
+capture \EXPSPACE{} \parencite{chandra:et:al:jacm-81}. We use the formulation in which $w$ is
+accepted iff, for some accepting configuration $e$, the existential player wins the claim
+(initial configuration, $e$) with $k=2^{O(p(n))}$.
+
+\paragraph{The memory: a queue of counter cells.}
+A position of the game is a pair of configurations, i.e.\ two words of length $S$, too large for
+the state of a planning problem. We store it in the \emph{task network}. The network consists of a
+totally ordered \emph{control chain} and pools of mutually unordered \emph{cells}. A cell for the
+symbol $\tau$ is a chain
+\[
+  \mathit{init}_\tau\cdot(\mathit{tick}\cdot\mathit{res})^S\cdot\mathit{fin}_\tau .
+\]
+The control chain is a long sequence of \emph{windows}. A window enables one kind of cell task (by
+adding a token fact that the task consumes) and then disables it again. Each \emph{step} of the
+control consists of $S$ windows for $\mathit{tick}$, $S$ windows for $\mathit{res}$, and then one
+window each for $\mathit{fin}$, $\mathit{init}$ and an update of the finite control state. A cell
+that has ticked must resume before it can tick again, so the $S$ tick windows of a step tick
+\emph{every} running cell exactly once. Consequently the unique cell that can finish in a step is
+the one started exactly $S$ steps earlier: $\mathit{fin}_\tau$ reports the symbol $\tau$ written $S$
+steps before, and $\mathit{init}_{\tau'}$ lets the policy write a new symbol $\tau'$ of its choice
+by starting a cell of that kind. The cells thus implement a \emph{queue} (a delay line) of length
+$S$. Each step reads the symbol written $S$ steps earlier and appends a new one. A short
+\emph{pre-warm} phase fills the queue with blanks. A policy that does not stagger the initial cells
+perfectly gets stuck within $S$ steps.
+
+\paragraph{The program.}
+The finite control runs an automaton over the queue. In an input sweep of $S$ steps it writes, for
+each cell $i$, the triple $(c_0(i),e(i),e(i))$ of the initial configuration and the claimed
+accepting configuration $e$ (chosen by the policy). In each of the $k$ rounds it sweeps once more.
+It reads the triple stored for cell $i$, projects it to the current pair $(x(i),y(i))$, and lets the
+policy write $(x(i),m(i),y(i))$, where $m$ is the claimed midpoint. At the end of the round a
+nondeterministic action chooses which half the next round projects to. After the last round a
+check sweep verifies with a finite automaton that the remaining pair is equal or a single step of
+$N$. When the check succeeds, a flag makes all remaining tasks executable. Since every symbol of
+the current pair is read exactly $S$ steps after it was written, the policy wins iff it wins the
+Savitch game.
+
+\paragraph{Exponential repetition.}
+The numbers $S$ and $k$, and the counts of windows and of cells, are exponential. They are produced
+by acyclic \emph{doubling} hierarchies: a compound task $D_{j+1}$ has the single method
+$D_{j+1}\to D_j\,D_j$, totally ordered for the control chain and unordered for the pools, and a
+count given in binary selects which levels contribute. Every compound task has exactly one method,
+so the whole problem decomposes into a single primitive network.
+
+\begin{proof}[Proof of Theorem~\ref{thm:acyc-od}, hardness]
+  The construction is computable in polynomial time, the problem is acyclic, and its unique
+  achievable primitive network is the control chain together with the pools. By the queue property,
+  every strong OD policy induces a strategy of the existential player in the Savitch game, which
+  wins because the final check must succeed against every choice of halves. Conversely, a winning
+  strategy is executed by writing the claimed midpoints. Hence $w$ is accepted iff the problem has
+  a strong OD solution.
+\end{proof}
+
+Because every compound task has a single method, fixed methods and method-based policies coincide
+on these instances. By Proposition~\ref{prop:fair-basic}(ii) strong and fair strong cyclic
+policies coincide on acyclic problems. So the same reduction proves \EXPSPACE-hardness of strong
+and strong cyclic method-based plan existence for acyclic partially ordered problems. This replaces
+the proof of \textcite[Thm.~2]{chen:bercher:icaps-22}, which only outlines an extension of the
+\NEXPTIME-hardness proof of \textcite{alford:et:al:icaps-15} to alternating machines.
+
+\subsection{Regular problems}\label{sec:fixed-reg}
+
+For regular problems the answer depends on the initial task network.
+
+\begin{theorem}\label{thm:regtn}
+  Strong OD plan existence for \REGtn{} is \EXPSPACE-complete.
+\end{theorem}
+
+The upper bound is due to \CBa{} (Thm.~5.3), whose argument we make precise. In a \REGtn{} problem
+every achievable primitive network is a sequence of \emph{blocks} $B_0\prec B_1\prec\cdots\prec
+B_\ell$: the primitive part of $\tnI$, then the primitive parts of the chosen methods, in order.
+Every task of a block precedes every task of the next, because the compound task of a regular
+network comes last and decomposition inherits its predecessors. The key fact is a
+\emph{composition lemma}: $X$ followed by $Y$ is solvable from $s$ iff $X$ is solvable from $s$
+in such a way that every final state lies in the set of states from which $Y$ is solvable. Hence
+a solution is described by the sequence of methods and the sequence of \emph{belief sets}, the sets
+of states in which the execution can be at the start of each block. A nondeterministic procedure
+guesses the next method and the next belief set (an explicit set of states, of exponential size)
+and checks the current block from each state of the current belief set in polynomial space. By
+Savitch's theorem this is in \EXPSPACE.
+
+\DB{} proved the matching lower bound via chosen-length planning games. Their proof leaves the
+STRIPS gadgets of the game unspecified, and the simulation of games by regular problems is argued
+only informally. We give a direct proof that is considerably simpler.
+
+\begin{proof}[Proof of Theorem~\ref{thm:regtn}, hardness]
+  Let $N$ be a nondeterministic machine with space $2^n$ and input $w$. The initial network starts
+  with a nondeterministic task by which the environment chooses a cell index $c<2^n$, written in
+  $n$ bits of the state, followed by a gadget that checks that a register $\sigma$ holds the input
+  symbol at cell $c$, and then a single compound task $\mathit{run}$. The methods for
+  $\mathit{run}$ are regular. For each transition of $N$ and each way of updating the binary head
+  position there is a method $\mathit{run}\to B\cdot\mathit{run}$, and for each accepting state a
+  final method $\mathit{run}\to B_{\mathit{acc}}$. The block $B$ of a transition from $q$ to $q'$
+  that reads $a$ and writes $a'$ checks: if $c$ is the head position, then $\sigma=a$ and the new
+  content is $a'$; otherwise the content stays $\sigma$. It then updates $\sigma$, the control
+  state and the head position. The policy supplies the new content and auxiliary witnesses, which
+  small CNF gadgets check.
+
+  With fixed methods, the sequence of methods, i.e.\ a run of $N$, is chosen before the environment
+  picks $c$, and it is the same in every branch. In the branch for $c$ the blocks track the
+  content of cell $c$ along this run and fail iff the run is inconsistent at $c$. So a strong OD
+  solution exists iff some accepting run of $N$ on $w$ is consistent at every cell, i.e.\ iff $N$
+  accepts $w$. Every Boolean register is represented by a pair of facts, so only positive
+  preconditions are used.
+\end{proof}
+
+The argument shows nicely why fixed methods are expensive here: the planner must commit to the
+whole run before learning which cell is checked. With method-based policies the planner could
+adapt the run to $c$, and indeed regular problems are only \EXPTIME-complete in that setting
+(Section~\ref{sec:policies}).
+
+For the class \REG{} of \textcite{bercher:et:al:ijcai-19}, where only methods must be regular, the
+membership argument breaks down. With $\tnI$ consisting of several unordered compound tasks, the
+achievable networks consist of several parallel block sequences. A policy may interleave them
+differently in different branches, so there is no single cut between blocks at which a belief set
+summarises the past. In fact no algorithm exists.
+
+\begin{theorem}\label{thm:reg-undec}
+  Strong OD plan existence is undecidable for problems that are both in \REG{} and in \TR{}. In
+  particular it is undecidable for \REG{} and for partially ordered tail-recursive problems.
+\end{theorem}
+
+The undecidability of the tail-recursive case was conjectured in the same unpublished notes,
+with a reduction from the Post correspondence problem that is to check two different equalities in
+two ``modes'' of execution. The missing piece is a way to make the check of the inactive mode
+free. With positive preconditions and unconditional effects this is not possible in the proposed
+form, since the tasks of the inactive check still have to be executed. We solve this with
+\emph{gated cheat tasks} and reduce directly from the halting problem of two-stack machines.
+
+\begin{proof}
+  Fix a two-stack machine $M$ and write a configuration with control state $q$ and stacks $u,v$
+  as the word $\mathrm{rev}(u)\,q\,v$. A transition rewrites a factor of length two around $q$.
+  We use letters that carry one optional character for each of two \emph{modes},
+  written $(o_1,o_2)$.
+
+  The initial network consists of four unordered compound tasks, each generating a chain by regular
+  methods. Chain $A$ is $\mathit{init}$, followed by the letters $(\cdot,x)$ for the initial
+  configuration and a separator $\#$, then arbitrary letters $(x,x)$ chosen by the decomposition,
+  then the letters $(x,\cdot)$ for the halting configuration followed by $\#$, and finally a task
+  $\mathit{fin}$. Chain $B$ is a sequence of blocks $u\cdot R(t)\cdot v\cdot\#$, where $u,v$ consist
+  of letters $(x,x)$ and $R(t)$ lists the right-hand side of transition $t$ in mode~1 and its
+  left-hand side in mode~2, followed by a task $\mathit{end}_B$. Projecting to mode~1 gives
+  $\pi_1(A)=\mathit{mid}\cdot C_{\mathit{halt}}\#$ and $\pi_1(B)=$ the concatenation of the
+  \emph{successor} configurations of the blocks. Projecting to mode~2 gives $\pi_2(A)=C_0\#\cdot
+  \mathit{mid}$ and $\pi_2(B)=$ the concatenation of the \emph{predecessor} configurations.
+  Both equalities $\pi_1(A)=\pi_1(B)$ and $\pi_2(A)=\pi_2(B)$ hold iff the blocks of $B$ describe a
+  run $C_0\to C_1\to\cdots\to C_{\mathit{halt}}$ and $\mathit{mid}=C_1\#\cdots C_{k-1}\#$.
+
+  The first task $\mathit{init}$ is nondeterministic and chooses the active mode $m$. A letter of
+  $A$ with character $x$ in mode $m$ requires a token $\mathit{free}_m$ and replaces it by
+  $\mathit{pend}_m(x)$, and a letter of $B$ with character $x$ in mode $m$ consumes
+  $\mathit{pend}_m(x)$ and restores $\mathit{free}_m$. So in the active mode the letters of $A$ and
+  $B$ must alternate character by character, which succeeds iff the projections agree. The task
+  $\mathit{fin}$ requires $\mathit{free}_1$, $\mathit{free}_2$ and the fact added by
+  $\mathit{end}_B$. The two remaining chains are \emph{supply chains} of cheat tasks
+  $\mathit{cheat}_m$, whose length is chosen by the decomposition. A cheat adds all facts of mode
+  $m$, so it makes every letter of mode $m$ executable, but it requires $\mathit{ok}_m$. The task
+  $\mathit{init}$ adds $\mathit{ok}$ for the \emph{inactive} mode only, and $\mathit{fin}$ adds both.
+  Thus in the inactive mode the policy can use cheats freely, while in the active mode cheats are
+  available only after the check has been completed. The cheats sit in chains of their own
+  because a cheat inside chain $A$ or $B$ would block that chain in the active mode.
+
+  With fixed methods the words in $A$ and $B$ are chosen before $\mathit{init}$ reveals the mode,
+  so a strong OD solution exists iff one choice passes both checks, i.e.\ iff $M$ halts. All
+  methods are regular and the problem has a single stratum, so it lies in $\REG\cap\TR$.
+\end{proof}
+
+Strong OD plan existence is semi-decidable for all problems: enumerate the achievable primitive
+networks and decide each in polynomial space \parencite[Thm.~3.1]{chen:bercher:icaps-21}. So
+tail-recursive and \REG{} problems are as hard as unrestricted ones. For unrestricted partially
+ordered problems all four fixed-method concepts are semi-decidable and undecidable, the latter
+already for deterministic problems \parencite{erol:et:al:amai-96,geier:bercher:ijcai-11}.

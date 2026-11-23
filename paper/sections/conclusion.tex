@@ -1,0 +1,18 @@
+\section{Conclusion}\label{sec:conclusion}
+
+We have completed the complexity map of FOND HTN planning for the solution concepts of
+\CBa{} and \CBb{} and the standard structural classes. The new entries confirm the general
+pattern that outcome dependence costs one exponential, but with notable exceptions. Strong
+outcome-dependent solutions with fixed methods become undecidable as soon as the hierarchy allows
+two independent recursive chains. They are therefore strictly harder than method-based policies
+on regular and tail-recursive problems, because the planner must commit to the refinement before
+it observes anything. For strong cyclic method-based policies the right definition requires
+fairness, and with it the unrestricted problem leaves the arithmetical hierarchy altogether.
+
+Several questions remain. The complexity of strong cyclic solutions under the literal reading of
+\CBb{} is still open. It is a well-defined, if unintended, notion, and its winning condition is a
+pure safety condition, so we expect it to be easier than the fair reading. Our \EXPTIME{} and
+\TWOEXP{} lower bounds for method-based policies use negative preconditions. They can presumably be
+compiled away as in classical planning, but this has not been checked formally. Finally, a formal
+proof of Harel's theorem would make the last entry of Table~\ref{tab:results} fully
+machine-checked as well.

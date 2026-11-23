@@ -1,0 +1,240 @@
+\section{Method-Based Policies}\label{sec:policies}
+
+By Proposition~\ref{prop:fm-vs-mp}(ii) the weak column for method-based policies coincides with the
+weak column for fixed methods, and by Proposition~\ref{prop:fm-vs-mp}(i) the primitive rows
+coincide with strong OD (Theorem~\ref{thm:prim-po}). We therefore concentrate on strong and
+(fair) strong cyclic policies for problems with a hierarchy.
+
+\subsection{Upper bounds}
+
+All upper bounds come from the games of Section~\ref{sec:games}, played with progression only
+(Lemma~\ref{lem:delay}). What varies between the classes is the size of the networks that
+progression can reach \parencite{alford:et:al:icaps-15}.
+
+\begin{theorem}[\CBb, Thms.~1--5]\label{thm:mp-upper}
+  Strong and fair strong cyclic method-based plan existence is
+  \begin{itemize}
+    \item in \EXPTIME{} for acyclic totally ordered, regular (\REG{} and \REGtn), and
+      tail-recursive totally ordered problems;
+    \item in \EXPSPACE{} for acyclic partially ordered problems;
+    \item in \TWOEXP{} for tail-recursive partially ordered problems.
+  \end{itemize}
+\end{theorem}
+
+\begin{proof}
+  For acyclic problems every play of the game of Theorem~\ref{thm:mp-andor} is finite, and strong
+  and fair solutions coincide (Proposition~\ref{prop:fair-basic}). Under total order the networks
+  reachable by progression have polynomial size, so the game is decided in alternating polynomial
+  space, i.e.\ \EXPTIME. Under partial order they have exponential size and plays have exponential
+  length, which is alternating exponential time, i.e.\ \EXPSPACE.
+
+  For the other classes plays can be infinite, and we compute the winning region explicitly. In a
+  regular problem a reachable network consists of a subset of the primitive tasks of one method
+  (or of $\tnI$) plus possibly the compound task, so there are exponentially many networks up to
+  isomorphism. For tail-recursive problems progression keeps networks polynomially large under total
+  order and exponentially large under partial order. Together with the $2^{|F|}$ states, the game
+  graph is exponential, respectively doubly exponential. The attractor for strong solutions and the
+  nested fixpoint of Theorem~\ref{thm:mp-fair-game} for fair ones are computed in time polynomial in
+  the size of the graph.
+\end{proof}
+
+We note that \CBb{} also suggest deciding strong cyclic solutions with their alternating
+progression procedure, after dropping its cycle check. This computes strong rather than strong
+cyclic solutions, since an alternating machine rejects infinite branches. The upper bounds for
+strong cyclic solutions therefore rest on the explicit graph computation, as above.
+
+\subsection{\EXPTIME{} lower bounds}\label{sec:exptime-hard}
+
+\CBb{} prove \EXPTIME-hardness for acyclic totally ordered problems (Thm.~1) by simulating an
+alternating polynomial-space machine with an exponentially long sequence of step tasks. The
+construction has no acceptance check: the method that lets the simulation stop can be used at any
+time, so every instance has a trivial solution. Their lower bound for regular problems (Thm.~3)
+encodes FOND STRIPS planning and needs a method that the proof does not mention. We give one
+construction that covers all three \EXPTIME-complete classes.
+
+\begin{theorem}\label{thm:exptime-hard}
+  Strong and fair strong cyclic method-based plan existence is \EXPTIME-hard for acyclic totally
+  ordered problems and for regular totally ordered problems (hence also for regular partially
+  ordered and tail-recursive totally ordered problems).
+\end{theorem}
+
+The source problem is deterministic plan existence for totally ordered HTN problems, which is
+\EXPTIME-complete \parencite{alford:et:al:icaps-15}. Such a problem is decided by a dynamic
+program over triples $(v,x,v')$: ``task $x$ can be refined into an executable sequence leading
+from state $v$ to state $v'$''. A primitive $x$ needs a single applicable step, and a compound $x$
+needs a method $x\to x_1\cdots x_k$ and intermediate states $v=u_0,u_1,\dots,u_k=v'$ such that all
+triples $(u_{i-1},x_i,u_i)$ hold. The table has exponentially many triples, and it is the least
+fixpoint of this rule.
+
+\begin{proof}[Proof sketch]
+  We build a FOND problem whose state stores a \emph{current triple} $(v,x,v')$ in polynomially many
+  Boolean fields. The policy proves that the triple is in the table by walking down a derivation
+  tree, with the environment choosing the branch. One \emph{round} of this walk is a small program.
+  \begin{itemize}
+    \item For a compound $x$, the policy chooses a method $x\to x_1\cdots x_k$ of the source and
+      guesses the intermediate states $u_1,\dots,u_{k-1}$, bit by bit, by choosing among
+      alternative methods. The program checks $u_0=v$ and $u_k=v'$. Then a nondeterministic action
+      with $k$ outcomes chooses a child $i$, and the current triple becomes $(u_{i-1},x_i,u_i)$.
+    \item For a primitive $x$, the program checks bit by bit that the action is applicable in $v$
+      and leads to $v'$, and it sets a flag $\mathit{done}$.
+  \end{itemize}
+  Programs are compiled into the hierarchy: the compound task ``program $r$ at instruction $pc$''
+  has one method per alternative of the instruction, namely the corresponding action followed by
+  ``program $r$ at instruction $pc+1$''. This is totally ordered and regular.
+
+  Rounds are supplied in one of two ways. In the \emph{acyclic} variant a doubling clock
+  $\mathit{clk}_{j+1}\to\mathit{clk}_j\,\mathit{clk}_j$ produces $2^n$ rounds, enough for any
+  derivation path, and a final task requires $\mathit{done}$. A round with $\mathit{done}$ set may
+  do nothing. In the \emph{regular} variant a compound task $\mathit{round}$ has a method for every
+  program, each ending in $\mathit{round}$ again, and a method $\mathit{round}\to\mathit{fin}$.
+
+  If the initial triple (initial state, initial task, any state) is in the table, the policy plays
+  along derivations and wins in every branch. Conversely, an invariant shows that every reachable
+  configuration is either done or has its triple in the table: a round can only be won against all
+  children if all children's triples hold. For strong policies this is all. In the regular variant
+  a fair policy could keep looping through rounds whose guesses are consistent but never reach the
+  bottom of a derivation. To exclude this we add a round counter that bounds the number of rounds by
+  the depth of the dynamic program. Then every play is finite, and fair solutions are strong.
+\end{proof}
+
+The constructed problems use negative preconditions. Actions have as many outcomes as the source
+has subtasks in a method.
+
+\subsection{Tail-recursive partially ordered problems}\label{sec:tr-po}
+
+\begin{theorem}\label{thm:tr-po}
+  Strong and fair strong cyclic method-based plan existence for tail-recursive partially ordered
+  problems is \TWOEXP-complete.
+\end{theorem}
+
+Membership is Theorem~\ref{thm:mp-upper}. For strong policies \CBb{} (Thm.~5) claim hardness with
+the remark that the \EXPSPACE-hardness proof for deterministic problems can be extended to
+alternating machines ``in the same fashion'' as their Thm.~2; for strong cyclic policies they leave
+hardness open. We give a complete reduction that works for both.
+
+\paragraph{The source.} Every language in \TWOEXP{} is decided by a deterministic machine running in
+time $2^{2^{e(n)}}$, and acceptance can be phrased as a \emph{tableau game}. The existential player
+claims ``at time $t$, cell $i$ holds symbol $a$''. To support a claim with $t>0$ she names the
+contents of the three cells $i-1,i,i+1$ at time $t-1$ that determine it, and the universal player
+picks one of them to continue with. A claim at $t=0$ is checked against the input. The numbers
+$t$ and $i$ have $B=2^{e(n)}$ bits, exponentially many, so a claim does not fit into a state.
+
+\paragraph{Claims on a tape of threads.}
+We store a claim in the task network, as two interleaved $B$-bit counters on a ``tape'' of
+$4B$ cells. One round of the game sweeps this tape once. A round is played by a loop
+\[
+  \mathit{loop}\to\mathit{block}\cdot\mathit{loop},
+\]
+which is tail-recursive because the recursion is in the last task. Two such loops alternate as
+writer and reader. A block expands, through acyclic doubling with unordered methods, into $4B$
+\emph{threads}, one per cell. A thread writes the address of its cell, reads the bit that the
+corresponding thread of the previous round left behind, applies one step of a \emph{transducer} to
+it, and leaves the new bit for the next round. The transducer decrements $t$ (with a borrow that
+travels with the sweep) and moves $i$ by the offset $-1$, $0$ or $+1$ that the environment chose
+at the end of the previous round. The bit left behind is the tail of the thread, which is
+unordered with respect to the next block, so the next round can read it whenever its own thread for
+that cell runs. At the end of a round the environment chooses the next offset, and the policy names
+the claimed symbol. When $t$ reaches $0$, the first cell guesses which interval of the first row
+(input, padding, blanks) contains $i$, and the sweep verifies the guess by comparing $i$ with the
+interval bounds, which have polynomially many set bits.
+
+\begin{proof}[Proof sketch]
+  The construction is computable in polynomial time: the interval bounds are exponentially long
+  numbers, but they are accessed only bitwise at polynomially many positions.
+
+  Soundness: every round of a strong (or fair) policy realises a correct move of the tableau game,
+  and the time decreases in every round. By induction on the time, a won claim is a true entry
+  of the tableau. Completeness: the canonical strategy of the tableau game, executed by writing the
+  claimed symbols and following the environment's offsets, wins. For fair policies we only use
+  that a fair policy cannot leave the set of positions it has committed to (a safety property). The
+  decrease of the time takes care of termination, so the same argument applies.
+\end{proof}
+
+\subsection{Totally ordered problems with an arbitrary hierarchy}\label{sec:to-arb}
+
+Totally ordered problems with arbitrary recursion are missing from the table of \CBb{}. For
+deterministic problems they are \EXPTIME-complete \parencite{alford:et:al:icaps-15}. With
+policies they are one exponential harder.
+
+\begin{theorem}\label{thm:to-arb}
+  Strong and fair strong cyclic method-based plan existence for totally ordered problems is
+  \TWOEXP-complete.
+\end{theorem}
+
+\paragraph{Upper bound for strong policies.}
+The decisive tool is sequential composition. Write $u;v$ for a network in which every task of $u$
+precedes every task of $v$, and say that $u$ is won from $s$ \emph{with target} $S'$ if the planner
+can execute $u$ completely against all outcomes so that every final state lies in $S'$.
+
+\begin{lemma}[composition]\label{lem:comp}
+  $u;v$ is won from $s$ iff, for some set $S'$, $u$ is won from $s$ with target $S'$ and $v$ is won
+  from every state in $S'$.
+\end{lemma}
+
+\begin{proof}
+  Since no task of $v$ can be touched before $u$ is finished, a strategy for $u;v$ first plays $u$
+  to completion and then continues. Take $S'$ to be the set of states in which it finishes $u$.
+  Conversely, play a strategy for $u$ and then, from the reached state, one for $v$.
+\end{proof}
+
+For a totally ordered network $c\,w$ that starts with a compound task, the lemma reduces the game to
+\emph{summaries} $(c,s,S')$: ``$c$, started in $s$, can be completed with target $S'$''. A summary
+holds iff some method $c\to x_1\cdots x_k$ can be executed from $s$ with target $S'$, and executing a
+word of tasks again splits at its first compound task into a summary and a rest. This yields an
+AND/OR game whose configurations, a task, a state, a remainder of a method network and an explicit
+set $S'$ of states, have exponential size. Its attractor is computed in doubly exponential time.
+The game is the least fixpoint, which matches strong solutions: a winning strategy has finite height,
+so the summaries used in it are well founded. Turning a derivation of summaries back into a policy
+needs a rank argument, so that the policy never returns to an isomorphic node. This is the
+``rank'' that the unpublished notes in which the table was proposed leave open.
+
+\paragraph{Upper bound for fair policies.}
+Composition holds for fair policies as well, but the obvious summary table, a greatest instead of a
+least fixpoint, is wrong. A fair policy for $c\,w$ must satisfy two requirements of different
+kinds. Locally, every node inside the execution of $c$ must be able to reach \emph{some} exit of
+$c$. And for the enclosing network to make progress, the start of $c$ must be able to reach a
+\emph{particular} exit from which the rest can be completed. Neither the least nor the greatest
+fixpoint of the summary table captures both. We therefore use a summary game with two progress
+modes: a position records, besides the remaining word, the state and the allowed exit set, whether
+it must reach \emph{some} exit or a \emph{specific} exit $e$. A call of a compound task splits into
+the call itself (with its own exit set and progress target) and the continuation. Safety is
+required for all exits of the call, progress only through the chosen target. The game is a fair
+game with separate successor sets for safety and progress, its configurations have exponential
+size, and its nested fixpoint is computed in doubly exponential time.
+
+\paragraph{Lower bound.}
+The unpublished notes contain a sketch of the hardness proof, which leaves two families of
+compound tasks undefined, misses the base case of the induction and does not show that the planner
+cannot profit from inconsistent encodings. We give a complete construction along the same lines.
+
+\begin{proof}[Proof sketch of hardness]
+  As in Section~\ref{sec:tr-po} we use the tableau of a deterministic machine that runs in time
+  $2^D$ with $D=2^b$, $b$ polynomial, on a doubly exponentially padded input. A claim
+  $\Claim(t,i,a)$ involves two numbers with $D$ binary \emph{digits}. A digit index has only $b$
+  bits and fits into the state, but the numbers do not, and in a totally ordered network there is
+  no room for parallel threads either.
+
+  The key idea is \emph{digit challenges}. The claim task for time $t$ is refined, left-recursively,
+  into the claim for time $t-1$ followed by a \emph{verification chain}. The chain runs through all
+  $D$ digit positions, and for each position it executes a small automaton step that checks one
+  local relation between the digits of the old and new numbers, e.g.\ ``$t$ is one more than the
+  inner time'', with the carry handled by the automaton. The types of these steps, and hence the
+  numbers themselves, are fixed when the policy chooses the methods of the chain. Recursion
+  bottoms out at time $0$, which is executed \emph{first} because it is leftmost. There the
+  environment chooses a digit index $\mathit{Check}$, once and for all. From then on the state
+  records only digit $\mathit{Check}$ of each number, and every verification step compares the
+  digit it is about against $\mathit{Check}$ and is vacuous for the other digits.
+
+  Because $\mathit{Check}$ is chosen by the environment, after the verification chains have been
+  committed, a strong policy must be consistent at \emph{every} digit, so the committed numbers are
+  well defined and satisfy the relations. Which of the three predecessor cells is verified is again
+  chosen by the environment, as a \emph{mode}, before the inner claim is refined. The policy may then
+  choose the inner claim's methods depending on the mode, which is exactly what method-based
+  policies allow. By induction on $t$, $\Claim(t,i,a)$ can be won iff the tableau has $a$ at
+  $(t,i)$.
+
+  The same construction works for fair policies, but the induction needs care, because a fair
+  policy may recurse forever along some challenges. One shows first, by induction on the rank of
+  the attractor, that every claim the policy commits to covers all challenged digits. Coverage forces
+  the time to decrease, so the claims are sound by induction on the time.
+\end{proof}

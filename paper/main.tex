@@ -1,0 +1,89 @@
+%% The complexity of FOND HTN planning, revisited.
+%% JAIR author kit (2025), based on acmart.
+\documentclass[manuscript, screen]{jair}
+
+\setcopyright{cc}
+\acmDOI{10.1613/jair.1.xxxxx}
+\JAIRAE{}
+\JAIRTrack{}
+\acmVolume{1}
+\acmArticle{1}
+\acmMonth{1}
+\acmYear{2026}
+
+\RequirePackage[
+  datamodel=acmdatamodel,
+  style=acmauthoryear,
+  backend=biber,
+  giveninits=true,
+  uniquename=false
+  ]{biblatex}
+\renewcommand*{\bibopenbracket}{(}
+\renewcommand*{\bibclosebracket}{)}
+\addbibresource{references.bib}
+
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{enumitem}
+
+\input{macros}
+
+\begin{document}
+
+\title[The Complexity of FOND HTN Planning]{The Complexity of Fully Observable
+  Nondeterministic HTN Planning: A Complete and Machine-Checked Map}
+
+%% TODO: complete the author list.
+\author{Gregor Behnke}
+\email{g.behnke@uva.nl}
+\affiliation{%
+  \institution{University of Amsterdam}
+  \city{Amsterdam}
+  \country{The Netherlands}}
+
+\renewcommand{\shortauthors}{Behnke}
+
+\begin{abstract}
+  Hierarchical task network (HTN) planning with nondeterministic actions asks for a way of
+  refining an initial task network into executable actions that works no matter which outcome
+  each action has. Two families of solution concepts have been proposed: \emph{fixed methods},
+  where all refinement decisions are taken before execution, and \emph{method-based policies},
+  where they may depend on the outcomes observed so far. Each family comes in a weak, a strong
+  and (for policies) a strong cyclic flavour, and the complexity of deciding plan existence has
+  been studied for the usual structural restrictions of the hierarchy. Several entries of the
+  resulting tables were open, and several published proofs turn out to be incomplete or wrong.
+
+  We close every remaining gap. For fixed methods, strong outcome-dependent solutions of acyclic partially ordered problems
+  are \EXPSPACE-complete, and those of partially ordered tail-recursive problems are
+  undecidable, as are those of regular problems whose initial task network is not regular. For method-based
+  policies, totally ordered problems with an arbitrary hierarchy are \TWOEXP-complete for strong
+  and for strong cyclic solutions. We argue that the published definition of strong cyclic
+  solutions must be read with the usual fairness condition, and show that under this reading
+  the unrestricted problem is not even semi-decidable: it is $\Sigma^1_1$-complete, and in
+  particular outside the arithmetical hierarchy. Along the way we repair the published
+  lower-bound proofs whose constructions fail, and we give new reductions where the published
+  arguments are only outlines.
+
+  All results except one classical theorem of recursion theory, which we cite, have been
+  verified in the proof assistant Lean~4. This article presents the proofs in ordinary
+  mathematical language.
+\end{abstract}
+
+\received{}
+\received[accepted]{}
+
+\maketitle
+
+\input{sections/intro}
+\input{sections/prelim}
+\input{sections/solutions}
+\input{sections/fixed}
+\input{sections/policies}
+\input{sections/unrestricted}
+\input{sections/formal}
+\input{sections/conclusion}
+
+\printbibliography
+
+\end{document}

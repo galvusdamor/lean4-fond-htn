@@ -1,0 +1,149 @@
+\section{Unrestricted Problems and Fairness}\label{sec:unrestricted}
+
+For partially ordered problems without restrictions on the hierarchy, plan existence is
+undecidable already for deterministic problems \parencite{erol:et:al:amai-96}. For the fixed-method
+concepts and for weak and strong method-based policies it is still semi-decidable: a solution has a
+finite witness (an achievable primitive network with a solvability tree, a run, or a finite winning
+strategy of the game of Theorem~\ref{thm:mp-andor}), and these witnesses can be enumerated and
+checked. \CBb{} state that ``the general case is undecidable'' and do not distinguish the strong
+cyclic column. We show that fair strong cyclic plan existence is of a different nature.
+
+\begin{theorem}\label{thm:sigma11}
+  Fair strong cyclic method-based plan existence for unrestricted problems is
+  \begin{enumerate}[label=(\roman*)]
+    \item not recursively enumerable,
+    \item not co-recursively enumerable,
+    \item in $\Sigma^1_1$, and
+    \item $\Sigma^1_1$-hard.
+  \end{enumerate}
+  Hence it is $\Sigma^1_1$-complete and not arithmetical.
+\end{theorem}
+
+Items (i)--(iii) are fully formalised. Item~(iv) is formalised except for Harel's theorem, see
+below. Note that (iv) implies (i) and (ii); we nevertheless prove them separately because
+their proofs are elementary and self-contained.
+
+\subsection{Fair solutions as infinite runs}
+
+The proofs of (i) and (iv) use one construction. Let $M$ be a two-stack machine with initial
+stacks $u,v$. We build a FOND problem whose task network holds the two stacks as two unordered
+chains of compound tasks, one task per stack symbol, each chain closed by a task for its bottom.
+The state holds the control state of $M$.
+\begin{itemize}
+  \item For each transition of $M$ that pops $x$ from stack $b$, the task for $x$ on stack $b$ has a
+    method that executes an action $a_t$ for the transition and then pushes the new symbols, i.e.\
+    replaces $x$ by the tasks for the pushed word. The action $a_t$ requires the source control state
+    and has two effects: the \emph{continue} effect moves to the target control state, and the
+    \emph{tick} effect adds a fact $\stopf$. Every transition action requires that $\stopf$ is
+    false.
+  \item Every stack symbol and every bottom also has a \emph{drain} method, refining it into an
+    action that requires $\stopf$ and does nothing.
+\end{itemize}
+Since a symbol task can only be refined at the top of its stack, a policy that does not drain
+simulates $M$ step by step. The network becomes empty, which is the only way to reach a goal, only
+after a tick has added $\stopf$ and everything has been drained.
+
+\begin{lemma}\label{lem:fair-inf}
+  The problem has a fair strong cyclic solution iff $M$ has an infinite run from the initial
+  configuration.
+\end{lemma}
+
+\begin{proof}
+  Suppose $M$ has an infinite run. The policy simulates it. From every node of its execution
+  structure a goal is reachable: either $\stopf$ already holds and the policy drains, or the next
+  transition of the run is about to be executed, and its tick outcome leads to draining. Conversely,
+  let a fair policy be given. As long as $\stopf$ is false the policy cannot drain, so at every
+  non-goal node it must execute a transition (no node may be a dead end, since a goal must remain
+  reachable). Following the continue outcomes gives an infinite run of $M$.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:sigma11}(i)]
+  Consider a deterministic two-stack machine that simulates a universal Turing machine on input
+  $n$, as used in the undecidability proof of deterministic HTN planning. It has an infinite run iff
+  the $n$-th partial recursive function diverges on $0$. Divergence is not recursively enumerable,
+  and the map from $n$ to the problem of Lemma~\ref{lem:fair-inf} is computable, so fair plan
+  existence is not recursively enumerable.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:sigma11}(ii)]
+  Halting reduces to deterministic plan existence for partially ordered HTN problems, via the
+  intersection of context-free languages \parencite{erol:et:al:amai-96}. A deterministic problem
+  has a fair strong cyclic solution iff it has a plan (Proposition~\ref{prop:fair-basic}(iii)), and
+  the goal can be added as a final task. So halting reduces to fair plan existence. Since
+  non-halting is not recursively enumerable, neither is the complement of fair plan existence.
+\end{proof}
+
+\subsection{Recurrence and $\Sigma^1_1$-hardness}
+
+We now refine Lemma~\ref{lem:fair-inf}. Fix a control state $q$ of $M$ and keep the tick effect only
+for the transitions that \emph{enter} $q$. A run of $M$ is \emph{$q$-recurrent} if it enters $q$
+infinitely often.
+
+\begin{lemma}\label{lem:fair-rec}
+  The modified problem has a fair strong cyclic solution iff $M$ has a $q$-recurrent run from the
+  initial configuration.
+\end{lemma}
+
+\begin{proof}
+  If $M$ has a $q$-recurrent run, the policy simulates it. From any node, the run enters $q$
+  again after finitely many steps, and the tick of that transition leads to a goal. So a goal is
+  reachable from every node, by induction on the distance to the next entry into $q$.
+
+  Conversely, let a fair policy be given and consider its attractor ranks
+  (Theorem~\ref{thm:mp-fair-game}). At every node the policy has a move that witnesses the rank:
+  all outcomes stay among the policy's nodes, and one outcome has a smaller rank. As before, this
+  move executes a transition. If the witnessing outcome is the tick, the transition enters $q$.
+  Otherwise the continue outcome has smaller rank. Following the witnessing moves, and the continue
+  outcome whenever the witness is the tick, we obtain an infinite run in which every step either
+  enters $q$ or decreases the rank. Since ranks are natural numbers, $q$ is entered infinitely
+  often.
+\end{proof}
+
+Note that the proof uses the liveness part of fairness (the attractor). The safety part alone,
+that the policy never gets stuck, only yields an infinite run, as in Lemma~\ref{lem:fair-inf}.
+
+\begin{proof}[Proof of Theorem~\ref{thm:sigma11}(iv)]
+  \textcite{harel:jacm-86} showed that the recurrence problem for nondeterministic Turing machines
+  (does the machine, started on input $w$, have a run that visits a given state infinitely often?)
+  is $\Sigma^1_1$-complete. This holds already for a fixed machine, since Harel's reduction is
+  computable and a universal machine can compute and simulate its output. A nondeterministic
+  two-stack machine simulates a Turing machine with finitely many steps per step and enters a
+  designated state exactly when the simulated machine does. Hence recurrence for a fixed two-stack
+  machine, with the input on one stack, is $\Sigma^1_1$-complete. By Lemma~\ref{lem:fair-rec} it
+  reduces to fair plan existence.
+\end{proof}
+
+The formal development contains Lemma~\ref{lem:fair-rec} and the computable reduction. Harel's
+theorem and the folklore simulation in the last proof are not formalised, since the
+analytical hierarchy is not available in Mathlib.
+
+\subsection{Membership in $\Sigma^1_1$}
+
+\begin{proof}[Proof of Theorem~\ref{thm:sigma11}(iii)]
+  By Theorem~\ref{thm:mp-fair-game}, a problem has a fair solution iff the initial node belongs to
+  a fair-closed set of nodes. We play the game on finite descriptions of nodes (a state and a
+  task network written with explicit identifiers), with progression only, so every configuration
+  has finitely many successors, which can be computed. A fair-closed set together with its attractor
+  can be described by two functions on configurations: membership $x(c)\in\{0,1\}$ in the set, and
+  an attractor rank $r(c)$, where $0$ means ``not in the attractor'' and $k+1$ means ``in the
+  attractor with rank $k$''. They have to satisfy a \emph{local} condition at every configuration
+  $c$:
+  \begin{itemize}
+    \item if $x(c)=1$ then $r(c)>0$;
+    \item if $r(c)=k+1$, then $c$ is a goal; or the planner has a move with a successor $c'$ such that
+      $x(c')=1$ and $0<r(c')\le k$ (for decompositions); or the environment moves at $c$, all
+      successors $c''$ have $x(c'')=1$, and some successor $c'$ has $0<r(c')\le k$ (for primitive
+      tasks).
+  \end{itemize}
+  Conversely, the least ranks of a fair-closed set satisfy these conditions. Encoding
+  configurations by natural numbers, the pair $(x,r)$ becomes a single function
+  $f:\mathbb N\to\mathbb N$. A finite prefix of $f$ determines $x$ and $r$ for all configurations
+  with small codes, and the relation $R(w,f(0)\cdots f(n-1))$ checks the initial configuration and
+  the local condition at every configuration whose code and whose successors' codes are below $n$.
+  This relation is computable (in fact in polynomial time), and the problem described by $w$ is
+  solvable iff some $f$ passes $R$ on all of its prefixes.
+\end{proof}
+
+Note the contrast with the strong case. There the witness, a finite strategy, can be found by
+enumeration. Here the witness must certify that a goal \emph{remains} reachable along unboundedly
+growing networks, and no finite object can do that in general.
