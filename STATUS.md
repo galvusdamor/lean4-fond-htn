@@ -89,7 +89,7 @@ FOND-specific lower bounds:
 | CB21 Thm 5.2: ACYC strong OD ∈ EXPSPACE | ✅ `FondHtn/StrongOD/Acyc.lean` |
 | CB21 Thm 5.3: REGtn strong OD ∈ EXPSPACE | ✅ `FondHtn/StrongOD/Reg.lean` (sequential composition `bsw_comp`, belief-set chains); Bercher REG (tn_I arbitrary): undecidable (`undecidable_strongOD_REG_TR`) |
 | CB21 Thm 3.1: semi-decidable and undecidable for all four FM criteria (and MP weak) | ✅ `FondHtn/Upper/SemiDec.lean`, `FondHtn/StrongOD/SemiDec.lean` (`thm_3_1_all`) |
-| CB22 Thms 1, 3, 4: MP strong ∈ EXPTIME (ACYC∩TO, REG(∩TO), TR∩TO) | ✅ `FondHtn/MPStrong/Mem.lean` (hardness ⏳) |
+| CB22 Thms 1, 3, 4: MP strong ∈ EXPTIME (ACYC∩TO, REG(∩TO), TR∩TO) | ✅ `FondHtn/MPStrong/Mem.lean`; hardness ✅ (`strongMP_ACYC_TO_complete`, `strongMP_REG_complete`, `strongMP_REG_TO_complete`, `strongMP_TR_TO_complete`) |
 | CB22 Thms 1–5 for **fair** strong cyclic: ACYC∩TO, REG(∩TO), TR∩TO ∈ EXPTIME, ACYC ∈ EXPSPACE (fair = strong on ACYC), TR ∈ 2-EXPTIME; G8 holds for the fair reading | ✅ `FondHtn/MPStrong/Cyclic*.lean`, `FondHtn/Alt/Buchi.lean` (ACYC hardness ✅ `complete_ACYC_mpFair`; TR hardness ✅ `complete_TR_mpFair`) |
 | CB22 Thms 2, 5: MP strong ACYC ∈ EXPSPACE, TR ∈ 2-EXPTIME | ✅ `FondHtn/MPStrong/Acyc.lean`, `TR.lean` (ACYC hardness ✅ `complete_ACYC_mpStrong`; TR hardness ✅ `complete_TR_mpStrong`) |
 | CB22 arbitrary PO: MP weak and strong semi-decidable and undecidable | ✅ `FondHtn/MPSemi/Strong.lean` (`mp_weak_strong_semi_undec`); fair: **not semi-decidable** `FOND.FU.fairMP_not_semiDecidable` (`FondHtn/FairUndec/`) |
