@@ -649,6 +649,12 @@ proof route and the gaps in the published proofs.
   existence (\lean{rec_reduces_fairMP}). Recurrence is $\Sigma^1_1$-complete
   (Harel, \emph{Effective transformations on infinite trees}, J.\ ACM 1986), so the problem is $\Sigma^1_1$-hard and not arithmetical; this last
   step is not formalised (Mathlib has no analytical hierarchy).
+  Conversely the problem is in $\Sigma^1_1$ (\lean{fairMP_sigma11}), with $\Sigma^1_1$ defined in
+  Kleene normal form (\lean{Sigma11}: some $f:\mathbb N\to\mathbb N$ passes a computable test on all
+  its finite prefixes). The fair game is played on description-level configurations without a
+  size bound (\lean{fair_iff_uWin}); $f$ encodes membership in the winning set and attractor
+  ranks, which are checked locally (\lean{uWin_iff_loc}, \lean{exists_chk_iff}). So the problem is
+  $\Sigma^1_1$-complete, with hardness relying on Harel's theorem.
 \end{deviation}
 
 \printbibliography

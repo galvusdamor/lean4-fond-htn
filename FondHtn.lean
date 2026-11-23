@@ -183,3 +183,4 @@ import FondHtn.TOHard2.FMain
 import FondHtn.FairUndec.Main
 import FondHtn.FairUndec.CoRE
 import FondHtn.FairUndec.RecMain
+import FondHtn.FairSigma.Main

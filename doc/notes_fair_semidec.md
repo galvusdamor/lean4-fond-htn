@@ -140,3 +140,12 @@ computable reduction for each fixed machine. With Harel's theorem (recurrence is
 already for a fixed machine) the problem is Σ¹₁-hard. That theorem is cited, not formalised.
 Soundness uses `FOND.FU.llive_of_fairWin` (`FairUndec/Live.lean`), the ranked attractor version
 of the safe word game. Open: the Σ¹₁ upper bound.
+
+## Update: Σ¹₁ membership (formalised)
+
+`FOND.FS.fairMP_sigma11` (`FondHtn/FairSigma/`): `PlanExMPFair UNRES` is Σ¹₁ in Kleene normal
+form (`FOND.FS.Sigma11`). Route: unbounded fair game on descriptions (`UGame.lean`,
+`fair_iff_uWin`, the proofs of `MPStrong/CyclicDesc.lean` without size side conditions); winning
+set + attractor ranks as functions with a local condition (`Rank.lean`, `uWin_iff_loc`); local
+conditions checked on prefixes of one `f : ℕ → ℕ` (`exists_chk_iff`); the check is PT, hence
+computable (`Main.lean`). With the hardness reduction: Σ¹₁-complete modulo Harel.
