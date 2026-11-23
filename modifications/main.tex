@@ -641,8 +641,14 @@ proof route and the gaps in the published proofs.
   The complement is not semi-decidable either: halting reduces to fair plan existence by the
   reduction of [D26, Thm.~4.1.1] followed by the embedding of deterministic plan existence
   (\lean{fairMP_compl_not_semiDecidable}). So the problem is neither RE nor co-RE
-  (\lean{fairMP_not_RE_not_coRE}). We do not determine its exact place in the arithmetical or
-  analytical hierarchy.
+  (\lean{fairMP_not_RE_not_coRE}). More precisely, with ticks only on the transitions into a
+  state $q$, a fair solution exists exactly when the (nondeterministic) machine has a run that
+  enters $q$ infinitely often (\lean{fair_iff_rec}): soundness keeps the liveness half of
+  fairness (\lean{llive_of_fairWin}), whose attractor ranks force ticks to recur; completeness
+  follows the run and inducts on the distance to the next tick. So recurrence reduces to fair plan
+  existence (\lean{rec_reduces_fairMP}). Recurrence is $\Sigma^1_1$-complete
+  (Harel, \emph{Effective transformations on infinite trees}, J.\ ACM 1986), so the problem is $\Sigma^1_1$-hard and not arithmetical; this last
+  step is not formalised (Mathlib has no analytical hierarchy).
 \end{deviation}
 
 \printbibliography

@@ -22,7 +22,7 @@ namespace FU
 open HTN HTN.Syn HTN.Syn.PolyDom HTN.Article PTime HTN.Undec AcycHard.Sav TOHard2
 
 /-- The description depends on the second stack in polynomial time. -/
-theorem pt_desc_s₂ (M : TSM) (s₁ : List ℕ) : PT fun s₂ : List ℕ => desc M s₁ s₂ := by
+theorem pt_desc_s₂ (M : TSM) (s₁ : List ℕ) (tk : ℕ → Bool) : PT fun s₂ : List ℕ => desc M s₁ s₂ tk := by
   have halph : PT fun s₂ : List ℕ => alph M s₁ s₂ :=
     PT.append (PT.append (PT.const s₁) PT.id) (PT.const _)
   have hsym : ∀ b : Bool, PT₂ fun (_ : List ℕ) (a : ℕ) => sym b a :=
@@ -44,10 +44,10 @@ theorem pt_desc_s₂ (M : TSM) (s₁ : List ℕ) : PT fun s₂ : List ℕ => des
   exact PT.pair (PT.pair (PT.const _) hmeths) (PT.const _)
 
 /-- The reduction from divergence. -/
-noncomputable def redF (n : ℕ) : List Bool := enc (desc undecTSM [0] (Sim.redStack n))
+noncomputable def redF (n : ℕ) : List Bool := enc (desc undecTSM [0] (Sim.redStack n) fun _ => true)
 
 theorem computable_redF : Computable redF := by
-  obtain ⟨F, hF, hFe⟩ := pt_desc_s₂ undecTSM [0]
+  obtain ⟨F, hF, hFe⟩ := pt_desc_s₂ undecTSM [0] fun _ => true
   have hc : Computable fun s₂ : List ℕ => F (enc s₂) :=
     (polyTimeFun_of_uc hF).computable.comp PEnc.primrec_enc.to_comp
   refine (hc.comp Sim.primrec_redStack.to_comp).of_eq fun n => ?_
@@ -60,7 +60,7 @@ theorem redF_iff (n : ℕ) : PlanExMPFair FClass.UNRES (redF n) ↔ ¬ (TMChain.
   · rintro ⟨-, -, h⟩
     exact inf_of_fair h
   · intro h
-    exact ⟨valid _ _ _, trivial, fair_of_inf h⟩
+    exact ⟨valid _ _ _ _, trivial, fair_of_inf h⟩
 
 /-- **Fair strong cyclic method-based plan existence is not semi-decidable** (unrestricted
 problems). -/

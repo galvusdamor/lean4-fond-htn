@@ -20,7 +20,7 @@ namespace FU
 
 open HTN HTN.Syn HTN.Article HTN.Undec AcycHard.Sav HardTR HardMP
 
-variable {M : TSM} {s₁ s₂ : List ℕ}
+variable {M : TSM} {s₁ s₂ : List ℕ} {tk : ℕ → Bool}
 
 /-! ## Positions -/
 
@@ -66,7 +66,7 @@ def Zf (M : TSM) (s₁ s₂ : List ℕ) (f : ℕ → Undec.Cfg) (ls : List (LCh 
 /-! ## Methods -/
 
 theorem mem_meth {e : MethodDesc} (he : e ∈ meths M s₁ s₂) :
-    e.toMethod ∈ (desc M s₁ s₂).toProblem.methods := ⟨e, he, rfl⟩
+    e.toMethod ∈ (desc M s₁ s₂ tk).toProblem.methods := ⟨e, he, rfl⟩
 
 theorem mem_methT {n : ℕ} (hn : n < M.trans.length) : methT M n ∈ meths M s₁ s₂ := by
   simp only [meths, List.mem_append]
@@ -124,7 +124,7 @@ theorem cost_set_lt {ls : List (LCh ℕ ℕ)} {k : ℕ} (hk : k < ls.length) {c 
 
 variable (M s₁ s₂) in
 theorem ca_drn (f : ℕ → Undec.Cfg) :
-    ∀ N ls s, cost ls ≤ N → Drn M s₁ s₂ ls s → ∃ n, CA (desc M s₁ s₂).toProblem (Zf M s₁ s₂ f) n ls s := by
+    ∀ N ls s, cost ls ≤ N → Drn M s₁ s₂ ls s → ∃ n, CA (desc M s₁ s₂ tk).toProblem (Zf M s₁ s₂ f) n ls s := by
   intro N
   induction N with
   | zero =>
@@ -187,9 +187,9 @@ theorem ca_drn (f : ℕ → Undec.Cfg) :
     · -- a drain action
       have hlt := cost_set_lt hk (c := ⟨rest, none⟩) (by rw [hlab]; simp [costX])
       obtain ⟨n, hn⟩ := ih (ls.set k ⟨rest, none⟩) s (by omega) (hdset _ hdrest)
-      have happ : ((desc M s₁ s₂).toProblem.δ aD).Applicable s := by
+      have happ : ((desc M s₁ s₂ tk).toProblem.δ aD).Applicable s := by
         rw [δ_aD, app_aD]; exact hd.1
-      have hout : ((desc M s₁ s₂).toProblem.δ aD).outcomes s = {s} := by rw [δ_aD, outcomes_aD]
+      have hout : ((desc M s₁ s₂ tk).toProblem.δ aD).outcomes s = {s} := by rw [δ_aD, outcomes_aD]
       refine ⟨n + 1, .prim hk hc' (fun g h => by simp at h) happ (fun s' hs' => ?_) (by rw [hout]; rfl) hn⟩
       rw [hout, Set.mem_singleton_iff] at hs'
       subst hs'
@@ -259,8 +259,8 @@ theorem bs_methT (n : ℕ) (rest : List ℕ) :
 variable (M s₁ s₂) in
 /-- **The fair set of the run.** -/
 theorem cset_run {f : ℕ → Undec.Cfg} (hf0 : f 0 = ⟨M.start, s₁, s₂⟩)
-    (hf : ∀ i, M.Step (f i) (f (i + 1))) :
-    CSet (desc M s₁ s₂).toProblem (Zf M s₁ s₂ f) := by
+    (hf : ∀ i, M.Step (f i) (f (i + 1))) (hrec : ∀ i, ∃ j, i ≤ j ∧ tk (f (j + 1)).st = true) :
+    CSet (desc M s₁ s₂ tk).toProblem (Zf M s₁ s₂ f) := by
   -- the stacks hold symbols of the machine
   have halph : ∀ i, AlphOK M s₁ s₂ (f i) := by
     intro i
@@ -274,22 +274,25 @@ theorem cset_run {f : ℕ → Undec.Cfg} (hf0 : f 0 = ⟨M.start, s₁, s₂⟩)
     | succ i ih =>
       obtain ⟨n, rest, hn, -, hst, he⟩ := runStep_of_step (hf i)
       rw [he]; exact alphOK_nxt ih hn hst
-  have hdrn := ca_drn M s₁ s₂ f
-  -- after the transition
+  have hdrn := ca_drn (tk := tk) M s₁ s₂ f
+  -- after the transition: one outcome (the tick, if any, or the continuation) leads to a
+  -- position of the attractor
   have hB : ∀ i n rest, RunStep M f i n rest →
-      ∃ m, CA (desc M s₁ s₂).toProblem (Zf M s₁ s₂ f) m (posB M (f i) n rest) {fq (f i).st} := by
-    rintro i n rest ⟨hn, hsrc, hst, he⟩
+      ((tk (f (i + 1)).st = true) ∨
+        ∃ m, CA (desc M s₁ s₂ tk).toProblem (Zf M s₁ s₂ f) m (posA (f (i + 1))) {fq (f (i + 1)).st}) →
+      ∃ m, CA (desc M s₁ s₂ tk).toProblem (Zf M s₁ s₂ f) m (posB M (f i) n rest) {fq (f i).st} := by
+    rintro i n rest ⟨hn, hsrc, hst, he⟩ hnext
     have hd := drn_posA (halph (i + 1)) (s := {fq (f i).st} ∪ {fStop}) (by simp)
-    obtain ⟨m, hm⟩ := hdrn _ _ _ le_rfl hd
-    have happ : ((desc M s₁ s₂).toProblem.δ (aT n)).Applicable {fq (f i).st} := by
-      rw [δ_aT M s₁ s₂ hn, app_aT]
+    have happ : ((desc M s₁ s₂ tk).toProblem.δ (aT n)).Applicable {fq (f i).st} := by
+      rw [δ_aT M s₁ s₂ tk hn, app_aT]
       exact ⟨by simp [hsrc], by simpa using (fq_ne_stop _).symm⟩
     have hst' : (f (i + 1)).st = (tr M n).tgt := by rw [he]; unfold nxt; split_ifs <;> rfl
     have hcont : ({fq (f i).st} \ {fq (tr M n).src}) ∪ {fq (tr M n).tgt} = ({fq (f (i + 1)).st} : Set ℕ) := by
       rw [hst', hsrc]; ext x; simp only [Set.mem_union, Set.mem_diff, Set.mem_singleton_iff]; tauto
-    have hout : ((desc M s₁ s₂).toProblem.δ (aT n)).outcomes {fq (f i).st} =
-        {{fq (f (i + 1)).st}, {fq (f i).st} ∪ {fStop}} := by
-      rw [δ_aT M s₁ s₂ hn, outcomes_aT, hcont]
+    have hout : ((desc M s₁ s₂ tk).toProblem.δ (aT n)).outcomes {fq (f i).st} =
+        insert {fq (f (i + 1)).st}
+          {s' | tk (f (i + 1)).st = true ∧ s' = {fq (f i).st} ∪ {fStop}} := by
+      rw [δ_aT M s₁ s₂ tk hn, outcomes_aT, hcont, hst']
     have hset : (posB M (f i) n rest).set (kOf (tr M n).stk)
         ⟨stackLab (tr M n).stk ((tr M n).push ++ rest), none⟩ = posA (f (i + 1)) := by
       rw [he]
@@ -300,19 +303,29 @@ theorem cset_run {f : ℕ → Undec.Cfg} (hf0 : f 0 = ⟨M.start, s₁, s₂⟩)
     have hc : (posB M (f i) n rest)[kOf (tr M n).stk] =
         ⟨Sum.inl (aT n) :: stackLab (tr M n).stk ((tr M n).push ++ rest), none⟩ := by
       simp only [posB, posA, kOf]; split_ifs <;> simp
-    refine ⟨m + 1, .prim hk hc (fun g h => by simp at h) happ (fun s' hs' => ?_)
-      (s₀ := {fq (f i).st} ∪ {fStop}) (by rw [hout]; exact Or.inr rfl) (by rw [hset]; exact hm)⟩
-    rw [hout] at hs'
-    rw [hset]
-    rcases hs' with rfl | hs'
-    · exact Or.inl ⟨i + 1, rfl, rfl⟩
-    · rw [Set.mem_singleton_iff] at hs'; subst hs'
-      exact Or.inr (Or.inr (Or.inr hd))
+    have hall : ∀ s' ∈ ((desc M s₁ s₂ tk).toProblem.δ (aT n)).outcomes {fq (f i).st},
+        Zf M s₁ s₂ f ((posB M (f i) n rest).set (kOf (tr M n).stk)
+          ⟨stackLab (tr M n).stk ((tr M n).push ++ rest), none⟩) s' := by
+      intro s' hs'
+      rw [hout] at hs'
+      rw [hset]
+      rcases hs' with rfl | ⟨-, rfl⟩
+      · exact Or.inl ⟨i + 1, rfl, rfl⟩
+      · exact Or.inr (Or.inr (Or.inr hd))
+    rcases hnext with htk | ⟨m, hm⟩
+    · obtain ⟨m, hm⟩ := hdrn _ _ _ le_rfl hd
+      exact ⟨m + 1, .prim hk hc (fun g h => by simp at h) happ hall
+        (s₀ := {fq (f i).st} ∪ {fStop}) (by rw [hout]; exact Or.inr ⟨htk, rfl⟩)
+        (by rw [hset]; exact hm)⟩
+    · exact ⟨m + 1, .prim hk hc (fun g h => by simp at h) happ hall
+        (s₀ := {fq (f (i + 1)).st}) (by rw [hout]; exact Or.inl rfl) (by rw [hset]; exact hm)⟩
   -- the steady positions
-  have hA : ∀ i, ∃ m, CA (desc M s₁ s₂).toProblem (Zf M s₁ s₂ f) m (posA (f i)) {fq (f i).st} := by
-    intro i
+  have hA' : ∀ i, ((tk (f (i + 1)).st = true) ∨
+        ∃ m, CA (desc M s₁ s₂ tk).toProblem (Zf M s₁ s₂ f) m (posA (f (i + 1))) {fq (f (i + 1)).st}) →
+      ∃ m, CA (desc M s₁ s₂ tk).toProblem (Zf M s₁ s₂ f) m (posA (f i)) {fq (f i).st} := by
+    intro i hnext
     obtain ⟨n, rest, hrs⟩ := runStep_of_step (hf i)
-    obtain ⟨m, hm⟩ := hB i n rest hrs
+    obtain ⟨m, hm⟩ := hB i n rest hrs hnext
     have hrs' := hrs
     obtain ⟨hn, -, hst, -⟩ := hrs'
     have hk : kOf (tr M n).stk < (posA (f i)).length := by simp only [posA, kOf]; split_ifs <;> simp
@@ -329,8 +342,21 @@ theorem cset_run {f : ℕ → Undec.Cfg} (hf0 : f 0 = ⟨M.start, s₁, s₂⟩)
     refine ⟨m + 1, .seq hk hc (mem_meth (mem_methT hn)) rfl (labs_seq _) ?_ (by rw [hset]; exact hm)⟩
     rw [hset]
     exact Or.inr (Or.inl ⟨i, n, rest, hrs, rfl, rfl⟩)
+  -- by induction on the distance to the next tick
+  have hAd : ∀ d i, tk (f (i + d + 1)).st = true →
+      ∃ m, CA (desc M s₁ s₂ tk).toProblem (Zf M s₁ s₂ f) m (posA (f i)) {fq (f i).st} := by
+    intro d
+    induction d with
+    | zero => intro i h; exact hA' i (Or.inl h)
+    | succ d ih =>
+      intro i h
+      exact hA' i (Or.inr (ih (i + 1) (by rw [show i + 1 + d + 1 = i + (d + 1) + 1 by omega]; exact h)))
+  have hA : ∀ i, ∃ m, CA (desc M s₁ s₂ tk).toProblem (Zf M s₁ s₂ f) m (posA (f i)) {fq (f i).st} := by
+    intro i
+    obtain ⟨j, hij, hj⟩ := hrec i
+    exact hAd (j - i) i (by rw [show i + (j - i) + 1 = j + 1 by omega]; exact hj)
   -- the initial positions
-  have h2 : ∃ m, CA (desc M s₁ s₂).toProblem (Zf M s₁ s₂ f) m (pos2 s₁) {fq M.start} := by
+  have h2 : ∃ m, CA (desc M s₁ s₂ tk).toProblem (Zf M s₁ s₂ f) m (pos2 s₁) {fq M.start} := by
     obtain ⟨m, hm⟩ := hA 0
     rw [hf0] at hm
     have hset : (pos2 s₁).set 2 ⟨[] ++ (symL true (stk0 s₁ s₂ true) ++ [(true, bot true)]).map toLab ++ [],
@@ -340,7 +366,7 @@ theorem cset_run {f : ℕ → Undec.Cfg} (hf0 : f 0 = ⟨M.start, s₁, s₂⟩)
       (mem_meth (mem_rootM true)) rfl (labs_seq _) ?_ (by rw [hset]; exact hm)⟩
     rw [hset]
     exact Or.inl ⟨0, by rw [hf0], by rw [hf0]⟩
-  have h1 : ∃ m, CA (desc M s₁ s₂).toProblem (Zf M s₁ s₂ f) m pos1 {fq M.start} := by
+  have h1 : ∃ m, CA (desc M s₁ s₂ tk).toProblem (Zf M s₁ s₂ f) m pos1 {fq M.start} := by
     obtain ⟨m, hm⟩ := h2
     have hset : pos1.set 1 ⟨[] ++ (symL false (stk0 s₁ s₂ false) ++ [(true, bot false)]).map toLab ++ [],
         none⟩ = pos2 s₁ := by
@@ -349,7 +375,7 @@ theorem cset_run {f : ℕ → Undec.Cfg} (hf0 : f 0 = ⟨M.start, s₁, s₂⟩)
       (mem_meth (mem_rootM false)) rfl (labs_seq _) ?_ (by rw [hset]; exact hm)⟩
     rw [hset]
     exact Or.inr (Or.inr (Or.inl ⟨rfl, Or.inr (Or.inr rfl)⟩))
-  have h0 : ∃ m, CA (desc M s₁ s₂).toProblem (Zf M s₁ s₂ f) m pos0 {fq M.start} := by
+  have h0 : ∃ m, CA (desc M s₁ s₂ tk).toProblem (Zf M s₁ s₂ f) m pos0 {fq M.start} := by
     obtain ⟨m, hm⟩ := h1
     have hset : pos0.set 0 ⟨[], none⟩ ++ ([(true, root false), (true, root true)].map toLab).map
         (fun b => (⟨[b], none⟩ : LCh ℕ ℕ)) = pos1 := by
@@ -361,27 +387,33 @@ theorem cset_run {f : ℕ → Undec.Cfg} (hf0 : f 0 = ⟨M.start, s₁, s₂⟩)
   intro ls s hz
   rcases hz with ⟨i, rfl, rfl⟩ | ⟨i, n, rest, hrs, rfl, rfl⟩ | ⟨rfl, rfl | rfl | rfl⟩ | hd
   · exact hA i
-  · exact hB i n rest hrs
+  · exact hB i n rest hrs (Or.inr (hA (i + 1)))
   · exact h0
   · exact h1
   · exact h2
   · exact hdrn _ _ _ le_rfl hd
 
-/-- **Infinite runs give fair solutions.** -/
-theorem fair_of_inf (h : Inf M ⟨M.start, s₁, s₂⟩) :
-    (desc M s₁ s₂).toProblem.MPStrongCyclicFairSolvable := by
-  obtain ⟨f, hf0, hf⟩ := h
+/-- **Recurrent runs give fair solutions.** -/
+theorem fair_of_rec (h : Rec tk M ⟨M.start, s₁, s₂⟩) :
+    (desc M s₁ s₂ tk).toProblem.MPStrongCyclicFairSolvable := by
+  obtain ⟨f, hf0, hf, hrec⟩ := h
   refine Problem.fair_of_fairWin ?_
-  have htn : (desc M s₁ s₂).toProblem.tnI = (seqTn [(true, root0)]).toTaskNetwork := rfl
-  have hinit : (desc M s₁ s₂).toProblem.init = {fq M.start} := by
+  have htn : (desc M s₁ s₂ tk).toProblem.tnI = (seqTn [(true, root0)]).toTaskNetwork := rfl
+  have hinit : (desc M s₁ s₂ tk).toProblem.init = {fq M.start} := by
     ext x; simp [desc, FProbDesc.toProblem, FProbDesc.init]
   rw [htn, hinit]
-  refine fairWin_of_chains (cset_run M s₁ s₂ hf0 hf) (TnDesc.toTaskNetwork_wf _)
+  refine fairWin_of_chains (cset_run M s₁ s₂ hf0 hf hrec) (TnDesc.toTaskNetwork_wf _)
     (TC.of_isSeqNet (isSeqNet_seqTn [(true, root0)])) ?_
   exact Or.inr (Or.inr (Or.inl ⟨rfl, Or.inl (by simp [pos0, TCh.proj, toLab])⟩))
 
-/-- **Fair solvability of the description is an infinite run.** -/
-theorem fair_iff_inf : (desc M s₁ s₂).toProblem.MPStrongCyclicFairSolvable ↔ Inf M ⟨M.start, s₁, s₂⟩ :=
+/-- **Infinite runs give fair solutions** (every transition ticks). -/
+theorem fair_of_inf (h : Inf M ⟨M.start, s₁, s₂⟩) :
+    (desc M s₁ s₂ fun _ => true).toProblem.MPStrongCyclicFairSolvable :=
+  fair_of_rec (rec_true_iff.2 h)
+
+/-- **Fair solvability of the description is an infinite run** (every transition ticks). -/
+theorem fair_iff_inf :
+    (desc M s₁ s₂ fun _ => true).toProblem.MPStrongCyclicFairSolvable ↔ Inf M ⟨M.start, s₁, s₂⟩ :=
   ⟨inf_of_fair, fair_of_inf⟩
 
 end FU

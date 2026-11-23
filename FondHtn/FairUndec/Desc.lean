@@ -52,7 +52,7 @@ def root0 : ℕ := Nat.pair 3 0
 /-- The labels of a stack content. -/
 def symL (b : Bool) (s : List ℕ) : List (Bool × ℕ) := s.map fun a => (true, sym b a)
 
-variable (M : TSM) (s₁ s₂ : List ℕ)
+variable (M : TSM) (s₁ s₂ : List ℕ) (tk : ℕ → Bool)
 
 /-- The initial stack `b`. -/
 def stk0 (b : Bool) : List ℕ := if b then s₂ else s₁
@@ -60,15 +60,17 @@ def stk0 (b : Bool) : List ℕ := if b then s₂ else s₁
 /-- The symbols of the machine and of the initial stacks. -/
 def alph : List ℕ := s₁ ++ s₂ ++ M.trans.flatMap fun t => t.pop :: t.push
 
-/-- The action description of a transition. -/
+/-- The action description of a transition: the tick outcome exists iff `tk` holds for the
+target state. -/
 def actT (n : ℕ) : FActDesc :=
-  (aT n, [fq (tr M n).src], [fStop], [([fq (tr M n).tgt], [fq (tr M n).src]), ([fStop], [])])
+  (aT n, [fq (tr M n).src], [fStop], ([fq (tr M n).tgt], [fq (tr M n).src]) ::
+    if tk (tr M n).tgt then [([fStop], [])] else [])
 
 /-- The drain action description. -/
 def actD : FActDesc := (aD, [fStop], [], [([], [])])
 
 /-- The actions. -/
-def acts : List FActDesc := (List.range M.trans.length).map (actT M) ++ [actD]
+def acts : List FActDesc := (List.range M.trans.length).map (actT M tk) ++ [actD]
 
 /-- The method of a transition. -/
 def methT (n : ℕ) : MethodDesc :=
@@ -83,7 +85,7 @@ def meths : List MethodDesc :=
     [(root0, setTn [(true, root false), (true, root true)])]
 
 /-- **The description.** -/
-def desc : FProbDesc := ((acts M, meths M s₁ s₂), ([fq M.start], seqTn [(true, root0)]))
+def desc : FProbDesc := ((acts M tk, meths M s₁ s₂), ([fq M.start], seqTn [(true, root0)]))
 
 /-! ## Basic facts -/
 
@@ -111,7 +113,7 @@ theorem bot_ne_root (b b' : Bool) : bot b ≠ root b' := by simp [bot, root, Nat
 theorem bot_ne_root0 (b : Bool) : bot b ≠ root0 := by simp [bot, root0, Nat.pair_eq_pair]
 theorem root_ne_root0 (b : Bool) : root b ≠ root0 := by simp [root, root0, Nat.pair_eq_pair]
 
-theorem mem_acts {a : FActDesc} : a ∈ acts M ↔ (∃ n < M.trans.length, a = actT M n) ∨ a = actD := by
+theorem mem_acts {a : FActDesc} : a ∈ acts M tk ↔ (∃ n < M.trans.length, a = actT M tk n) ∨ a = actD := by
   simp only [acts, List.mem_append, List.mem_map, List.mem_range, List.mem_singleton]
   constructor
   · rintro (⟨n, hn, rfl⟩ | rfl)
@@ -121,19 +123,19 @@ theorem mem_acts {a : FActDesc} : a ∈ acts M ↔ (∃ n < M.trans.length, a = 
     · exact Or.inl ⟨n, hn, rfl⟩
     · exact Or.inr rfl
 
-theorem declared_iff {x : ℕ} : (desc M s₁ s₂).Declared x ↔ (∃ n < M.trans.length, x = aT n) ∨ x = aD := by
+theorem declared_iff {x : ℕ} : (desc M s₁ s₂ tk).Declared x ↔ (∃ n < M.trans.length, x = aT n) ∨ x = aD := by
   simp only [FProbDesc.Declared, desc, FProbDesc.actions, List.mem_map]
   constructor
   · rintro ⟨a, ha, rfl⟩
-    rcases (mem_acts M).1 ha with ⟨n, hn, rfl⟩ | rfl
+    rcases (mem_acts M tk).1 ha with ⟨n, hn, rfl⟩ | rfl
     · exact Or.inl ⟨n, hn, rfl⟩
     · exact Or.inr rfl
   · rintro (⟨n, hn, rfl⟩ | rfl)
-    · exact ⟨_, (mem_acts M).2 (Or.inl ⟨n, hn, rfl⟩), rfl⟩
-    · exact ⟨_, (mem_acts M).2 (Or.inr rfl), rfl⟩
+    · exact ⟨_, (mem_acts M tk).2 (Or.inl ⟨n, hn, rfl⟩), rfl⟩
+    · exact ⟨_, (mem_acts M tk).2 (Or.inr rfl), rfl⟩
 
 /-- **The description is well formed.** -/
-theorem valid : (desc M s₁ s₂).Valid where
+theorem valid : (desc M s₁ s₂ tk).Valid where
   names_nodup := by
     simp only [desc, FProbDesc.actions, acts, List.map_append, List.map_map, List.map_cons,
       List.map_nil]
@@ -147,7 +149,7 @@ theorem valid : (desc M s₁ s₂).Valid where
       exact aT_ne_aD n
   effs_ne := by
     intro a ha
-    rcases (mem_acts M).1 ha with ⟨n, -, rfl⟩ | rfl <;> simp [actT, actD, FActDesc.effs]
+    rcases (mem_acts M tk).1 ha with ⟨n, -, rfl⟩ | rfl <;> simp [actT, actD, FActDesc.effs]
   tnI := seqTn_valid fun q hq hf => by simp at hq; subst hq; simp at hf
   methods := by
     intro e he
@@ -157,12 +159,12 @@ theorem valid : (desc M s₁ s₂).Valid where
     · refine seqTn_valid fun q hq hf => ?_
       simp only [List.mem_cons, symL, List.mem_map] at hq
       rcases hq with rfl | ⟨a, -, rfl⟩
-      · exact (declared_iff M s₁ s₂).2 (Or.inl ⟨n, hn, rfl⟩)
+      · exact (declared_iff M s₁ s₂ tk).2 (Or.inl ⟨n, hn, rfl⟩)
       · simp at hf
     · exact seqTn_valid fun q hq _ => by
-        simp at hq; subst hq; exact (declared_iff M s₁ s₂).2 (Or.inr rfl)
+        simp at hq; subst hq; exact (declared_iff M s₁ s₂ tk).2 (Or.inr rfl)
     · exact seqTn_valid fun q hq _ => by
-        simp at hq; subst hq; exact (declared_iff M s₁ s₂).2 (Or.inr rfl)
+        simp at hq; subst hq; exact (declared_iff M s₁ s₂ tk).2 (Or.inr rfl)
     · refine seqTn_valid fun q hq hf => ?_
       simp only [List.mem_append, symL, List.mem_map, List.mem_singleton] at hq
       rcases hq with ⟨a, -, rfl⟩ | rfl <;> simp at hf
@@ -171,30 +173,35 @@ theorem valid : (desc M s₁ s₂).Valid where
 /-! ## The actions -/
 
 theorem δ_aT {n : ℕ} (hn : n < M.trans.length) :
-    (desc M s₁ s₂).toProblem.δ (aT n) = (actT M n).toAction :=
-  FProbDesc.δ_of_mem (valid M s₁ s₂) ((mem_acts M).2 (Or.inl ⟨n, hn, rfl⟩))
+    (desc M s₁ s₂ tk).toProblem.δ (aT n) = (actT M tk n).toAction :=
+  FProbDesc.δ_of_mem (valid M s₁ s₂ tk) ((mem_acts M tk).2 (Or.inl ⟨n, hn, rfl⟩))
 
-theorem δ_aD : (desc M s₁ s₂).toProblem.δ aD = (actD).toAction :=
-  FProbDesc.δ_of_mem (valid M s₁ s₂) ((mem_acts M).2 (Or.inr rfl))
+theorem δ_aD : (desc M s₁ s₂ tk).toProblem.δ aD = (actD).toAction :=
+  FProbDesc.δ_of_mem (valid M s₁ s₂ tk) ((mem_acts M tk).2 (Or.inr rfl))
 
 theorem app_aT {n : ℕ} {s : Set ℕ} :
-    (actT M n).toAction.Applicable s ↔ fq (tr M n).src ∈ s ∧ fStop ∉ s := by
+    (actT M tk n).toAction.Applicable s ↔ fq (tr M n).src ∈ s ∧ fStop ∉ s := by
   simp [actT, FActDesc.toAction, Action.Applicable, Set.disjoint_left]
 
 theorem outcomes_aT {n : ℕ} {s : Set ℕ} :
-    (actT M n).toAction.outcomes s =
-      {(s \ {fq (tr M n).src}) ∪ {fq (tr M n).tgt}, s ∪ {fStop}} := by
+    (actT M tk n).toAction.outcomes s =
+      insert ((s \ {fq (tr M n).src}) ∪ {fq (tr M n).tgt})
+        {s' | tk (tr M n).tgt = true ∧ s' = s ∪ {fStop}} := by
   ext s'
-  simp only [Action.outcomes, actT, FActDesc.toAction, FActDesc.effs, List.mem_cons,
-    List.not_mem_nil, or_false, Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff]
+  simp only [Action.outcomes, actT, FActDesc.toAction, FActDesc.effs, Set.mem_setOf_eq,
+    Set.mem_insert_iff]
   constructor
   · rintro ⟨e, ⟨x, hx, rfl⟩, rfl⟩
-    rcases hx with rfl | rfl
+    rcases List.mem_cons.1 hx with rfl | hx
     · left; ext f; simp [Action.applyEff]
-    · right; ext f; simp [Action.applyEff]
-  · rintro (rfl | rfl)
-    · refine ⟨_, ⟨_, Or.inl rfl, rfl⟩, ?_⟩; ext f; simp [Action.applyEff]
-    · refine ⟨_, ⟨_, Or.inr rfl, rfl⟩, ?_⟩; ext f; simp [Action.applyEff]
+    · split_ifs at hx with ht
+      · rw [List.mem_singleton] at hx; subst hx
+        right; exact ⟨ht, by ext f; simp [Action.applyEff]⟩
+      · simp at hx
+  · rintro (rfl | ⟨ht, rfl⟩)
+    · refine ⟨_, ⟨_, List.mem_cons_self, rfl⟩, ?_⟩; ext f; simp [Action.applyEff]
+    · refine ⟨_, ⟨([fStop], []), List.mem_cons_of_mem _ (by simp [ht]), rfl⟩, ?_⟩
+      ext f; simp [Action.applyEff]
 
 theorem app_aD {s : Set ℕ} : (actD).toAction.Applicable s ↔ fStop ∈ s := by
   simp [actD, FActDesc.toAction, Action.Applicable]

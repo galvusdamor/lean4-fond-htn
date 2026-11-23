@@ -215,6 +215,15 @@ theorem undecTSM_inf_iff (n : ℕ) :
     simTSM_inf_iff (supports univCode) (start_mem_supp univCode) (initTape [n]),
     dom_chain univCode [n], univCode_dom]
 
+/-- **Recurrence**: an infinite run from `c` that enters a state satisfying `tk` infinitely
+often. -/
+def Rec (tk : ℕ → Bool) (M : TSM) (c : Cfg) : Prop :=
+  ∃ f : ℕ → Cfg, f 0 = c ∧ (∀ i, M.Step (f i) (f (i + 1))) ∧ ∀ i, ∃ j, i ≤ j ∧ tk (f (j + 1)).st = true
+
+/-- Recurrence for the predicate that always holds is an infinite run. -/
+theorem rec_true_iff {M : TSM} {c : Cfg} : Rec (fun _ => true) M c ↔ Inf M c :=
+  ⟨fun ⟨f, h0, hs, _⟩ => ⟨f, h0, hs⟩, fun ⟨f, h0, hs⟩ => ⟨f, h0, hs, fun i => ⟨i, le_rfl, rfl⟩⟩⟩
+
 end FU
 
 end FOND

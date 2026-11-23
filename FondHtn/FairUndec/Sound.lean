@@ -21,7 +21,7 @@ namespace FU
 
 open HTN HTN.Syn HTN.Article HTN.Undec AcycHard.Sav HardTR HardTR.TD
 
-variable {M : TSM} {s₁ s₂ : List ℕ}
+variable {M : TSM} {s₁ s₂ : List ℕ} {tk : ℕ → Bool}
 
 /-- The residual words of a configuration. -/
 def Gen (M : TSM) (c : Cfg) (w : List ℕ) : Prop :=
@@ -92,10 +92,10 @@ theorem step_nxt {c : Cfg} {n : ℕ} (hn : n < M.trans.length) (hsrc : c.st = (t
     exact Or.inr ⟨rfl, rest, by simpa [stkC] using h, by simp [nxt, hb]⟩
 
 /-- **Fair solutions give infinite runs.** -/
-theorem inf_of_fair (h : (desc M s₁ s₂).toProblem.MPStrongCyclicFairSolvable) :
+theorem inf_of_fair (h : (desc M s₁ s₂ tk).toProblem.MPStrongCyclicFairSolvable) :
     Inf M ⟨M.start, s₁, s₂⟩ := by
-  set d := desc M s₁ s₂ with hd
-  have hv := valid M s₁ s₂
+  set d := desc M s₁ s₂ tk with hd
+  have hv := valid M s₁ s₂ tk
   have hP := FProbDesc.toProblem_wf hv
   have hfw := (Problem.mpStrongCyclicFairSolvable_iff_prog hP.tnI).1 h
   obtain ⟨R, hR0, hcl⟩ := lsafe_of_fairWin hP hfw
@@ -124,12 +124,12 @@ theorem inf_of_fair (h : (desc M s₁ s₂).toProblem.MPStrongCyclicFairSolvable
     rcases gen_cons (hgen _ hw) with rfl | ⟨n, hn, rfl, rest, hrest, -⟩
     · rw [δ_aD, app_aD] at happ
       exact absurd (Set.mem_singleton_iff.1 happ) (fq_ne_stop _).symm
-    rw [δ_aT M s₁ s₂ hn, app_aT] at happ
+    rw [δ_aT M s₁ s₂ tk hn, app_aT] at happ
     have hsrc : c.st = (tr M n).src := fq_inj (Set.mem_singleton_iff.1 happ.1).symm
     refine ⟨nxt M c n rest, ({w | aT n :: w ∈ L}, {fq (tr M n).tgt}), step_nxt hn hsrc hrest, ?_, ?_, ?_⟩
     · apply hall
-      show _ ∈ ((desc M s₁ s₂).toProblem.δ (aT n)).outcomes {fq c.st}
-      rw [δ_aT M s₁ s₂ hn, outcomes_aT]
+      show _ ∈ ((desc M s₁ s₂ tk).toProblem.δ (aT n)).outcomes {fq c.st}
+      rw [δ_aT M s₁ s₂ tk hn, outcomes_aT]
       left
       ext f
       simp only [Set.mem_union, Set.mem_diff, Set.mem_singleton_iff, hsrc]

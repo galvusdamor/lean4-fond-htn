@@ -130,3 +130,13 @@ arithmetical given the policy. The problem is probably Σ¹₁-hard. Recurrence 
 machine (visit q infinitely often) is Σ¹₁-complete, and with stop ticks only on transitions into q
 it seems to reduce to fair solvability. If so, the problem is not arithmetical. Mathlib has no
 analytical hierarchy, so neither bound is formalised.
+
+## Update: Σ¹₁-hardness (reduction formalised)
+
+`FOND.FU.fair_iff_rec` (`FairUndec/RecSound.lean`, `Complete.lean`): the description now has a
+tick predicate `tk` on target states; fair solvability ⇔ `Rec tk M c` (a run entering a
+`tk`-state infinitely often). `FOND.FU.rec_reduces_fairMP` (`FairUndec/RecMain.lean`) gives a
+computable reduction for each fixed machine. With Harel's theorem (recurrence is Σ¹₁-complete,
+already for a fixed machine) the problem is Σ¹₁-hard. That theorem is cited, not formalised.
+Soundness uses `FOND.FU.llive_of_fairWin` (`FairUndec/Live.lean`), the ranked attractor version
+of the safe word game. Open: the Σ¹₁ upper bound.
