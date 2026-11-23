@@ -118,3 +118,15 @@ run, via `lsafe_of_fairWin`), `ChainFair.lean` (a fair game on label chains ⇒ 
 `Complete.lean` (infinite run ⇒ fair), `Main.lean` (`fairMP_not_semiDecidable`). The
 nondeterminism of the source machine did not matter: determinism of the simulation was proved
 directly (each control state reads one stack and its transitions pop distinct symbols).
+
+## Update: neither RE nor co-RE
+
+`FOND.FU.fairMP_compl_not_semiDecidable` (`FondHtn/FairUndec/CoRE.lean`): the complement is not RE.
+Halting reduces to the fair language through the Thm. 4.1.1 reduction (`cfgProb gram₁ (gram undecTSM
+true (redStack c))`) composed with `redP_planExMPFair`. Combined result: `fairMP_not_RE_not_coRE`.
+
+Exact classification is open. The upper bound is Σ¹₁: there exists a policy, and fairness is
+arithmetical given the policy. The problem is probably Σ¹₁-hard. Recurrence of a nondeterministic
+machine (visit q infinitely often) is Σ¹₁-complete, and with stop ticks only on transitions into q
+it seems to reduce to fair solvability. If so, the problem is not arithmetical. Mathlib has no
+analytical hierarchy, so neither bound is formalised.

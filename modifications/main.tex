@@ -638,6 +638,11 @@ proof route and the gaps in the published proofs.
   the stop outcome of the next transition always leads to the goal; conversely a fair policy
   must keep executing transitions as long as nature does not stop it
   (\lean{FairUndec/Sound.lean}, \lean{FairUndec/Complete.lean}).
+  The complement is not semi-decidable either: halting reduces to fair plan existence by the
+  reduction of [D26, Thm.~4.1.1] followed by the embedding of deterministic plan existence
+  (\lean{fairMP_compl_not_semiDecidable}). So the problem is neither RE nor co-RE
+  (\lean{fairMP_not_RE_not_coRE}). We do not determine its exact place in the arithmetical or
+  analytical hierarchy.
 \end{deviation}
 
 \printbibliography
